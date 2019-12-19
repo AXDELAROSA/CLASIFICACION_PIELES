@@ -301,7 +301,7 @@ GO
 
 
 
--- EXECUTE [dbo].[PG_IN_PIEL_CLASIFICADA] 0,0,0, '123A','',1,1,2
+-- EXECUTE [dbo].[PG_IN_PIEL_CLASIFICADA] 0,0,0, '123A','',1,1,5
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> INSERT / FICHA
@@ -337,15 +337,16 @@ AS
 	-- ==================================
 
 	IF @VP_MENSAJE=''
-		--EXECUTE [dbo].[PG_RN_PIEL_CLASIFICADA_INSERT]	@PP_L_DEBUG, @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-		--												@VP_K_PIEL_CLASIFICADA,@PP_D_PIEL_CLASIFICADA,
-		--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+		EXECUTE [dbo].[PG_RN_PIEL_CLASIFICADA_INSERT]	@PP_L_DEBUG, @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_K_PIEL_LOTE, @PP_D_PIEL_CLASIFICADA,
+														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 															
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN	
 			BEGIN TRANSACTION 
 			BEGIN TRY
+
 			DECLARE @VP_S_PIEL_CLASIFICADA VARCHAR(10) = LEFT(@PP_D_PIEL_CLASIFICADA,5)		
 			INSERT INTO [PIEL_CLASIFICADA]	
 				(	[K_PIEL_CLASIFICADA], [D_PIEL_CLASIFICADA],
@@ -368,9 +369,15 @@ AS
 					@PP_K_USUARIO_ACCION, GETDATE(),
 					0, NULL, NULL )	
 			-- ==================================	
-			
-			EXECUTE	[PG_IN_UP_PIEL_PORCENTAJE_X_ESTATUS]	@PP_L_DEBUG, @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-															@PP_K_PIEL_LOTE
+			IF @@ROWCOUNT=0
+				BEGIN
+					SET @VP_MENSAJE = 'ERROR ROWCOUNT: NO SE EJECUTO LA ACCION'
+				END
+			ELSE
+				BEGIN
+					EXECUTE	[PG_IN_UP_PIEL_PORCENTAJE_X_ESTATUS]	@PP_L_DEBUG, @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@PP_K_PIEL_LOTE
+				END
 			/* Confirmamos la transaccion*/
 			COMMIT TRANSACTION 
 			
