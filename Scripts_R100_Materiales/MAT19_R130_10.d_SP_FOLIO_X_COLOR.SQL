@@ -13,7 +13,7 @@ USE [DATA_02Pruebas]
 GO
 
 
--- EXECUTE [dbo].[PG_SK_FOLIO_X_COLOUR] 0,0,  'FNLGPS4' 
+-- EXECUTE [dbo].[PG_SK_FOLIO_X_COLOUR] 0,0,  'FCK2DX9' 
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / FICHA
@@ -97,8 +97,9 @@ AS
 			MOVEMENT
 	-- =====================
 	FROM	RP_SC
-	WHERE	tagno=@PP_TAG_NO 
+	WHERE	TAGNO=@PP_TAG_NO 
 	AND		type<>'D'
+	ORDER BY HIDE ASC
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
@@ -146,7 +147,7 @@ AS
 			LOT		AS LOTE
 	-- =====================
 	FROM	RP_SC
-	WHERE	tagno=@PP_TAG_NO 
+	WHERE	TAGNO=@PP_TAG_NO 
 	AND		type<>'D'
 	-- =====================
 	
@@ -172,6 +173,118 @@ GO
 
 
 
+-- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  1524141
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	COLOUR	AS COLOR,
+			LOT		AS LOTE,
+			HIDE	AS PIEL,
+			SQF		AS SQF
+	-- =====================
+	FROM	RP_SC
+	WHERE	TAGNO=@PP_TAG_NO 
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_TRANSFERIR_X_FOLIO] 0,0, 0
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_RP_SC_PRT]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_IN_RP_SC_PRT]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_IN_RP_SC_PRT]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	-- ///////////////////////////////////////////
+	
+	IF @VP_MENSAJE = ''
+		BEGIN
+			INSERT INTO RP_SC_PRT (
+								TAG, TYPE	) 
+					VALUES (	@PP_TAG_NO, '1'	)
+
+			IF @@ROWCOUNT = 0
+				SET @VP_MENSAJE = 'ERROR: // INSERT RP_SC_PRT // '
+		END
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO] en [RP_SC_PRT]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'INSERT',
+													'',
+													-- ===========================================
+													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
 -- EXECUTE [dbo].[PG_SK_RP_SC_TRANSFERIR_X_FOLIO] 0,0, 0
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_RP_FOLIO_TRANSFERIR_X_FOLIO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_RP_FOLIO_TRANSFERIR_X_FOLIO]
@@ -187,7 +300,7 @@ CREATE PROCEDURE [dbo].[PG_IN_RP_FOLIO_TRANSFERIR_X_FOLIO]
 	@PP_SELECT_TODOS			INT
 AS
 
-	DECLARE @VP_MENSAJE VARCHAR(50) = ''
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
 	-- ///////////////////////////////////////////
 
@@ -239,33 +352,41 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
-	DECLARE @VP_TAG_NO		INT = 0
+	DECLARE @VP_TAG_NO_NUEVO		INT = 0
 	EXECUTE [dbo].[PG_SK_CATALOGO_K_MAX_GET]	0, 'RP_SC', 'TAGNO',
-												@OU_K_TABLA_DISPONIBLE = @VP_TAG_NO	OUTPUT
+												@OU_K_TABLA_DISPONIBLE = @VP_TAG_NO_NUEVO	OUTPUT
 	-- =====================
 
-	INSERT INTO RP_Folios (	
-			TAG, STATUS, MACHINE, JOBNO	) 
-	VALUES(
-			@VP_TAG_NO, 'A', @VP_MACHINE, @PP_JOB_NO	)
-	
-	IF @@ROWCOUNT = 0
-		SET @VP_MENSAJE = 'ERROR: // INSERT RP_Folio // '
-
+	IF @VP_MENSAJE = ''
+		BEGIN
+			INSERT INTO RP_Folios (	
+					TAG, STATUS, MACHINE, JOBNO	) 
+			VALUES(
+					@VP_TAG_NO_NUEVO, 'A', @VP_MACHINE, @PP_JOB_NO	)
+			
+			IF @@ROWCOUNT = 0
+				SET @VP_MENSAJE = 'ERROR: // INSERT RP_Folios // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
+	IF @VP_MENSAJE = ''
+		BEGIN
+			EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+										@VP_TAG_NO_NUEVO
+		END
+	-- /////////////////////////////////////////////////////////////////////
 
 	IF @VP_MENSAJE<>''
 		BEGIN
 		
 		SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
 		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAG_NO)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAG_NO_NUEVO)+']'
 		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
 		END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @VP_TAG_NO AS CLAVE
+	SELECT	@VP_MENSAJE AS MENSAJE, @VP_TAG_NO_NUEVO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -278,12 +399,13 @@ AS
 													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
 													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
 													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @VP_TAG_NO, '' , 0.00, 0.00,
+													0, 0, @VP_TAG_NO_NUEVO, '' , 0.00, 0.00,
 													-- === @PP_VALOR_1 al 6_DATO
 													'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
+
 
 
 
@@ -300,29 +422,45 @@ CREATE PROCEDURE [dbo].[PG_UP_RP_SC_X_FOLIO]
 	-- ===========================
 	@PP_TAG_NO_NUEVO			INT,
 	@PP_TAG_NO_ANTERIOR			INT,
-	@VP_HIDE					VARCHAR(15),
-	@VP_LOT 					VARCHAR(15),
-	@VP_SQF						VARCHAR(15)
+	@PP_HIDE					VARCHAR(15),
+	@PP_LOT 					VARCHAR(15),
+	@PP_SQF						VARCHAR(15),
+	@PP_USER					VARCHAR(25),
+	@PP_COMPUTER_NAME			VARCHAR(25)
 
 AS
 
-	DECLARE @VP_MENSAJE VARCHAR(50) = ''
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
 	-- ///////////////////////////////////////////
 
 	UPDATE RP_SC 
 	SET 
-			TAGNO=@PP_TAG_NO_NUEVO 
-	WHERE	TAGNO=@PP_TAG_NO_ANTERIOR
-	AND		HIDE=@VP_HIDE 
-	AND		LOT=@VP_LOT 
-	AND		SQF=@VP_SQF
+			TAGNO	=	@PP_TAG_NO_NUEVO 
+	WHERE	TAGNO	=	@PP_TAG_NO_ANTERIOR
+	AND		HIDE=@PP_HIDE 
+	AND		LOT=@PP_LOT 
+	AND		SQF=@PP_SQF
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios  // '
+	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 
 	-- /////////////////////////////////////////////////////////////////////
 	
+	DECLARE @VP_CDATE VARCHAR(10) = FORMAT(GETDATE(),  'dd/MM/yyyy')
+	DECLARE @VP_CTIME VARCHAR(10) = FORMAT(GETDATE(),  'HHmmss')
+	DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @PP_HIDE + ' to: ' + CONVERT(VARCHAR(20),@PP_TAG_NO_NUEVO) + ' Lot: ' + LEFT('0' + @PP_LOT, 6)
+	
+	IF @VP_MENSAJE = ''
+		BEGIN
+			
+			EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION ,
+												@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
+												@PP_TAG_NO_ANTERIOR, 'Transfer Nuevo',
+												@VP_DETAIL, @PP_HIDE
+
+		END
+	-- /////////////////////////////////////////////////////////////////////
 
 	IF @VP_MENSAJE<>''
 		BEGIN
@@ -474,7 +612,79 @@ GO
 
 
 
--- EXECUTE [dbo].[PG_SK_RP_FOLIO_X_TAG] 0,0,  'FNLGPS4' 
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / FICHA
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_RP_SC_Y_RP_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_LI_RP_SC_Y_RP_FOLIO]
+GO
+
+-- EXEC PG_LI_RP_SC_Y_RP_FOLIO 0 ,0, '32291', '0023' 
+
+CREATE PROCEDURE [dbo].[PG_LI_RP_SC_Y_RP_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_LOTE					VARCHAR(20),
+	@PP_PIEL					VARCHAR(20)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+			
+	SELECT 
+			ISNULL(COLOUR, '')	AS COLOUR,
+			ISNULL(LOT, '')		AS LOT,
+			ISNULL(HIDE, '')	AS HIDE,
+			ISNULL(SQF, '')		AS SQF,
+			ISNULL(TAGNO, 0)	AS TAGNO,
+			ISNULL(STATUS, '')	AS STATUS,
+			ISNULL(MACHINE, '') AS MACHINE,
+			ISNULL(JOBNO, '')	AS JOBNO 
+	FROM	RP_SC 
+	-- =======================
+	INNER JOIN	RP_Folios ON RP_Folios.TAG=RP_SC.TAGNO 
+				AND	LOT=@PP_LOTE
+				AND	HIDE=@PP_PIEL	
+	-- =======================
+	ORDER BY CDATE
+          
+
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_LOTE, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
+
+
+
+
+
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / FICHA
@@ -529,6 +739,174 @@ AS
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
+
+
+
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO] 0,0,  '3783325'
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					VARCHAR(10)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	*
+	-- =====================
+	FROM	RP_SC_TEMP
+	WHERE	tagno=@PP_TAG_NO 
+	ORDER BY HIDE ASC
+	-- =====================
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO] 0,0, 0
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT,
+	@PP_JOB_NO					VARCHAR(50),
+	@PP_LOCATION				VARCHAR(50),
+	@PP_USER					VARCHAR(25),
+	@PP_COMPUTER_NAME			VARCHAR(25)
+AS
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_COLOUR VARCHAR(15)
+	DECLARE @VP_STATUS VARCHAR(5)
+
+	SELECT	DISTINCT	
+			@VP_COLOUR = COLOUR,
+			@VP_STATUS = STATUS
+	-- =====================
+	FROM	RP_Folios 
+	INNER	JOIN RP_SC ON RP_Folios.TAG=RP_SC.TAGNO
+	AND		RP_Folios.TAG=@PP_TAG_NO 
+
+	IF	@VP_COLOUR IS NULL
+		SET @VP_COLOUR = ''
+
+	IF	@VP_STATUS IS NULL
+		SET @VP_STATUS = ''
+	-- =====================
+
+	DECLARE @VP_MACHINE VARCHAR(20)
+
+	SELECT  @VP_MACHINE = MACHINE 
+	FROM	CCJOBHDR_SQL 
+	WHERE	JOBNO=@PP_JOB_NO
+	
+	IF	@VP_MACHINE IS NULL
+		SET @VP_MACHINE = ''
+		
+	-- /////////////////////////////////////////////////////////////////////
+	
+	IF @VP_MENSAJE = ''
+		BEGIN
+			UPDATE	CCJOBHDR_SQL 
+				SET	STARTEDFLAG =	'C',
+					FOLIO		=	@PP_TAG_NO
+			WHERE	JOBNO=@PP_JOB_NO
+			
+			IF @@ROWCOUNT = 0
+				SET @VP_MENSAJE = 'ERROR: // UPDATE CCJOBHDR_SQL // '
+		END
+	-- /////////////////////////////////////////////////////////////////////
+	
+	IF @VP_MENSAJE = ''
+		BEGIN
+			UPDATE	RP_Folios 
+				SET	STATUS	=	'C1',
+					MACHINE	=	@VP_MACHINE,
+					JOBNO	=	@PP_JOB_NO
+			WHERE	TAG=@PP_TAG_NO
+
+			IF @@ROWCOUNT = 0
+				SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios // '
+		END
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE = ''
+		BEGIN
+		
+			DECLARE @VP_DETAIL VARCHAR(100) = ' To: ' + @PP_LOCATION + ' order: ' + @PP_JOB_NO 
+	
+			EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION ,
+												@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
+												@PP_TAG_NO, 'Cargar Orden',
+												@VP_DETAIL, ''
+			
+		END
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'INSERT',
+													'',
+													-- ===========================================
+													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
 
 
 
