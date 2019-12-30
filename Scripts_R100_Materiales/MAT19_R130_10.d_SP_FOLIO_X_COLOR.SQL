@@ -71,7 +71,7 @@ GO
 
 
 
--- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  807969
+-- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  3777539
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO]
 GO
@@ -173,7 +173,7 @@ GO
 
 
 
--- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  1524141
+-- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  3777539
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]
 GO
@@ -283,6 +283,76 @@ GO
 
 
 
+-- EXECUTE [dbo].[PG_UP_RP_FOLIO_X_FOLIO] 0,0, 0
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_RP_FOLIO_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT,
+	@PP_STATUS				VARCHAR(5),
+	@PP_JOB_NO				VARCHAR(10),
+	@PP_MACHINE				VARCHAR(15)
+
+AS
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_COLOUR VARCHAR(50)
+
+	-- /////////////////////////////////////////////////////////////////////
+
+	UPDATE RP_Folios 
+	SET
+		STATUS=@PP_STATUS,
+		JOBNO=@PP_JOB_NO,
+		MACHINE=@PP_MACHINE 
+	WHERE TAG=@PP_TAG_NO
+
+	IF @@ROWCOUNT = 0
+	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios  // '
+	
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'UPDATE',
+													'',
+													-- ===========================================
+													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
 
 
 -- EXECUTE [dbo].[PG_SK_RP_SC_TRANSFERIR_X_FOLIO] 0,0, 0
@@ -340,15 +410,9 @@ AS
 
 	IF	@PP_SELECT_TODOS = 1
 		BEGIN
-			UPDATE RP_Folios 
-			SET
-				STATUS='A',
-				JOBNO=NULL,
-				MACHINE=NULL 
-			WHERE TAG=@PP_TAG_NO
-
-			IF @@ROWCOUNT = 0
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios  // '
+		
+			EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+													@PP_TAG_NO, 'A', NULL, NULL
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
@@ -449,7 +513,7 @@ AS
 	
 	DECLARE @VP_CDATE VARCHAR(10) = FORMAT(GETDATE(),  'dd/MM/yyyy')
 	DECLARE @VP_CTIME VARCHAR(10) = FORMAT(GETDATE(),  'HHmmss')
-	DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @PP_HIDE + ' to: ' + CONVERT(VARCHAR(20),@PP_TAG_NO_NUEVO) + ' Lot: ' + LEFT('0' + @PP_LOT, 6)
+	DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @PP_HIDE + ' to: ' + CONVERT(VARCHAR(20),@PP_TAG_NO_NUEVO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@PP_LOT)), 6)
 	
 	IF @VP_MENSAJE = ''
 		BEGIN
@@ -907,6 +971,57 @@ AS
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
+
+
+
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE] 0,0,  3777539
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	COLOUR	AS COLOUR,
+			CONCAT('         ', RIGHT('000000' + Ltrim(Rtrim(LOT)), 6))		AS LOT,
+			SUM(CAST(SQF AS DECIMAL(4,2)))	AS SQF
+	-- =====================
+	FROM	RP_SC
+	-- =====================
+	WHERE	TAGNO=@PP_TAG_NO 
+	-- =====================
+	GROUP BY	COLOUR, LOT
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
 
 
 
