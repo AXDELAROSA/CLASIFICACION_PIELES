@@ -36,7 +36,6 @@ AS
 	DECLARE @VP_LI_N_REGISTROS		INT = 10000
 
 	-- =========================================
-		
 	SELECT	DISTINCT
 			TAG,
 			STATUS,
@@ -50,7 +49,6 @@ AS
 	ORDER BY TAG
 	-- =====================
 	
-
 	-----////////////////////////////////////////////////////////////////
 
 	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -91,6 +89,7 @@ AS
 	-- =========================================
 		
 	SELECT	DISTINCT
+			COLOUR  AS COLOR,
 			LOT		AS LOTE,
 			HIDE	AS PIEL,
 			SQF,
@@ -294,9 +293,9 @@ CREATE PROCEDURE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
 	@PP_TAG_NO					INT,
-	@PP_STATUS				VARCHAR(5),
-	@PP_JOB_NO				VARCHAR(10),
-	@PP_MACHINE				VARCHAR(15)
+	@PP_STATUS					VARCHAR(5),
+	@PP_JOB_NO					VARCHAR(10),
+	@PP_MACHINE					VARCHAR(15)
 
 AS
 
@@ -310,9 +309,9 @@ AS
 
 	UPDATE RP_Folios 
 	SET
-		STATUS=@PP_STATUS,
-		JOBNO=@PP_JOB_NO,
-		MACHINE=@PP_MACHINE 
+		STATUS	=	@PP_STATUS,
+		JOBNO	=	@PP_JOB_NO,
+		MACHINE	=	@PP_MACHINE 
 	WHERE TAG=@PP_TAG_NO
 
 	IF @@ROWCOUNT = 0
@@ -475,12 +474,12 @@ GO
 
 
 -- EXECUTE [dbo].[PG_SK_RP_SC_TRANSFERIR_X_FOLIO] 0,0, 0
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_RP_SC_X_FOLIO]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_UP_RP_SC_X_FOLIO]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_RP_SC_TAGNO_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_UP_RP_SC_TAGNO_X_FOLIO]
 GO
 
 
-CREATE PROCEDURE [dbo].[PG_UP_RP_SC_X_FOLIO]
+CREATE PROCEDURE [dbo].[PG_UP_RP_SC_TAGNO_X_FOLIO]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
@@ -677,10 +676,8 @@ GO
 
 
 
-
-
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SELECT / FICHA
+-- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_RP_SC_Y_RP_FOLIO]') AND type in (N'P', N'PC'))
@@ -751,7 +748,7 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SELECT / FICHA
+-- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_RP_FOLIO_STATUS_B]') AND type in (N'P', N'PC'))
@@ -771,8 +768,7 @@ AS
 	DECLARE @VP_LI_N_REGISTROS		INT = 10000
 
 	-- =========================================
-		
-	
+			
 	SELECT	TAGNO, 
 			COLOUR, 
 			COUNT(TAGNO) AS PIELES, 
@@ -1022,6 +1018,7 @@ AS
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
+
 
 
 
