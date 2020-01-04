@@ -855,6 +855,122 @@ GO
 
 
 
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
+GO
+
+-- EXEC [PG_SK_CCJOBHDR_SQL_X_ORDEN] 0,0,'00001'
+
+CREATE PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN_NO				VARCHAR(10)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+			-- SELECT TOP 100 * FROM CCJOBHDR_SQL
+	SELECT	*
+	-- =====================
+	FROM	CCJOBHDR_SQL
+	WHERE	JOBNO = @PP_ORDEN_NO
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]
+GO
+
+-- EXEC [PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN] 0,0,'00001'
+
+CREATE PROCEDURE [dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_COLOR					VARCHAR(20),
+	@PP_LOCACION				VARCHAR(5),
+	@PP_ORDEN_NO				VARCHAR(10)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		SELECT	IMLSTRX_SQL.ser_lot_no, IMLSTRX_SQL.lev_no, IMINVTRX_SQL.doc_type, 
+				IMINVTRX_SQL.doc_ord_no, IMINVTRX_SQL.quantity, IMLSTRX_SQL.trx_qty 
+		-- =====================
+        FROM	IMLSTRX_SQL 
+		INNER	JOIN	IMINVTRX_SQL	ON	IMLSTRX_SQL.source = IMINVTRX_SQL.source 
+										AND IMLSTRX_SQL.ord_no = IMINVTRX_SQL.ord_no 
+										AND IMLSTRX_SQL.ctl_no = IMINVTRX_SQL.ctl_no 
+										AND IMLSTRX_SQL.line_no = IMINVTRX_SQL.line_no 
+										AND IMLSTRX_SQL.lev_no = IMINVTRX_SQL.lev_no 
+										AND IMLSTRX_SQL.seq_no = IMINVTRX_SQL.seq_no 
+        -- =====================
+		WHERE IMINVTRX_SQL.item_no = Ltrim(Rtrim(@PP_COLOR))
+        AND IMINVTRX_SQL.loc = Ltrim(Rtrim(@PP_LOCACION)) 
+        AND (IMINVTRX_SQL.doc_ord_no = Ltrim(Rtrim(@PP_ORDEN_NO))
+			OR IMINVTRX_SQL.doc_ord_no = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
+		--	OR IMINVTRX_SQL.doc_ord_no =  Ltrim(Rtrim(@PP_ORDEN_NO))
+        ) 
+		 -- =====================
+		ORDER BY IMLSTRX_SQL.ser_lot_no, IMINVTRX_SQL.lev_no DESC
+
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
