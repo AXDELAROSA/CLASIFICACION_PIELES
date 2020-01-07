@@ -776,7 +776,7 @@ AS
 	SELECT	DISTINCT
 			ISNULL(TAG, 0)		AS TAG, 
 			ISNULL(LOT, '')		AS LOT,
-			ISNULL(COLOUR, '') AS COLOUR
+			ISNULL(COLOUR, '')  AS COLOUR
 	-- =====================
 	FROM	RP_Folios 
 	INNER JOIN RP_SC ON TAG=TAGNO AND STATUS=@PP_STATUS
@@ -962,6 +962,213 @@ AS
 													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
 													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
 													0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- EXECUTE [dbo].[PG_IN_RP_FOLIOS] 0,0, 0
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_RP_FOLIOS]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_IN_RP_FOLIOS]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_IN_RP_FOLIOS]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT,
+	@PP_ESTATUS					VARCHAR(5),
+	@PP_MAQUINA					VARCHAR(15),
+	@PP_JOBNO					VARCHAR(10),
+	@PP_JOBNO2					VARCHAR(10)
+AS
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	-- ///////////////////////////////////////////
+		
+	IF @VP_MENSAJE = ''
+		BEGIN
+			INSERT INTO RP_Folios (	
+					TAG, STATUS, MACHINE, JOBNO, JOBNO2	) 
+			VALUES(
+					@PP_TAG_NO, @PP_ESTATUS, @PP_MAQUINA, @PP_JOBNO, @PP_JOBNO2	)
+			
+			IF @@ROWCOUNT = 0
+				SET @VP_MENSAJE = 'ERROR: // INSERT RP_Folios // '
+		END
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'INSERT',
+													'',
+													-- ===========================================
+													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_STATUS					VARCHAR(5),
+	@PP_COLOR					VARCHAR(20),
+	@PP_TAGNO_ORIGEN			INT,
+	@PP_LOCACION				VARCHAR(5),
+	@PP_ORDEN_DESTINO			VARCHAR(10)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+	
+	-- ///////////////////////////////////////////
+	DECLARE	@VP_TAGNO_DESTINO INT = 0
+
+	SELECT	@VP_TAGNO_DESTINO=ISNULL(TAG, 0)
+	-- =====================
+	FROM	RP_Folios  
+	-- =====================
+	INNER JOIN RP_SC ON TAG=TAGNO AND STATUS=@PP_STATUS AND COLOUR=@PP_COLOR
+	GROUP BY TAG, COLOUR
+			
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_TAGNO_DESTINO IS NULL 
+		BEGIN
+			EXECUTE [dbo].[PG_SK_CATALOGO_K_MAX_GET]	0, 'RP_SC', 'TAGNO',
+														@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
+		END
+
+		DECLARE @VP_MOVIMIENTO		VARCHAR(10)
+		DECLARE @VP_COLOR_ORIGEN	VARCHAR(20)
+		DECLARE @VP_COLOR_DESTINO	VARCHAR(20)
+
+		SELECT	@VP_MOVIMIENTO		=	MOVEMENT,
+				@VP_COLOR_DESTINO	=	COLOUR
+									FROM	RP_SC
+									WHERE	TAGNO=@VP_TAGNO_DESTINO
+			-- =====================
+
+		SELECT	@VP_MOVIMIENTO		=	MOVEMENT,
+				@VP_COLOR_ORIGEN	=	COLOUR
+									FROM	RP_SC
+									WHERE	TAGNO=@PP_TAGNO_ORIGEN
+			-- =====================
+
+	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
+
+	IF @VP_MENSAJE=''
+		EXECUTE [dbo].[PG_RN_TRANSFER_PIEL_DEVOLUCION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_TAGNO_ORIGEN, @VP_TAGNO_DESTINO,
+														@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
+														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+	
+	IF @VP_MENSAJE=''
+		BEGIN	
+			IF @VP_MOVIMIENTO IS NULL
+				BEGIN
+					EXECUTE [dbo].[PG_RN_VALIDA_LOCACION]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@PP_LOCACION,
+																@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+				END
+			ELSE
+				BEGIN
+					SELECT	@PP_LOCACION = IMINVTRX_SQL.Loc
+					FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+					WHERE	(IMLSTRX_SQL.Source = IMINVTRX_SQL.Source And IMLSTRX_SQL.Ord_No = IMINVTRX_SQL.Ord_No)
+					AND		IMLSTRX_SQL.Ctl_No = IMINVTRX_SQL.Ctl_No 
+					AND		IMLSTRX_SQL.Line_No = IMINVTRX_SQL.Line_No 
+					AND		IMLSTRX_SQL.Lev_No = IMINVTRX_SQL.Lev_No 
+					AND		IMLSTRX_SQL.Seq_No = IMINVTRX_SQL.Seq_No 
+					AND		IMINVTRX_SQL.ord_no=@VP_MOVIMIENTO 
+					AND		(( IMLSTRX_SQL.lev_no='0' AND doc_type='R' ) 
+							OR  ( IMLSTRX_SQL.lev_no='1' and doc_type='T' ))
+				END
+		END
+		
+		IF @VP_MENSAJE=''
+			IF @PP_LOCACION <> 'MHI'
+				EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@PP_ORDEN_DESTINO,
+																	@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+
+	-- /////////////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE=''
+		BEGIN
+			
+			EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												@VP_TAGNO_DESTINO, @PP_STATUS, NULL, NULL, NULL
+
+			-- /////////////////////////////////////////////////////////////////////
+
+		
+		
+		END
+
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @VP_TAGNO_DESTINO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @VP_TAGNO_DESTINO, '' , 0.00, 0.00,
 													-- === @PP_VALOR_1 al 6_DATO
 													'', '', '@PP_BUSCAR', '', '', ''
 

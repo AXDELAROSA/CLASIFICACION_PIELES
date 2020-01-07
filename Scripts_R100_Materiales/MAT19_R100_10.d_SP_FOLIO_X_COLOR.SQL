@@ -191,10 +191,12 @@ AS
 
 	-- =========================================
 		
-	SELECT	COLOUR	AS COLOR,
-			LOT		AS LOTE,
-			HIDE	AS PIEL,
-			SQF		AS SQF
+	SELECT	ISNULL(COLOUR, '')		AS COLOR,
+			ISNULL(LOT, '')			AS LOTE,
+			ISNULL(HIDE, '')		AS PIEL,
+			ISNULL(SQF, '')			AS SQF,
+			ISNULL(TYPE, '')		AS TIPO,
+			ISNULL(MOVEMENT, '')	AS MOVIMIENTO	
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 
@@ -202,18 +204,18 @@ AS
 
 	-----////////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
-													'',
-													-- ===========================================
-													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
+	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'SELECT',
+	--												'',
+	--												-- ===========================================
+	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '@PP_BUSCAR', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
