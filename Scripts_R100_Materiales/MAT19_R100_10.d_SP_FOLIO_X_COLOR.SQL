@@ -93,7 +93,7 @@ AS
 			LOT		AS LOTE,
 			HIDE	AS PIEL,
 			SQF,
-			MOVEMENT
+			ISNULL(MOVEMENT, '') AS MOVEMENT
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 

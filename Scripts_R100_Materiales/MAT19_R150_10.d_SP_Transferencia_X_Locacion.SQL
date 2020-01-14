@@ -1036,6 +1036,95 @@ GO
 
 
 
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_RP_SC]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_LI_RP_SC]
+GO
+
+-- EXEC PG_LI_RP_SC_Y_RP_FOLIO 0 ,0, '32291', '0023' 
+
+CREATE PROCEDURE [dbo].[PG_LI_RP_SC]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT,
+	@PP_COLOR					VARCHAR(20),
+	@PP_LOTE					VARCHAR(20),
+	@PP_PIEL					VARCHAR(10)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	IF	@PP_FOLIO = 0
+		BEGIN
+			
+			SELECT	@PP_FOLIO=ISNULL(TAG, 0)
+			-- =====================
+			FROM	RP_Folios  
+			-- =====================
+			INNER JOIN RP_SC ON TAG=TAGNO AND RTRIM(LTRIM(STATUS))='B' AND COLOUR=@PP_COLOR
+			GROUP BY TAG, COLOUR
+					
+			-- /////////////////////////////////////////////////////////////////////
+
+			IF @PP_FOLIO IS NULL 
+				BEGIN
+					EXECUTE [dbo].[PG_SK_CATALOGO_K_MAX_GET]	0, 'RP_SC', 'TAGNO',
+																@OU_K_TABLA_DISPONIBLE = @PP_FOLIO	OUTPUT
+				END
+			-- =========================================
+		END
+
+	SELECT 
+			ISNULL(CDATE, '')		AS CDATE,
+			ISNULL(COLOUR, '')		AS COLOUR,
+			ISNULL(LOT, '')			AS LOT,
+			ISNULL(HIDE, '')		AS HIDE,
+			ISNULL(SQF, '')			AS SQF,
+			ISNULL(TAGNO, 0)		AS TAGNO,
+			ISNULL(YARDAS, '')		AS YARDAS,
+			ISNULL(YLB, '')			AS YLB,
+			ISNULL(PESO, '')		AS PESO,
+			ISNULL(TYPE, '')		AS TYPE,
+			ISNULL(MOVEMENT, '')	AS MOVEMENT
+	FROM	RP_SC 
+	-- =======================
+	WHERE	TAGNO=@PP_FOLIO
+	AND		COLOUR=@PP_COLOR
+	AND		LOT=@PP_LOTE
+	AND		HIDE=@PP_PIEL	
+	-- =======================
+	ORDER BY CDATE DESC
+          
+
+	-----////////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'SELECT',
+													'',
+													-- ===========================================
+													'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_LOTE, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
@@ -1082,14 +1171,13 @@ AS
 		DECLARE @VP_COLOR_ORIGEN	VARCHAR(20)
 		DECLARE @VP_COLOR_DESTINO	VARCHAR(20)
 
-		SELECT	@VP_MOVIMIENTO		=	MOVEMENT,
-				@VP_COLOR_DESTINO	=	COLOUR
+		SELECT	@VP_MOVIMIENTO		=	LTRIM(RTRIM(MOVEMENT)),
+				@VP_COLOR_DESTINO	=	LTRIM(RTRIM(COLOUR))
 									FROM	RP_SC
 									WHERE	TAGNO=@VP_TAGNO_DESTINO
 			-- =====================
 
-		SELECT	@VP_MOVIMIENTO		=	MOVEMENT,
-				@VP_COLOR_ORIGEN	=	COLOUR
+		SELECT	@VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR))
 									FROM	RP_SC
 									WHERE	TAGNO=@PP_TAGNO_ORIGEN
 			-- =====================
@@ -1101,7 +1189,8 @@ AS
 														@PP_TAGNO_ORIGEN, @VP_TAGNO_DESTINO,
 														@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
 														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-	
+	-- ===============================================================
+
 	IF @VP_MENSAJE=''
 		BEGIN	
 			IF @VP_MOVIMIENTO IS NULL
@@ -1112,7 +1201,7 @@ AS
 				END
 			ELSE
 				BEGIN
-					SELECT	@PP_LOCACION = IMINVTRX_SQL.Loc
+					SELECT	@PP_LOCACION = LTRIM(RTRIM(IMINVTRX_SQL.Loc))
 					FROM	IMLSTRX_SQL, IMINVTRX_SQL 
 					WHERE	(IMLSTRX_SQL.Source = IMINVTRX_SQL.Source And IMLSTRX_SQL.Ord_No = IMINVTRX_SQL.Ord_No)
 					AND		IMLSTRX_SQL.Ctl_No = IMINVTRX_SQL.Ctl_No 
@@ -1124,14 +1213,33 @@ AS
 							OR  ( IMLSTRX_SQL.lev_no='1' and doc_type='T' ))
 				END
 		END
-		
-		IF @VP_MENSAJE=''
-			IF @PP_LOCACION <> 'MHI'
-				EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																	@PP_ORDEN_DESTINO,
-																	@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+		-- ===============================================================
 
+		IF @VP_MENSAJE=''
+			BEGIN
+				IF @PP_LOCACION <> 'MHI'
+					BEGIN
+						SET @VP_MENSAJE='Favor de proporcionar el numero de <ORDEN> a la que desea cargar los pies cuadrados...'
+
+						IF @VP_MENSAJE=''
+							EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_ORDEN_DESTINO,
+																				@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+						
+						IF @VP_MENSAJE=''
+							EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_ORDEN_DESTINO,
+																				@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+						
+						IF @VP_MENSAJE=''
+							EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_ORDEN_DESTINO, @VP_COLOR_ORIGEN,
+																				@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+						
+					END
+			END
 	-- /////////////////////////////////////////////////////////////////////
+
 	IF @VP_MENSAJE=''
 		BEGIN
 			
@@ -1139,9 +1247,6 @@ AS
 												@VP_TAGNO_DESTINO, @PP_STATUS, NULL, NULL, NULL
 
 			-- /////////////////////////////////////////////////////////////////////
-
-		
-		
 		END
 
 

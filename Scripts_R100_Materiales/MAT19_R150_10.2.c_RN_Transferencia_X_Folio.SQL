@@ -43,7 +43,7 @@ AS
 
 	IF @VP_RESULTADO=''
 		IF ( @PP_FOLIO_ORIGEN = @PP_FOLIO_DESTINO )
-			SET @VP_RESULTADO =  'No es posible transferir dentro del mismo folio...' 
+			SET @VP_RESULTADO =  'No es posible transferir dentro del mismo <FOLIO>...' 
 
 	-- /////////////////////////////////////////////////////
 	
@@ -88,7 +88,7 @@ AS
 
 	IF @VP_RESULTADO=''
 		IF ( @VP_TAG_NO IS NULL )
-			SET @VP_RESULTADO =  'El folio proporcionado no existe....' 
+			SET @VP_RESULTADO =  'El <FOLIO> proporcionado no existe....' 
 
 	-- /////////////////////////////////////////////////////
 	
@@ -124,7 +124,7 @@ AS
 				
 	IF @VP_RESULTADO=''
 		IF NOT  (LEN(@PP_LOCACION) = 3  AND (SUBSTRING(@PP_LOCACION,1,1)='T'	OR @PP_LOCACION = 'MHI'))
-			SET @VP_RESULTADO =  'Locacion no valida...Transferencia Cancelada. [#LOC.' + @PP_LOCACION + ']' 
+			SET @VP_RESULTADO =  '<LOCACION> no valida...Transferencia Cancelada. [#LOC.' + @PP_LOCACION + ']' 
 
 	-- /////////////////////////////////////////////////////
 	
@@ -172,7 +172,7 @@ AS
 				END
 			ELSE
 				BEGIN
-					SET @VP_RESULTADO =  'El color del folio no coincide: [#Color Origen.' + @PP_COLOR_ORIGEN + '] - [#Color Destino.' + @PP_COLOR_DESTINO + ']'
+					SET @VP_RESULTADO =  'El <COLOR> del folio no coincide: [#Color Origen.' + @PP_COLOR_ORIGEN + '] - [#Color Destino.' + @PP_COLOR_DESTINO + ']'
 				END 
 
 	-- /////////////////////////////////////////////////////
@@ -197,7 +197,57 @@ CREATE PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================		
-	@PP_ORDEN_DESTINO			VARCHAR(8),
+	@PP_ORDEN_DESTINO			VARCHAR(10),
+	-- ===========================		
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
+	-- /////////////////////////////////////////////////////
+
+	IF @VP_RESULTADO=''
+		IF ( LTRIM(RTRIM(@PP_ORDEN_DESTINO)) = '' )
+			SET @VP_RESULTADO =  'Numero de <ORDEN> no valido [Campo Vacio]...Transferencia cancelada' 
+	-- /////////////////////////////////////////////////////
+
+	IF @VP_RESULTADO=''
+		IF ( LEN(@PP_ORDEN_DESTINO) <> 5 )
+			SET @VP_RESULTADO =  'Numero de <ORDEN> no valido [Cantidad de Caracteres No Valido]...Transferencia cancelada' 
+	-- /////////////////////////////////////////////////////
+
+	DECLARE @VP_JOBNO		INT = 0
+	SELECT	@VP_JOBNO	=	JOBNO
+							FROM	CCJOBHDR_SQL
+							WHERE	JOBNO=@PP_ORDEN_DESTINO
+	-- ===========================
+	
+	IF @VP_RESULTADO=''
+		IF ( @VP_JOBNO IS NULL )
+			SET @VP_RESULTADO =  'Numero de <ORDEN> no existente...Transferencia cancelada' 
+
+	-- /////////////////////////////////////////////////////
+
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> RN_EXISTE
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================		
+	@PP_ORDEN_DESTINO			VARCHAR(10),
 	-- ===========================		
 	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
@@ -206,16 +256,60 @@ AS
 	
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_JOBNO		INT = 0
+	DECLARE @VP_ESTATUS		VARCHAR(3)
 			
-	SELECT	@VP_JOBNO	=	JOBNO
+	SELECT	@VP_ESTATUS	=	LTRIM(RTRIM(STATUS))
 							FROM	CCJOBHDR_SQL
 							WHERE	JOBNO=@PP_ORDEN_DESTINO
 	-- ===========================
-	
+
 	IF @VP_RESULTADO=''
-		IF ( @VP_JOBNO IS NULL )
-			SET @VP_RESULTADO =  'Numero de orden no existente...Transferencia cancelada' 
+		IF ( @VP_ESTATUS='C' )
+			SET @VP_RESULTADO =  'La <ORDEN> ya fue completada...Transferencia cancelada...' 
+
+	-- /////////////////////////////////////////////////////
+	
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> RN_EXISTE
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================		
+	@PP_ORDEN_DESTINO			VARCHAR(10),
+	@PP_COLOR_ORIGEN			VARCHAR(20),
+	-- ===========================		
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
+	
+	-- /////////////////////////////////////////////////////
+
+	DECLARE @VP_COLOR_JOBNO_DESTINO		VARCHAR(3)
+			
+	SELECT	@VP_COLOR_JOBNO_DESTINO	=	LTRIM(RTRIM(COLOUR))
+							FROM	CCJOBHDR_SQL
+							WHERE	JOBNO=@PP_ORDEN_DESTINO
+	-- ===========================
+
+	IF @VP_RESULTADO=''
+		IF ( @VP_COLOR_JOBNO_DESTINO=@PP_COLOR_ORIGEN )
+			SET @VP_RESULTADO =  'La <ORDEN> proporcionada corresponde a otro tipo de piel...Transferencia cancelada...' 
 
 	-- /////////////////////////////////////////////////////
 	
