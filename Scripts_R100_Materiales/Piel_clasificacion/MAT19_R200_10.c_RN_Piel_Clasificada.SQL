@@ -30,8 +30,7 @@ GO
 CREATE PROCEDURE [dbo].[PG_RN_RP_SC_EXISTE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
-	-- ===========================		
-	@PP_FOLIO					INT,
+	-- ===========================	
 	@PP_LOTE					VARCHAR(15),
 	@PP_PIEL					VARCHAR(10),
 	-- ===========================		
@@ -46,9 +45,8 @@ AS
 			
 	SELECT	@VP_K_RP_SC	=	ID
 							FROM	RP_SC
-							WHERE	RTRIM(LTRIM(TAGNO))=RTRIM(LTRIM(@PP_FOLIO))
-							AND		RTRIM(LTRIM(LOT))=RTRIM(LTRIM(@PP_LOTE))
-							AND		RTRIM(LTRIM(HIDE))=RTRIM(LTRIM(@PP_PIEL))
+							WHERE	RTRIM(LTRIM(LOT))=@PP_LOTE
+							AND		RTRIM(LTRIM(HIDE))=@PP_PIEL
 	-- ===========================
 
 	IF @VP_RESULTADO=''
@@ -65,53 +63,101 @@ AS
 GO
 
 
-/*
+
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> RN_CLAVE_EXISTE
+-- // STORED PROCEDURE ---> RN_PIEL_ESTA_CLASIFICADA
 -- //////////////////////////////////////////////////////////////
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_RP_SC_CLAVE_EXISTE]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_RN_RP_SC_CLAVE_EXISTE]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE]
 GO
+ -- EXECUTE PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE 0,0,'FCPRDX9,104313-0215*37.50'
 
-
-CREATE PROCEDURE [dbo].[PG_RN_RP_SC_CLAVE_EXISTE]
+CREATE PROCEDURE [dbo].[PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================		
-	@PP_K_RP_SC		INT,
+	@PP_ETIQUETA_PIEL		VARCHAR(100)
 	-- ===========================		
-	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
 
-	DECLARE @VP_RESULTADO		VARCHAR(300) = ''
-		
+	DECLARE @VP_MENSAJE		VARCHAR(300) = ''
+	DECLARE @VP_COLOR		VARCHAR(10) = ''
+	DECLARE @VP_LOTE		VARCHAR(10) = ''
+	DECLARE @VP_PIEL		VARCHAR(10) = ''
+	DECLARE @VP_SQF			VARCHAR(10) = ''
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE=''
+		IF LTRIM(RTRIM(@PP_ETIQUETA_PIEL)) = ''
+			SET @VP_MENSAJE = 'El Numero de Piel no puede ser vacio'
+			
+	IF @VP_MENSAJE=''
+		IF NOT (@PP_ETIQUETA_PIEL LIKE '%_______,______-____*%')
+			SET @VP_MENSAJE = 'Ingrese Numero de Piel Valido'
+
+	-- /////////////////////////OBTENER VALORES DE LA ETIQUETA PIEL////////////////////////////////////////////
+
+	IF @VP_MENSAJE=''
+		EXECUTE [dbo].[PG_RN_ETIQUETA_PIEL_OBTENER_VALOR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_ETIQUETA_PIEL,
+															@OU_COLOR	 = @VP_COLOR	OUTPUT,
+															@OU_LOTE	 = @VP_LOTE		OUTPUT,
+															@OU_PIEL	 = @VP_PIEL		OUTPUT,
+															@OU_SQF		 = @VP_SQF		OUTPUT
+
+	SET @VP_LOTE = RTRIM(LTRIM(@VP_LOTE))
+	SET @VP_PIEL = RTRIM(LTRIM(@VP_PIEL))
+
 	-- ///////////////////////////////////////////
 
-	IF @VP_RESULTADO='' 
+	IF @VP_MENSAJE='' 
 		BEGIN
 
-		DECLARE @VP_EXISTE_CLAVE	INT
+		DECLARE @VP_PIEL_CLASIFICADA_EXISTE	INT = 0
 
-		SELECT	@VP_EXISTE_CLAVE =	COUNT(K_RP_SC)
-									FROM	RP_SC 
-									WHERE	K_RP_SC=@PP_K_RP_SC
+		SELECT	@VP_PIEL_CLASIFICADA_EXISTE =	COUNT(ID)
+											FROM	RP_SC
+											WHERE	RTRIM(LTRIM(LOT))=@VP_LOTE
+											AND		RTRIM(LTRIM(HIDE))=@VP_PIEL
+											AND		K_CLASIFICACION <> 0
 										
-		IF @VP_EXISTE_CLAVE>0
-			SET @VP_RESULTADO =  'El folio/identificador no está disponible.' 
+		IF @VP_PIEL_CLASIFICADA_EXISTE IS NULL
+			SET @VP_PIEL_CLASIFICADA_EXISTE = 0
 
-		END	
-		
+		IF @VP_PIEL_CLASIFICADA_EXISTE>0
+			BEGIN
+				
+				DECLARE @VP_D_PIEL_CLASIFICACION	VARCHAR(50)
+
+				SELECT @VP_D_PIEL_CLASIFICACION = D_PIEL_CLASIFICACION
+												FROM	PIEL_CLASIFICACION
+												WHERE K_PIEL_CLASIFICACION = (	SELECT TOP 1 K_CLASIFICACION
+																				FROM	RP_SC
+																				WHERE	RTRIM(LTRIM(LOT))=@VP_LOTE
+																				AND		RTRIM(LTRIM(HIDE))=@VP_PIEL )
+
+				SET		@VP_MENSAJE = 'Piel clasificada como: ' 
+				SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+				SET		@VP_MENSAJE = @VP_MENSAJE + @VP_D_PIEL_CLASIFICACION +' '
+				--SET		@VP_MENSAJE = @VP_MENSAJE + '[#PIEL.' + @VP_PIEL +'] del '
+				--SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOTE.' + @VP_LOTE +']'
+								
+				SET		@VP_MENSAJE = @VP_MENSAJE + ') '
+				SET		@VP_MENSAJE = @VP_MENSAJE + 'Desea Actualizarla?'
+
+			END	
+	END
 	-- ///////////////////////////////////////////
 		
-	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+	SELECT	@VP_MENSAJE AS MENSAJE,  @VP_LOTE AS LOTE, @VP_PIEL AS PIEL
 
 	-- /////////////////////////////////////////////////////
 GO
 
 
 
-
+/*
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> RN_DESCRIPCION_EXISTE
@@ -193,7 +239,6 @@ CREATE PROCEDURE [dbo].[PG_RN_RP_SC_INSERT]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================		
-	@PP_FOLIO					INT,
 	@PP_LOTE					VARCHAR(15),
 	@PP_PIEL					VARCHAR(10),
 	-- ===========================			
@@ -236,7 +281,6 @@ CREATE PROCEDURE [dbo].[PG_RN_RP_SC_UPDATE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================		
-	@PP_FOLIO					INT,
 	@PP_LOTE					VARCHAR(15),
 	@PP_PIEL					VARCHAR(10),
 	-- ===========================		
@@ -250,13 +294,13 @@ AS
 	
 	IF @VP_RESULTADO=''
 		EXECUTE [dbo].[PG_RN_RP_SC_EXISTE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@PP_FOLIO, @PP_LOTE, @PP_PIEL,	 
+											@PP_LOTE, @PP_PIEL,	 
 											@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
 
 	-- ///////////////////////////////////////////
 	
 	IF	@VP_RESULTADO<>''
-		SET	@VP_RESULTADO = @VP_RESULTADO + ' //UPD//'
+		SET	@VP_RESULTADO = @VP_RESULTADO --+ ' //UPD//'
 	
 	-- ///////////////////////////////////////////
 		
@@ -281,7 +325,6 @@ CREATE PROCEDURE [dbo].[PG_RN_RP_SC_DELETE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================		
-	@PP_FOLIO					INT,
 	@PP_LOTE					VARCHAR(15),
 	@PP_PIEL					VARCHAR(10),
 	-- ===========================			
@@ -294,7 +337,7 @@ AS
 
 	IF @VP_RESULTADO=''
 		EXECUTE [dbo].[PG_RN_RP_SC_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-												@PP_FOLIO, @PP_LOTE, @PP_PIEL,
+												@PP_LOTE, @PP_PIEL,
 												@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
 	-- ///////////////////////////////////////////
 

@@ -25,6 +25,10 @@ GO
 -- // DROPs
 -- //////////////////////////////////////////////////////////////
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PIEL_CLASIFICADA_PORCENTAJE]') AND type in (N'U'))
+	DROP TABLE [dbo].[PIEL_CLASIFICADA_PORCENTAJE]
+GO
+
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PIEL_CLASIFICACION]') AND type in (N'U'))
 	DROP TABLE [dbo].[PIEL_CLASIFICACION]
@@ -137,6 +141,46 @@ SET NOCOUNT OFF
 -- ===============================================
 
 GO
+
+
+-- //////////////////////////////////////////////////////////////
+-- // PIEL_CLASIFICADA_PORCENTAJE
+-- //////////////////////////////////////////////////////////////
+
+CREATE TABLE [dbo].[PIEL_CLASIFICADA_PORCENTAJE] (
+	[K_PIEL_CLASIFICADA_PORCENTAJE]			[INT]			NOT NULL,
+	-- ============================	
+	[LOTE]									VARCHAR(10)		NOT NULL,
+	[PIEL_TOTAL]							INT				NOT NULL,
+	[PIEL_TOTAL_CLASIFICADA]				INT				NOT NULL,
+	[PIEL_TOTAL_BUENO]						INT				NOT NULL,
+	[PIEL_TOTAL_REGULAR]					INT				NOT NULL,
+	[PIEL_TOTAL_MALO]						INT				NOT NULL,
+	[PIEL_PORCENTAJE_BUENO]					[DECIMAL](19,4)	NOT NULL,
+	[PIEL_PORCENTAJE_REGULAR]				[DECIMAL](19,4)	NOT NULL,
+	[PIEL_PORCENTAJE_MALO]					[DECIMAL](19,4)	NOT NULL
+	
+
+) ON [PRIMARY]
+GO
+
+-- //////////////////////////////////////////////////////
+
+ALTER TABLE [dbo].[PIEL_CLASIFICADA_PORCENTAJE]
+	ADD CONSTRAINT [PK_PIEL_CLASIFICADA_PORCENTAJE]
+		PRIMARY KEY CLUSTERED ([K_PIEL_CLASIFICADA_PORCENTAJE])
+GO
+
+
+-- //////////////////////////////////////////////////////////////
+/*
+ALTER TABLE [dbo].[PIEL_CLASIFICADA_PORCENTAJE] ADD 
+	CONSTRAINT [FK_PIEL_CLASIFICADA_PORCENTAJE_01]  
+		FOREIGN KEY ([K_PIEL_LOTE]) 
+		REFERENCES [dbo].[PIEL_LOTE] ([K_PIEL_LOTE])
+GO
+*/
+-- //////////////////////////////////////////////////////////////
 
 
 

@@ -1138,11 +1138,20 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_STATUS					VARCHAR(5),
+	@PP_ESTATUS					VARCHAR(5),
 	@PP_COLOR					VARCHAR(20),
 	@PP_TAGNO_ORIGEN			INT,
 	@PP_LOCACION				VARCHAR(5),
-	@PP_ORDEN_DESTINO			VARCHAR(10)
+	@PP_ORDEN_DESTINO			VARCHAR(10),
+	@PP_PRT_FORM_DEV_EXT		INT, -- INPRIMIR FORMA #0 N0, #1 SI
+	@PP_SELECT_TODOS			INT, -- SE SELECCIONARON TODAS LAS PIELES #0 N0, #1 SI
+	@PP_COLOR_ARRAY				NVARCHAR(MAX),
+	@PP_LOTE_ARRAY				NVARCHAR(MAX),
+	@PP_PIEL_ARRAY				NVARCHAR(MAX),
+	@PP_SQF_ARRAY				NVARCHAR(MAX),
+	@PP_MOVIMIENTO_ARRAY		NVARCHAR(MAX),
+	@PP_USER					VARCHAR(25),
+	@PP_COMPUTER_NAME			VARCHAR(25)
 AS
 
 	-- ///////////////////////////////////////////
@@ -1156,7 +1165,7 @@ AS
 	-- =====================
 	FROM	RP_Folios  
 	-- =====================
-	INNER JOIN RP_SC ON TAG=TAGNO AND STATUS=@PP_STATUS AND COLOUR=@PP_COLOR
+	INNER JOIN RP_SC ON TAG=TAGNO AND STATUS=@PP_ESTATUS AND COLOUR=@PP_COLOR
 	GROUP BY TAG, COLOUR
 			
 	-- /////////////////////////////////////////////////////////////////////
@@ -1235,18 +1244,101 @@ AS
 							EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																				@PP_ORDEN_DESTINO, @VP_COLOR_ORIGEN,
 																				@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-						
 					END
 			END
 	-- /////////////////////////////////////////////////////////////////////
 
 	IF @VP_MENSAJE=''
 		BEGIN
-			
-			EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-												@VP_TAGNO_DESTINO, @PP_STATUS, NULL, NULL, NULL
+			BEGIN TRANSACTION 
+			BEGIN TRY
+		
+				EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													@VP_TAGNO_DESTINO, @PP_ESTATUS, NULL, NULL, NULL
+				-- /////////////////////////////////////////////////////////////////////
 
-			-- /////////////////////////////////////////////////////////////////////
+				IF	@PP_SELECT_TODOS = 1
+					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+				-- /////////////////////////////////////////////////////////////////////
+								
+					--DECLARE @PP_COLOR_ARRAY				NVARCHAR(MAX) =	'1,2,3,4,5,6,7,8,9'
+					--DECLARE @PP_LOTE_ARRAY				NVARCHAR(MAX) =	'A,B,C,D,E,F,G,H,I'
+					--DECLARE @PP_PIEL_ARRAY				NVARCHAR(MAX) =	'1,2,3,4,5,6,7,8,9'
+					--DECLARE @PP_SQF_ARRAY				NVARCHAR(MAX) =	'A,B,C,D,E,F,G,H,I'
+					--DECLARE @PP_MOVIMIENTO_ARRAY		NVARCHAR(MAX) =	'1,2,3,4,5,6,7,8,9'
+				
+				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
+						K_PIEL_SELECCIONADA INT IDENTITY(1,1),
+						COLOR		VARCHAR(20),
+						LOTE		VARCHAR(20),
+						PIEL		VARCHAR(20),
+						SQF			VARCHAR(20),
+						MOVIMIENTO	VARCHAR(20)
+					)
+				SET NOCOUNT ON
+				
+				--@Posicion es la posicion de cada uno de nuestros separadores
+				DECLARE @VP_POSICION	 INT
+				
+				--Contendran cada uno de los valores obtenidos que almacenaremos en las siguientes variables
+				DECLARE @VP_COLOR_VALOR			VARCHAR(20)
+				DECLARE @VP_LOTE_VALOR			VARCHAR(20)
+				DECLARE @VP_PIEL_VALOR			VARCHAR(20)
+				DECLARE @VP_SQF_VALOR			VARCHAR(20)
+				DECLARE @VP_MOVIMIENTO_VALOR	VARCHAR(20)
+				
+				
+				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
+				SET	@PP_COLOR_ARRAY			= @PP_COLOR_ARRAY		+ ',' 	
+				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ ','		
+				SET	@PP_PIEL_ARRAY			= @PP_PIEL_ARRAY		+ ','		
+				SET	@PP_SQF_ARRAY			= @PP_SQF_ARRAY			+ ','	
+				SET	@PP_MOVIMIENTO_ARRAY	= @PP_MOVIMIENTO_ARRAY	+ ','
+			
+				--Hacemos un bucle que se repite mientras haya separadores
+				--patindex busca un patron en una cadena y nos devuelve su posicion
+				WHILE patindex('%,%' , @PP_COLOR_ARRAY) <> 0
+					BEGIN
+						SELECT @VP_POSICION =  patindex('%,%' , @PP_COLOR_ARRAY)
+
+						--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
+						SELECT @VP_COLOR_VALOR		= LEFT(@PP_COLOR_ARRAY, @VP_POSICION - 1)
+						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION - 1)
+						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION - 1)
+						SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY, @VP_POSICION - 1)
+						SELECT @VP_MOVIMIENTO_VALOR = LEFT(@PP_MOVIMIENTO_ARRAY, @VP_POSICION - 1)
+										
+						--Los parámetros los guardamos en la tabla temporal
+						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
+								VALUES	(
+											@VP_COLOR_VALOR,
+											@VP_LOTE_VALOR,
+											@VP_PIEL_VALOR,
+											@VP_SQF_VALOR,
+											@VP_MOVIMIENTO_VALOR	)
+						
+						--Reemplazamos lo procesado con nada con la funcion stuff
+						SELECT @PP_COLOR_ARRAY			= STUFF(@PP_COLOR_ARRAY, 1, @VP_POSICION, '')
+						SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION, '')
+						SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION, '')
+						SELECT @PP_SQF_ARRAY			= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION, '')
+						SELECT @PP_MOVIMIENTO_ARRAY		= STUFF(@PP_MOVIMIENTO_ARRAY, 1, @VP_POSICION, '')
+					END
+								
+				--Cuando se han recorrido todos los parametros sacamos por pantalla el resultado
+				--SELECT * FROM @TBL_PIEL_SELECCIONADAS
+
+
+			
+			COMMIT TRANSACTION 
+			END TRY
+	
+			BEGIN CATCH
+				/* Ocurrió un error, deshacemos los cambios*/ 
+				ROLLBACK TRANSACTION
+				SET @VP_MENSAJE = 'ERROR: //TRASAC. PG_PM_TRANSFER_PIEL_DEVOLUCION // '
+			END CATCH	
 		END
 
 
