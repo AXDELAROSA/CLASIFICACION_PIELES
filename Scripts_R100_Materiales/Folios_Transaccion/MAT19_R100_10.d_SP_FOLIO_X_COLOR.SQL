@@ -93,7 +93,7 @@ AS
 			LOT		AS LOTE,
 			HIDE	AS PIEL,
 			SQF,
-			ISNULL(MOVEMENT, '') AS MOVEMENT
+			ISNULL(MOVEMENT, '0') AS MOVEMENT
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 
@@ -234,7 +234,8 @@ CREATE PROCEDURE [dbo].[PG_IN_RP_SC_PRT]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_TAG_NO					INT
+	@PP_TAG_NO					INT,
+	@PP_TYPE					INT
 AS
 
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
@@ -245,7 +246,7 @@ AS
 		BEGIN
 			INSERT INTO RP_SC_PRT (
 								TAG, TYPE	) 
-					VALUES (	@PP_TAG_NO, '1'	)
+					VALUES (	@PP_TAG_NO, @PP_TYPE)
 
 			IF @@ROWCOUNT = 0
 				SET @VP_MENSAJE = 'ERROR: // INSERT RP_SC_PRT // '
@@ -437,7 +438,7 @@ AS
 	IF @VP_MENSAJE = ''
 		BEGIN
 			EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-										@VP_TAG_NO_NUEVO
+										@VP_TAG_NO_NUEVO, 1
 		END
 	-- /////////////////////////////////////////////////////////////////////
 
@@ -512,8 +513,6 @@ AS
 
 	-- /////////////////////////////////////////////////////////////////////
 	
-	DECLARE @VP_CDATE VARCHAR(10) = FORMAT(GETDATE(),  'dd/MM/yyyy')
-	DECLARE @VP_CTIME VARCHAR(10) = FORMAT(GETDATE(),  'HHmmss')
 	DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @PP_HIDE + ' to: ' + CONVERT(VARCHAR(20),@PP_TAG_NO_NUEVO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@PP_LOT)), 6)
 	
 	IF @VP_MENSAJE = ''
