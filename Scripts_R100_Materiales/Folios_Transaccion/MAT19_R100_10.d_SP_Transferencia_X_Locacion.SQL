@@ -499,18 +499,10 @@ AS
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
 	-- ///////////////////////////////////////////
-
-	UPDATE RP_SC 
-	SET 
-			TAGNO	=	@PP_TAG_NO_NUEVO 
-	WHERE	TAGNO	=	@PP_TAG_NO_ANTERIOR
-	AND		HIDE=@PP_HIDE 
-	AND		LOT=@PP_LOT 
-	AND		SQF=@PP_SQF
-
-	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
-
+	EXECUTE	[dbo].[PG_UP_RP_SC_TAGNO_X_FOLIO_PIEL_LOTE_SQF]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@PP_TAG_NO_NUEVO, @PP_TAG_NO_ANTERIOR,
+																@PP_HIDE, @PP_LOT, @PP_SQF
+	
 	-- /////////////////////////////////////////////////////////////////////
 	
 	DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @PP_HIDE + ' to: ' + CONVERT(VARCHAR(20),@PP_TAG_NO_NUEVO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@PP_LOT)), 6)
@@ -518,7 +510,7 @@ AS
 	IF @VP_MENSAJE = ''
 		BEGIN
 			
-			EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION ,
+			EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 												@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
 												@PP_TAG_NO_ANTERIOR, 'Transfer Nuevo',
 												@VP_DETAIL, @PP_HIDE
