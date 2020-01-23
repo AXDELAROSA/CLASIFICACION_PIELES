@@ -33,7 +33,7 @@ AS
 
 	-- ///////////////////////////////////////////
 
-	DECLARE @VP_LI_N_REGISTROS		INT = 100
+	DECLARE @VP_LI_N_REGISTROS		INT = 1
 
 	-- =========================================
 		
@@ -344,7 +344,7 @@ CREATE PROCEDURE [dbo].[PG_IN_IMLSTRX_SQL]
 	@PP_COLOR					VARCHAR(20),
 	@PP_LOTE					VARCHAR(20),
 	@PP_SQF						DECIMAL(13,4),
-	@PP_TRANSACCION_NO			VARCHAR(10),
+	@PP_TRANSACCION_NO			INT,
 	@PP_INDICE					VARCHAR(10),
 	@PP_NIVEL_NO				INT
 AS			
@@ -607,7 +607,7 @@ CREATE PROCEDURE [dbo].[PG_IN_IMINVTRX_SQL]
 	@PP_SQF						DECIMAL(13,4),
 	@PP_ORDEN_NO				VARCHAR(10),
 	@PP_USERNAME				VARCHAR(15),
-	@PP_COMENTARIO				VARCHAR(100),
+	@PP_COMENTARIO				VARCHAR(255),
 	@PP_NIVEL_NO				INT
 AS			
 
@@ -910,29 +910,47 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
 GO
-
-
+/*
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION] 0,0, 'B' , 'FCMKDX9' , 3777539 , 3784457 , 'MCT' , 
+												'MHI' , '' , 0 , 0 , 'FCMKDX9' , '32291' , '0008' , 
+												'43.10' , '0' , 43.10 , 0 , 0 , 'franciscoe' , 'ITX-002' 
+*/
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
 	@PP_ESTATUS					VARCHAR(5),
 	@PP_CB_COLOR				VARCHAR(20),
+	-- ===========================
 	@PP_TAGNO_ORIGEN			INT,
 	@PP_TAGNO_DESTINO			INT,
+	-- ===========================
 	@PP_CB_LOCACION				VARCHAR(5),
 	@PP_TB_LOCACION				VARCHAR(5),
+	-- ===========================
 	@PP_ORDEN_DESTINO			VARCHAR(10),
+	@PP_CB_ORDEN				VARCHAR(10),
+	-- ===========================
 	@PP_PRT_FORM_DEV_EXT		INT, -- INPRIMIR FORMA #0 N0, #1 SI
 	@PP_SELECT_TODOS			INT, -- SE SELECCIONARON TODAS LAS PIELES #0 N0, #1 SI
+	-- ===========================
 	@PP_COLOR_ARRAY				NVARCHAR(MAX),
 	@PP_LOTE_ARRAY				NVARCHAR(MAX),
 	@PP_PIEL_ARRAY				NVARCHAR(MAX),
 	@PP_SQF_ARRAY				NVARCHAR(MAX),
 	@PP_MOVIMIENTO_ARRAY		NVARCHAR(MAX),
+	-- ===========================
 	@PP_TB_SQF					DECIMAL(13,2),
-	@PP_LOTE_PIEL_EXISTE		INT, -- SI EXISTE #1
+	-- ===========================
+	@PP_LOTE_PIEL_EXISTE		INT, -- SI EXISTE #
 	@PP_LOTE_PIEL_EXISTE_ADD	INT, -- SI EXISTE Y DESEA ACTUALIZAR #1
+	-- ===========================
+	@PP_DG2_COLOR_ARRAY			NVARCHAR(MAX),
+	@PP_DG2_LOTE_ARRAY 			NVARCHAR(MAX),
+	@PP_DG2_SQF_ARRAY			NVARCHAR(MAX),
+	-- ===========================
+	@PP_COMENTARIO				VARCHAR(255),
+	-- ===========================
 	@PP_USER					VARCHAR(25),
 	@PP_COMPUTER_NAME			VARCHAR(25)
 AS
@@ -951,25 +969,28 @@ AS
 			@VP_COLOR_DESTINO	=	LTRIM(RTRIM(COLOUR))
 								FROM	RP_SC
 								WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_DESTINO
-		-- =====================
 
+	IF @VP_COLOR_DESTINO IS NULL 
+	SET @VP_MENSAJE='Folio destino no existe'
+	--=====================
+		
 	SELECT	@VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR))
 								FROM	RP_SC
 								WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_ORIGEN
-		-- =====================
-
+	-- =====================
+	
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
-
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_TRANSFER_PIEL_DEVOLUCION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
 														@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
 														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 	-- ===============================================================
-
+	SELECT @VP_MENSAJE AS [PG_RN_TRANSFER_PIEL_DEVOLUCION]
+		
 	IF @VP_MENSAJE=''
 		BEGIN	
-			IF @VP_MOVIMIENTO IS NULL
+			IF @VP_MOVIMIENTO IS NULL OR @VP_MOVIMIENTO = 0 -- Si el Folio destino no tiene un movimineto/transaccion toma el valor del Combo CB_LOC
 				BEGIN
 					EXECUTE [dbo].[PG_RN_VALIDA_LOCACION]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@PP_CB_LOCACION,
@@ -992,10 +1013,16 @@ AS
 		-- ===============================================================
 
 		IF @VP_MENSAJE=''
+			IF @PP_CB_LOCACION = @PP_TB_LOCACION
+				SET @VP_MENSAJE='La Locacion origen: '+ @PP_TB_LOCACION + 'No puede ser igual a la Locacion destino: ' + @PP_CB_LOCACION
+		-- ===============================================================
+
+		IF @VP_MENSAJE=''
 			BEGIN
 				IF @PP_CB_LOCACION <> 'MHI'
 					BEGIN
-						SET @VP_MENSAJE='Favor de proporcionar el numero de <ORDEN> a la que desea cargar los pies cuadrados...'
+						IF @PP_ORDEN_DESTINO = ''
+						SET @VP_MENSAJE='Proporcione el numero de <ORDEN> a la que desea cargar los pies cuadrados...'
 
 						IF @VP_MENSAJE=''
 							EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -1014,9 +1041,10 @@ AS
 					END
 			END
 	-- /////////////////////////////////////////////////////////////////////
-
+	
 	IF @VP_MENSAJE=''
 		BEGIN
+		
 			BEGIN TRANSACTION 
 			BEGIN TRY
 				IF NOT EXISTS(SELECT TAGNO FROM RP_SC WHERE TAGNO = @PP_TAGNO_DESTINO )
@@ -1042,12 +1070,6 @@ AS
 					END
 				-- /////////////////////////////////////////////////////////////////////
 
-				--DECLARE @PP_COLOR_ARRAY				NVARCHAR(MAX) =	'1,2,3,4,5,6,7,8,9'
-				--DECLARE @PP_LOTE_ARRAY				NVARCHAR(MAX) =	'A,B,C,D,E,F,G,H,I'
-				--DECLARE @PP_PIEL_ARRAY				NVARCHAR(MAX) =	'1,2,3,4,5,6,7,8,9'
-				--DECLARE @PP_SQF_ARRAY				NVARCHAR(MAX) =	'A,B,C,D,E,F,G,H,I'
-				--DECLARE @PP_MOVIMIENTO_ARRAY		NVARCHAR(MAX) =	'1,2,3,4,5,6,7,8,9'
-				
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
 						K_PIEL_SELECCIONADA INT IDENTITY(1,1),
 						COLOR		VARCHAR(20),
@@ -1206,7 +1228,10 @@ AS
 										EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																							@PP_TAGNO_DESTINO, 'E', 'C'
 									
-									END							
+									END
+									-- ///////////////////////////////////////////
+								SET @VP_CONTADOR = @VP_CONTADOR + 1			
+								-- ///////////////////////////////////////////				
 							END
 					END
 				ELSE IF @VP_N_PIEL = 1
@@ -1307,6 +1332,14 @@ AS
 						-- /////////////////////////////////////////////////////////////////////
 					END
 					-- /////////////////////////////////////////////////////////////////////
+
+					EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_TAGNO_DESTINO, @PP_CB_LOCACION, @PP_TB_LOCACION,
+														@PP_ORDEN_DESTINO, @PP_CB_ORDEN,
+														@PP_DG2_COLOR_ARRAY, @PP_DG2_LOTE_ARRAY, @PP_DG2_SQF_ARRAY,						 	
+														@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
+																			
+					-- /////////////////////////////////////////////////////////////////////
 								
 			COMMIT TRANSACTION 
 			END TRY
@@ -1315,9 +1348,11 @@ AS
 				/* Ocurrió un error, deshacemos los cambios*/ 
 				ROLLBACK TRANSACTION
 				SET @VP_MENSAJE = 'ERROR: //TRASAC. PG_PM_TRANSFER_PIEL_DEVOLUCION // '
-			END CATCH	
+			END CATCH
+			
 		END
-		
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE<>''
 		BEGIN
 		

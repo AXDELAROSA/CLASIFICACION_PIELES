@@ -1,0 +1,207 @@
+-- //////////////////////////////////////////////////////////////
+-- // ARCHIVO:			
+-- //////////////////////////////////////////////////////////////
+-- // BASE DE DATOS:	[DATA_02Pruebas]
+-- // MODULO:			RP_SC / Folio Transaccion
+-- // OPERACION:		LIBERACION / STORED PROCEDURES
+-- //////////////////////////////////////////////////////////////
+-- // Autor:			FEG
+-- // Fecha creación:	20/ENE/2020
+-- ////////////////////////////////////////////////////////////// 
+
+USE [DATA_02Pruebas] 
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PM_TRANSFER]
+GO
+-- EXECUTE   [dbo].[PG_GET_FOLIO_DESTINO] 0,0, 'B' , 'FCMKDX9' 
+CREATE PROCEDURE [dbo].[PG_PM_TRANSFER]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAGNO_DESTINO			INT,
+	-- ===========================
+	@PP_CB_LOCACION				VARCHAR(5),
+	@PP_TB_LOCACION				VARCHAR(5),
+	-- ===========================
+	@PP_ORDEN_DESTINO			VARCHAR(10),
+	@PP_CB_ORDEN				VARCHAR(10),
+	-- ===========================
+	@PP_DG2_COLOR_ARRAY			NVARCHAR(MAX),
+	@PP_DG2_LOTE_ARRAY 			NVARCHAR(MAX),
+	@PP_DG2_SQF_ARRAY			NVARCHAR(MAX),
+	-- ===========================
+	@PP_TB_SQF					DECIMAL(13,2),
+	-- ===========================
+	@PP_COMENTARIO				VARCHAR(255),
+	-- ===========================
+	@PP_USER					VARCHAR(25)
+AS
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_TRANSACCION_DOC	INT = 0
+
+	SELECT	TOP 1
+			@VP_TRANSACCION_DOC  = RIGHT('00000000' + Ltrim(Rtrim(NEXT_DOC_NO)), 8)
+	-- =====================
+	FROM	IMCTLFIL_SQL
+	-- ///////////////////////////////////////////
+
+	 IF @PP_CB_ORDEN = '' 
+		IF @PP_ORDEN_DESTINO <> '' 
+			BEGIN
+              SET	@PP_CB_ORDEN = @PP_ORDEN_DESTINO
+			END
+        ELSE
+			BEGIN
+              SET	@PP_CB_ORDEN = '0'
+            END
+	-- ///////////////////////////////////////////
+
+	EXECUTE [dbo].[PG_UP_IMCTLFIL_SQL_NEXT_DOC_NO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														1 
+	-- ///////////////////////////////////////////
+
+	DECLARE @TBL_DG2	TABLE (
+						K_DG2		INT IDENTITY(1,1),
+						COLOR		VARCHAR(20),
+						LOTE		VARCHAR(20),
+						SQF			VARCHAR(20)
+					)
+	SET NOCOUNT ON
+	
+	DECLARE @VP_POSICION			INT
+	DECLARE @VP_COLOR_VALOR			VARCHAR(20)
+	DECLARE @VP_LOTE_VALOR			VARCHAR(20)
+	DECLARE @VP_SQF_VALOR			VARCHAR(20)
+					
+	--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
+	SET	@PP_DG2_COLOR_ARRAY			= @PP_DG2_COLOR_ARRAY	+ ',' 	
+	SET	@PP_DG2_LOTE_ARRAY 			= @PP_DG2_LOTE_ARRAY 	+ ','			
+	SET	@PP_DG2_SQF_ARRAY			= @PP_DG2_SQF_ARRAY		+ ','	
+	
+	--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
+	WHILE patindex('%,%' , @PP_DG2_COLOR_ARRAY) <> 0
+		BEGIN
+			SELECT @VP_POSICION =  patindex('%,%' , @PP_DG2_COLOR_ARRAY)
+
+			--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
+			SELECT @VP_COLOR_VALOR		= LEFT(@PP_DG2_COLOR_ARRAY, @VP_POSICION - 1)
+			SELECT @VP_LOTE_VALOR		= LEFT(@PP_DG2_COLOR_ARRAY, @VP_POSICION - 1)
+			SELECT @VP_SQF_VALOR		= LEFT(@PP_DG2_COLOR_ARRAY, @VP_POSICION - 1)
+			
+			INSERT	INTO	@TBL_DG2
+					VALUES	(
+							@VP_COLOR_VALOR,
+							@VP_LOTE_VALOR,
+							@VP_SQF_VALOR		)
+			
+			--Reemplazamos lo procesado con nada con la funcion stuff
+			SELECT @PP_DG2_COLOR_ARRAY			= STUFF(@PP_DG2_COLOR_ARRAY, 1, @VP_POSICION, '')
+			SELECT @PP_DG2_LOTE_ARRAY			= STUFF(@PP_DG2_LOTE_ARRAY, 1, @VP_POSICION, '')
+			SELECT @PP_DG2_SQF_ARRAY			= STUFF(@PP_DG2_SQF_ARRAY, 1, @VP_POSICION, '')
+		END
+					
+	DECLARE @VP_N_PIEL INT = 0
+	DECLARE @VP_CONTADOR INT = 1 
+
+	SELECT @VP_N_PIEL = COUNT(K_DG2) FROM @TBL_DG2
+
+	IF @VP_N_PIEL IS NULL
+		SET @VP_N_PIEL = 0
+
+	WHILE @VP_CONTADOR < @VP_N_PIEL
+		BEGIN
+			DECLARE @VP_INDICE		VARCHAR(10) = CONVERT(VARCHAR(10), @VP_CONTADOR)
+			DECLARE @VP_COLOR_TBL	VARCHAR(10)
+			DECLARE @VP_LOTE_TBL	VARCHAR(10)
+			DECLARE @VP_SQF_TBL		VARCHAR(10)
+
+			SELECT	@VP_COLOR_TBL	= LOTE,
+					@VP_LOTE_TBL	= LOTE,
+					@VP_SQF_TBL		= SQF
+									FROM @TBL_DG2
+									WHERE K_DG2 = @VP_CONTADOR
+			-- ///////////////////////////////////////////
+
+			EXECUTE [dbo].[PG_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_QUITAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_TB_LOCACION, @VP_COLOR_TBL,
+																				@VP_LOTE_TBL, @VP_SQF_TBL
+			-- ///////////////////////////////////////////
+
+			EXECUTE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_TB_LOCACION, @PP_CB_LOCACION, @VP_COLOR_TBL,
+																				@VP_LOTE_TBL, @VP_SQF_TBL, @VP_TRANSACCION_DOC
+			-- ///////////////////////////////////////////
+
+			EXECUTE [dbo].[PG_IN_IMLSTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL, 
+													@VP_TRANSACCION_DOC, @VP_INDICE, 0
+			-- ///////////////////////////////////////////
+			
+			EXECUTE [dbo].[PG_IN_IMLSTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL, 
+													@VP_TRANSACCION_DOC, @VP_INDICE, 1
+			-- ///////////////////////////////////////////
+			
+			EXECUTE [dbo].[PG_UP_IMINVLOC_SQL_X_LOCACION_COLOR_QUITAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@PP_TB_LOCACION, @VP_COLOR_TBL, @VP_SQF_TBL
+			-- ///////////////////////////////////////////
+
+			EXECUTE [dbo].[PG_IN_UP_IMINVLOC_SQL_X_LOCACION_COLOR_AGREGAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_CB_LOCACION, @VP_COLOR_TBL, @VP_SQF_TBL
+			-- ///////////////////////////////////////////
+
+			SET @VP_CONTADOR = @VP_CONTADOR + 1	
+			-- ///////////////////////////////////////////
+	END
+	-- ////////////////////////////////////////////////////////////////////
+	
+	DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
+	DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT('00000' + @PP_CB_ORDEN, 5)
+
+	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
+											@PP_TB_LOCACION, @PP_TB_SQF, VP_ORDEN_NO, 
+											@PP_USER, @PP_COMENTARIO, 0
+	
+	-- ////////////////////////////////////////////////////////////////////
+
+	SET @PP_CB_ORDEN = RIGHT(@VP_TRANSACCION_DOC, 5)
+
+	IF @PP_ORDEN_DESTINO <> '' 
+		BEGIN
+             SET	@VP_ORDERNO = @PP_ORDEN_DESTINO
+		END
+    ELSE
+		BEGIN
+             SET	@VP_ORDERNO = LEFT('00000' + @PP_CB_ORDEN, 5)
+        END
+
+	SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
+
+	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
+											@PP_TB_LOCACION, @PP_TB_SQF, VP_ORDEN_NO, 
+											@PP_USER, @PP_COMENTARIO, 1
+	-- ////////////////////////////////////////////////////////////////////
+
+	EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_TAGNO_DESTINO, 0, @VP_TRANSACCION_DOC, 0
+	-- ////////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
