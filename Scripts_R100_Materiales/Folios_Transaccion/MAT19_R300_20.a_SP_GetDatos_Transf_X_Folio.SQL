@@ -13,8 +13,6 @@ USE [DATA_02Pruebas]
 GO
 
 
-
-
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
@@ -22,7 +20,7 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_FOLIO_DESTINO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_GET_FOLIO_DESTINO]
 GO
--- EXECUTE   [dbo].[PG_GET_FOLIO_DESTINO] 0,0, 'B' , 'FCMKDX9' 
+-- EXECUTE   [dbo].[PG_GET_FOLIO_DESTINO] 0,0, 'B' , 'FMCKTX7' 
 CREATE PROCEDURE [dbo].[PG_GET_FOLIO_DESTINO]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,

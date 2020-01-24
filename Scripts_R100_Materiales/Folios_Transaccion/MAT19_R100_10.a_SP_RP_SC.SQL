@@ -204,7 +204,7 @@ AS
 			TAGNO		=	( CASE	WHEN @PP_UP_TAGNO = 1 THEN @PP_TAG_NO_ACTUAL 
 														  ELSE TAGNO	END		)
 	-- ===========================
-	WHERE	TAGNO=@PP_TAG_NO
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO
 
 	IF @@ROWCOUNT = 0
 	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
@@ -269,8 +269,8 @@ AS
 	UPDATE	RP_SC 
 		SET	TYPE	= @PP_TIPO_NUEVO
 		-- ===========================
-	WHERE	TAGNO=@PP_TAG_NO 
-	AND		TYPE=@PP_TIPO_ACTUAL
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO 
+	AND		LTRIM(RTRIM(TYPE))=@PP_TIPO_ACTUAL
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
@@ -337,9 +337,9 @@ AS
 	UPDATE	RP_SC 
 		SET	SQF	= CONVERT(VARCHAR(5), @PP_TOTAL_SQF) 
 		-- ===========================
-	WHERE	TAGNO=@PP_TAG_NO 
-	AND		LOT=@PP_LOTE
-	AND		LOT=@PP_PIEL
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO 
+	AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+	AND		LTRIM(RTRIM(LOT))=@PP_PIEL
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
@@ -404,10 +404,10 @@ AS
 	UPDATE RP_SC 
 	SET 
 			TAGNO	=	@PP_TAG_NO_NUEVO 
-	WHERE	TAGNO	=	@PP_TAG_NO_ANTERIOR
-	AND		HIDE=@PP_HIDE 
-	AND		LOT=@PP_LOT 
-	AND		SQF=@PP_SQF
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO_ANTERIOR
+	AND		LTRIM(RTRIM(HIDE))=@PP_HIDE 
+	AND		LTRIM(RTRIM(LOT))=@PP_LOT 
+	AND		LTRIM(RTRIM(SQF))=@PP_SQF
 
 	IF @@ROWCOUNT = 0
 	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
@@ -466,8 +466,8 @@ AS
 	-- ///////////////////////////////////////////
 	
 	DELETE	RP_SC 
-	WHERE	TAGNO=@PP_TAG_NO 
-	AND		TYPE=@PP_TIPO
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO 
+	AND		LTRIM(RTRIM(TYPE))=@PP_TIPO
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
@@ -530,9 +530,9 @@ AS
 	-- ///////////////////////////////////////////
 	
 	DELETE	RP_SC 
-	WHERE	TAGNO=@PP_TAG_NO 
-	AND		LOT=@PP_LOTE
-	AND		HIDE=@PP_PIEL
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO 
+	AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+	AND		LTRIM(RTRIM(HIDE))=@PP_PIEL
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
