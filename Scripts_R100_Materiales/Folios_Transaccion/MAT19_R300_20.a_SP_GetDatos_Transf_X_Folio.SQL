@@ -52,7 +52,35 @@ GO
 
 
 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_IMLSMST_SQL_QTY_ON_HAND]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_IMLSMST_SQL_QTY_ON_HAND]
+GO
+-- EXECUTE [dbo].[PG_GET_IMLSMST_SQL_QTY_ON_HAND] 0,0, 'T62' , 'FMCKTX7' , '032701' 
+CREATE PROCEDURE [dbo].[PG_GET_IMLSMST_SQL_QTY_ON_HAND]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_LOCACION				VARCHAR(10),			
+	@PP_COLOR					VARCHAR(20),
+	@PP_LOTE					VARCHAR(20)
+AS
+	-- ///////////////////////////////////////////
 
+	
+	-- =========================================
+	
+	SELECT	TOP (1) 
+			QTY_ON_HAND
+	FROM	IMLSMST_SQL
+	WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION
+	AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
+	AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+/*
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT /								*NO SE USA POR EL MOMENTO*
 -- //////////////////////////////////////////////////////////////
@@ -104,7 +132,7 @@ AS
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
-
+*/
 
 
 -- //////////////////////////////////////////////////////////////

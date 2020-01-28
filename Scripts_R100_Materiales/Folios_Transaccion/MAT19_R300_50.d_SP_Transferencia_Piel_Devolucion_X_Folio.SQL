@@ -169,9 +169,9 @@ AS
 		UPDATE	IMLSMST_SQL
 		SET		
 				QTY_ON_HAND =  QTY_ON_HAND - @PP_SQF
-		WHERE	LOC=@PP_LOCACION_ORIGEN
-		AND		ITEM_NO=@PP_COLOR
-		AND		SER_LOT_NO=@PP_LOTE
+		WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION_ORIGEN
+		AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
+		AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
 
 		IF @@ROWCOUNT = 0
 			SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
@@ -256,9 +256,9 @@ AS
 					SET		
 							QTY_ON_HAND =  QTY_ON_HAND + @PP_SQF
 					-- ==================
-					WHERE	LOC=@PP_LOCACION_DESTINO
-					AND		ITEM_NO=@PP_COLOR
-					AND		SER_LOT_NO=@PP_LOTE
+					WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO
+					AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
+					AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
 
 					IF @@ROWCOUNT = 0
 						SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
@@ -448,8 +448,8 @@ AS
 		UPDATE	IMINVLOC_SQL
 		SET		
 				QTY_ON_HAND =  QTY_ON_HAND - @PP_SQF
-		WHERE	LOC=@PP_LOCACION_ORIGEN
-		AND		ITEM_NO=@PP_COLOR
+		WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION_ORIGEN
+		AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
 
 		IF @@ROWCOUNT = 0
 			SET @VP_MENSAJE = 'ERROR: // UPDATE IMINVLOC_SQL // '
@@ -588,7 +588,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 
--- EXECUTE [dbo].[PG_IN_IMINVTRX_SQL] 0,0, 'TEST', 'TEST', 'TEST', 'TST', 10, 'TEST', 'TEST', 'TEST'
+-- EXECUTE [dbo].[PG_IN_IMINVTRX_SQL] 0,0, 'TEST', 'TEST', 'TEST', 'TST', 10, 'TEST', 'TEST', 'TEST', 0
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_IMINVTRX_SQL]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_IMINVTRX_SQL]
@@ -627,19 +627,32 @@ AS
 			DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
 			
 			INSERT INTO  IMINVTRX_SQL (	SOURCE, ORD_NO, ITEM_NO, LOC, TRX_DT, 
+
 										TRX_TM, DOC_DT, DOC_TYPE, DOC_SOURCE, QUANTITY, 
-										DOC_ORD_NO, OLD_QUANTITY, USER_NAME, ID_NO, PROMISE_DT, 
+
+										DOC_ORD_NO, OLD_QUANTITY, USER_NAME, ID_NO, PROMISE_DT,
+
 										LEV_NO, SEQ_NO, CTL_NO, LINE_NO, FROM_CTL_NO, FROM_LINE_NO, 
-										FROM_LEV_NO, FROM_SEQ_NO, UNIT_COST, OLD_UNIT_COST, NEW_UNIT_COST,
-										PRICE, BUILD_QTY, BUILD_QTY_PER, AMT, LANDED_COST, RECEIPT_ORD_NO,
+										
+										FROM_LEV_NO, FROM_SEQ_NO, UNIT_COST, OLD_UNIT_COST, NEW_UNIT_COST, 
+
+										PRICE, BUILD_QTY, BUILD_QTY_PER, AMT, LANDED_COST, RECEIPT_ORD_NO, 
+
 										TRX_QTY_BKORD, DEALL_AMT, batch_id, jnl, item_filler, comment	) 
+
 							VALUES	  ( 'I', @PP_TRANSACCION_NO, @PP_COLOR, @PP_LOCACION, @VP_F_TRANSACCION,
+
 										@VP_TIME, @VP_F_TRANSACCION, 'T', 'M', @PP_SQF, 
+
 										@PP_ORDEN_NO, @PP_SQF, @PP_USERNAME, @PP_ID_NO, @VP_F_TRANSACCION,
-										@PP_NIVEL_NO, 0, 0, 0, 0, 0, 0,
-										0, 0, 0, 0, 0, 0,
-										0, 0, 0, 00000000, 0, 0 ,
-										'', '', '', @PP_COMENTARIO	)
+
+										@PP_NIVEL_NO, 0, 0, 0, 0, 0,
+										
+										0, 0, 0, 0, 0, 
+										
+										0, 0, 0, 0, 0, '0', 
+										
+										00000000, 0, '' , '', '', @PP_COMENTARIO	)
 
 			IF @@ROWCOUNT = 0
 				SET @VP_MENSAJE = 'ERROR: // INSERT IMINVTRX_SQL // '
@@ -752,10 +765,6 @@ CREATE PROCEDURE [dbo].[PG_SK_SER_LOT_COMP_SQL_X_LOTE]
 AS
 
 	-- ///////////////////////////////////////////
-
-	DECLARE @VP_LI_N_REGISTROS		INT = 10000
-
-	-- =========================================
 			
 	SELECT	*
 	-- =====================
@@ -909,10 +918,14 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]  0,0, 'B' , 'FMCKTX7' , 3783390 , 2137674 , 'MCT' , 'T62' ,
-												 '07861' , '07927' , 0 , 0 , 'FMCKTX7' , '32701' , '0496' , 
-												 '39.80' , '04246651' , 39.80 , 0 , 0 , 'FMCKTX7' , '032701' , 
-												 '39.80' , '' , 'franciscoe' , 'ITX-002'
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION] 0,0,  'B' , 'FMCKTX7' , 3783390 , 2137674 , 'MCT' , 'T62' , 
+												'07861' , '07927' , 0 , 0 , '32701' , '0496' , 39.80 , 0 , 0 , 
+												'' , 'franciscoe' , 'ITX-002' 
+
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION] 0,0, 'B' , 'FMCKTX7' , 3783390 , 2137674 , 'MCT' , 'T62' , 
+												'' , '07927' , 0 , 0 , '32701' , '1155' , 38.00 , 0 , 0 , 
+												'' , 'franciscoe' , 'ITX-002' 
+
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
 	@PP_K_SISTEMA_EXE			INT,
@@ -933,20 +946,13 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_DEVOLUCION]
 	@PP_PRT_FORM_DEV_EXT		INT, -- INPRIMIR FORMA #0 N0, #1 SI
 	@PP_SELECT_TODOS			INT, -- SE SELECCIONARON TODAS LAS PIELES #0 N0, #1 SI
 	-- ===========================
-	@PP_COLOR_ARRAY				NVARCHAR(MAX),
 	@PP_LOTE_ARRAY				NVARCHAR(MAX),
 	@PP_PIEL_ARRAY				NVARCHAR(MAX),
-	@PP_SQF_ARRAY				NVARCHAR(MAX),
-	@PP_MOVIMIENTO_ARRAY		NVARCHAR(MAX),
 	-- ===========================
 	@PP_TB_SQF					DECIMAL(13,2),
 	-- ===========================
 	@PP_LOTE_PIEL_EXISTE		INT, -- SI EXISTE #
 	@PP_LOTE_PIEL_EXISTE_ADD	INT, -- SI EXISTE Y DESEA ACTUALIZAR #1
-	-- ===========================
-	@PP_DG2_COLOR_ARRAY			NVARCHAR(MAX),
-	@PP_DG2_LOTE_ARRAY 			NVARCHAR(MAX),
-	@PP_DG2_SQF_ARRAY			NVARCHAR(MAX),
 	-- ===========================
 	@PP_COMENTARIO				VARCHAR(255),
 	-- ===========================
@@ -984,7 +990,7 @@ AS
 		
 	IF @VP_MENSAJE=''
 		BEGIN	
-			IF @VP_MOVIMIENTO IS NULL OR @VP_MOVIMIENTO = 0 -- Si el Folio destino no tiene un movimineto/transaccion toma el valor del Combo CB_LOC
+			IF @VP_MOVIMIENTO IS NULL OR @VP_MOVIMIENTO = '' -- Si el Folio destino no tiene un movimineto/transaccion toma el valor del Combo CB_LOC
 				BEGIN
 					EXECUTE [dbo].[PG_RN_VALIDA_LOCACION]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@PP_CB_LOCACION,
@@ -1042,18 +1048,18 @@ AS
 			BEGIN TRANSACTION 
 			BEGIN TRY
 
-				IF NOT EXISTS(	SELECT	TAG	FROM	RP_Folios  INNER JOIN RP_SC ON TAG=TAGNO WHERE TAGNO = @PP_TAGNO_DESTINO )
+				IF NOT EXISTS(	SELECT	TOP 1 TAG	
+								FROM RP_Folios  INNER JOIN RP_SC ON TAG=TAGNO 
+								WHERE TAGNO = @PP_TAGNO_DESTINO AND STATUS=@PP_ESTATUS AND COLOUR = @PP_CB_COLOR	)
 					BEGIN
 						EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@PP_TAGNO_DESTINO, @PP_ESTATUS, NULL, NULL, NULL
 					END
-				
 				-- /////////////////////////////////////////////////////////////////////
 
 				IF	@PP_SELECT_TODOS = 1
 					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
 															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
-			
 				-- /////////////////////////////////////////////////////////////////////
 													
 				--DECLARE	@PP_COLOR_ARRAY				NVARCHAR(MAX)='FMCKTX7'
@@ -1076,73 +1082,65 @@ AS
 				DECLARE @VP_POSICION_COLOR			INT
 				DECLARE @VP_POSICION_LOTE			INT
 				DECLARE @VP_POSICION_SQF			INT
-				DECLARE @VP_POSICION_MOVIMIENTO			INT
+				DECLARE @VP_POSICION_MOVIMIENTO		INT
 
-				DECLARE @VP_COLOR_VALOR			VARCHAR(20)
-				DECLARE @VP_LOTE_VALOR			VARCHAR(20)
-				DECLARE @VP_PIEL_VALOR			VARCHAR(20)
-				DECLARE @VP_SQF_VALOR			VARCHAR(20)
-				DECLARE @VP_MOVIMIENTO_VALOR	VARCHAR(20)
+				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
+				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
+				DECLARE @VP_SQF_VALOR				VARCHAR(20)
+				DECLARE @VP_MOVIMIENTO_VALOR		VARCHAR(20)
 								
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
-				SET	@PP_COLOR_ARRAY			= @PP_COLOR_ARRAY		+ ',' 	
-				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ ','		
-				SET	@PP_PIEL_ARRAY			= @PP_PIEL_ARRAY		+ ','		
-				SET	@PP_SQF_ARRAY			= @PP_SQF_ARRAY			+ ','	
-				SET	@PP_MOVIMIENTO_ARRAY	= @PP_MOVIMIENTO_ARRAY	+ ','
+				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
+				SET	@PP_PIEL_ARRAY			= @PP_PIEL_ARRAY		+ '/'		
 			
 				--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
-				WHILE patindex('%,%' , @PP_PIEL_ARRAY) <> 0
+				WHILE patindex('%/%' , @PP_PIEL_ARRAY) <> 0
 					BEGIN
-						SELECT @VP_POSICION_PIEL	=	patindex('%,%' , @PP_PIEL_ARRAY)
-						SELECT @VP_POSICION_COLOR	=	patindex('%,%' , @PP_COLOR_ARRAY)
-						SELECT @VP_POSICION_LOTE	=	patindex('%,%' , @PP_LOTE_ARRAY)
-						SELECT @VP_POSICION_SQF		=	patindex('%,%' , @PP_SQF_ARRAY)
-						SELECT @VP_POSICION_MOVIMIENTO =patindex('%,%' , @PP_MOVIMIENTO_ARRAY)
+						SELECT @VP_POSICION_PIEL	=	patindex('%/%' , @PP_PIEL_ARRAY)
+						SELECT @VP_POSICION_LOTE	=	patindex('%/%' , @PP_LOTE_ARRAY)
 						
-
 						--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
 						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
-						SELECT @VP_COLOR_VALOR		= LEFT(@PP_COLOR_ARRAY, @VP_POSICION_COLOR - 1)
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
-						SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY, @VP_POSICION_SQF - 1)
-						SELECT @VP_MOVIMIENTO_VALOR = LEFT(@PP_MOVIMIENTO_ARRAY, @VP_POSICION_MOVIMIENTO - 1)
 						
+						SELECT	TOP 1 @VP_SQF_VALOR = SQF,
+								@VP_MOVIMIENTO_VALOR = MOVEMENT
+												FROM	RP_SC 
+												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
+												AND		LTRIM(RTRIM(TAGNO)) = @PP_TAGNO_ORIGEN
+												AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_VALOR
+												AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_VALOR
+
 						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
 								VALUES	(
-											@VP_COLOR_VALOR,
+											@PP_CB_COLOR,
 											@VP_LOTE_VALOR,
 											@VP_PIEL_VALOR,
 											@VP_SQF_VALOR,
 											@VP_MOVIMIENTO_VALOR	)
-							
-																	
+																								
 						--Reemplazamos lo procesado con nada con la funcion stuff
 						SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
-						SELECT @PP_COLOR_ARRAY			= STUFF(@PP_COLOR_ARRAY, 1, @VP_POSICION_COLOR, '')
 						SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
-						SELECT @PP_SQF_ARRAY			= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION_SQF, '')
-						SELECT @PP_MOVIMIENTO_ARRAY		= STUFF(@PP_MOVIMIENTO_ARRAY, 1, @VP_POSICION_MOVIMIENTO, '')
 
 					END
-
-					-- SELECT * FROM @TBL_PIEL_SELECCIONADAS
 								
 				DECLARE @VP_N_PIEL INT = 0
 				DECLARE @VP_CONTADOR INT = 1 
 
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
+				-- /////////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION////////////////////////////////////////////
 				IF @VP_N_PIEL IS NULL
 					RAISERROR ('Error raised in TRY block.', 16, 1 ) --MENSAJE - Severity -State.
-
-				-- /////////////////////////SI LAS PIELES A TRANSFERIR SON MAS DE UNA////////////////////////////////////////////
+									
 				DECLARE @VP_COLOR_TBL VARCHAR(10)
 				DECLARE @VP_LOTE_TBL VARCHAR(10)
 				DECLARE @VP_PIEL_TBL VARCHAR(10)
 				DECLARE @VP_SQF_TBL	 VARCHAR(10)
 				DECLARE @VP_TOTAL_SQF DECIMAL(13,2)
 
+				-- /////////////////////////SI LAS PIELES A TRANSFERIR SON MAS DE UNA////////////////////////////////////////////
 				IF @VP_N_PIEL > 1
 					BEGIN
 						WHILE @VP_CONTADOR <= @VP_N_PIEL
@@ -1162,13 +1160,10 @@ AS
 																NULL, NULL, NULL, 'E', @PP_CB_LOCACION, 0
 
 								-- /////////////////////////ACTUALIZO EL FOLIO ANTERIOR////////////////////////////////////////////
-								UPDATE	RP_SC 
-									SET	TYPE	= 'D' 
-								WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_ORIGEN
-								AND		LTRIM(RTRIM(HIDE))=@VP_PIEL_TBL
-								AND		LTRIM(RTRIM(LOT))=@VP_LOTE_TBL 
-								AND		LTRIM(RTRIM(SQF))=@VP_SQF_TBL
 
+								EXECUTE [dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_LOTE_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																					@PP_TAGNO_ORIGEN, 'D', @VP_PIEL_TBL, @VP_LOTE_TBL
+							
 								-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
 
 								DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @VP_PIEL_TBL + ' to: ' + CONVERT(VARCHAR(20),@PP_TAGNO_DESTINO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_TBL)), 6)
@@ -1230,7 +1225,7 @@ AS
 																			@PP_TAGNO_ORIGEN, 'Delete hides',
 																			@VP_DETAIL, @VP_PIEL_TBL
 
-										-- //////////////////////////////ACTUALIZA EL FOLIO ORIGEN A TIPO C ///////////////////////////////////////
+										-- //////////////////////////////ACTUALIZA EL FOLIO DESTINO A TIPO C ///////////////////////////////////////
 										EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																							@PP_TAGNO_DESTINO, 'E', 'C'
 									
@@ -1300,9 +1295,7 @@ AS
 																			@VP_DETAIL, @VP_PIEL_TBL															
 									END
 								-- /////////////////////////////////////////////////////////////////////
-								-- /////////////////////////////////////////////////////////////////////
-
-								
+								-- /////////////////////////////////////////////////////////////////////							
 							END
 						ELSE
 							BEGIN
@@ -1317,7 +1310,7 @@ AS
 									BEGIN
 										IF  @PP_LOTE_PIEL_EXISTE_ADD = 1
 											BEGIN
-																								-- /////////////////////////SUMA AL FOLIO DESTINO LOS SQF////////////////////////////////
+												-- /////////////////////////SUMA AL FOLIO DESTINO LOS SQF////////////////////////////////
 												EXECUTE	[dbo].[PG_UP_RP_SC_SQF_X_FOLIO_LOTE_Y_PIEL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																										@PP_TB_SQF, @PP_TAGNO_DESTINO, 
 																										@VP_LOTE_TBL, @VP_PIEL_TBL
@@ -1343,12 +1336,27 @@ AS
 						-- /////////////////////////////////////////////////////////////////////
 						-- /////////////////////////////////////////////////////////////////////
 					END
+					-- ///////////////OBTENEMOS LOS SQF DE LOS DIFERENTES LOTES A TRANSFERIR//////////////////////////////////////////////////////
+					
+					IF (	SELECT COUNT(*) FROM sys.table_types
+							WHERE name = 'TVPParam' AND schema_id = 1	) = 0
+							CREATE TYPE dbo.TVPParam AS TABLE(	COLOR		VARCHAR(20),
+																LOTE		VARCHAR(20),
+																SQF			VARCHAR(20)	)
+				
+					DECLARE @TBL_TOTAL_SQF_X_LOTE	TVPParam 
+
+					INSERT INTO  @TBL_TOTAL_SQF_X_LOTE 
+					SELECT COLOR, LOTE, SUM(CONVERT(DECIMAL(13,4),SQF)) AS SQF 
+					FROM @TBL_PIEL_SELECCIONADAS
+					GROUP BY COLOR, LOTE
+									
 					-- /////////////////////////////////////////////////////////////////////
 
 					EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@PP_TAGNO_DESTINO, @PP_CB_LOCACION, @PP_TB_LOCACION,
-														@PP_ORDEN_DESTINO, @PP_CB_ORDEN,
-														@PP_DG2_COLOR_ARRAY, @PP_DG2_LOTE_ARRAY, @PP_DG2_SQF_ARRAY,						 	
+														@PP_ORDEN_DESTINO, @PP_CB_ORDEN,  @TBL_TOTAL_SQF_X_LOTE,
+													--	@PP_DG2_COLOR_ARRAY, @PP_DG2_LOTE_ARRAY, @PP_DG2_SQF_ARRAY,						 	
 														@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
 																			
 					-- /////////////////////////////////////////////////////////////////////

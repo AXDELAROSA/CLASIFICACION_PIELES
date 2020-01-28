@@ -76,6 +76,82 @@ AS
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
+
+
+
+
+-- EXECUTE [dbo].[PG_UP_RP_FOLIO_X_FOLIO] 0,0, 0
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_RP_FOLIO_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT,
+	@PP_STATUS					VARCHAR(5),
+	@PP_JOB_NO					VARCHAR(10),
+	@PP_MACHINE					VARCHAR(15)
+
+AS
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_COLOUR VARCHAR(50)
+
+	-- /////////////////////////////////////////////////////////////////////
+
+	UPDATE RP_Folios 
+	SET
+		STATUS	=	@PP_STATUS,
+		JOBNO	=	@PP_JOB_NO,
+		MACHINE	=	@PP_MACHINE 
+	WHERE TAG=@PP_TAG_NO
+
+	IF @@ROWCOUNT = 0
+		BEGIN
+			RAISERROR ('Error raised in TRY block.', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+		END
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'UPDATE',
+													'',
+													-- ===========================================
+													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAG_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////

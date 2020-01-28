@@ -41,7 +41,7 @@ AS
 	
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_ITEM_NO		INT
+	DECLARE @VP_ITEM_NO		VARCHAR(20)
 			
 	SELECT	@VP_ITEM_NO	=	ITEM_NO
 							FROM	IMLSMST_SQL
