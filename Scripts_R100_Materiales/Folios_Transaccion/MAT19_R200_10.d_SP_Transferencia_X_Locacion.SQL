@@ -33,9 +33,6 @@ AS
 
 	-- ///////////////////////////////////////////
 
-	DECLARE @VP_LI_N_REGISTROS		INT = 10000
-
-	-- =========================================
 	SELECT	DISTINCT
 			TAG,
 			STATUS,
@@ -44,11 +41,11 @@ AS
 			COLOUR
 	-- =====================
 	FROM RP_Folios 
-	INNER JOIN RP_SC on RP_Folios.TAG=RP_SC.TAGNO AND COLOUR = @PP_D_COLOR
-	--AND MOVEMENT <> 0 -- QUITAR SOLO PARA PRUEBA
+	INNER JOIN RP_SC ON RP_Folios.TAG=RP_SC.TAGNO 
+						AND COLOUR = @PP_D_COLOR 
+	WHERE  STATUS  <> 'XX'
 	ORDER BY TAG
 	-- =====================
-	
 	-----////////////////////////////////////////////////////////////////
 
 	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -430,7 +427,7 @@ AS
 
 	-- ///////////////////////////////////////////
 	EXECUTE	[dbo].[PG_UP_RP_SC_TAGNO_X_FOLIO_PIEL_LOTE_SQF]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																@PP_TAG_NO_NUEVO, @PP_TAG_NO_ANTERIOR,
+																@PP_TAG_NO_ANTERIOR, @PP_TAG_NO_NUEVO, 
 																@PP_HIDE, @PP_LOT, @PP_SQF
 	
 	-- /////////////////////////////////////////////////////////////////////
@@ -526,18 +523,18 @@ AS
 
 	-----////////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
-													'',
-													-- ===========================================
-													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_ORDER_NO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
+	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'SELECT',
+	--												'',
+	--												-- ===========================================
+	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_ORDER_NO, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '@PP_BUSCAR', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO

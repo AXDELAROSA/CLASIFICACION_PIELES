@@ -90,8 +90,6 @@ AS
 													@VP_TAGNO_DESTINO, 1
 					END
 				-- /////////////////////////////////////////////////////////////////////
-				
-			-- /////////////////////////////////////////////////////////////////////
 
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
 						K_PIEL_SELECCIONADA INT IDENTITY(1,1),
@@ -128,8 +126,8 @@ AS
 						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
 						
-						SELECT	TOP 1 @VP_SQF_VALOR = SQF,
-								@VP_MOVIMIENTO_VALOR = MOVEMENT
+						SELECT	TOP 1 @VP_SQF_VALOR = LTRIM(RTRIM(SQF)),
+								@VP_MOVIMIENTO_VALOR = LTRIM(RTRIM(MOVEMENT))
 												FROM	RP_SC 
 												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
 												AND		LTRIM(RTRIM(TAGNO)) = @PP_TAGNO_ORIGEN
@@ -163,7 +161,8 @@ AS
 				DECLARE @VP_SQF AS VARCHAR(20)
 				DECLARE @VP_MOVIMIENTO AS VARCHAR(20)
 
-				DECLARE CU_PIEL_SELECCIONADA CURSOR FOR SELECT LOTE, PIEL, SQF, MOVIMIENTO FROM @TBL_PIEL_SELECCIONADAS
+				DECLARE CU_PIEL_SELECCIONADA CURSOR 
+				FOR SELECT LOTE, PIEL, SQF, MOVIMIENTO FROM @TBL_PIEL_SELECCIONADAS
 				
 				OPEN CU_PIEL_SELECCIONADA
 				FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_LOTE, @VP_PIEL, @VP_SQF, @VP_MOVIMIENTO
@@ -171,33 +170,38 @@ AS
 				WHILE @@FETCH_STATUS = 0
 					BEGIN
 						-- ///////////////////////////////////////////
-						EXECUTE	[dbo].[PG_UP_RP_SC_TAGNO_X_FOLIO_PIEL_LOTE_SQF]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_TAGNO_ORIGEN, @VP_TAGNO_DESTINO,
-																					@VP_PIEL, @VP_LOTE, @VP_SQF
-						-- ///////////////////////////////////////////
-
 						DECLARE @VP_LOCACION AS VARCHAR(5)
-						SELECT	@VP_LOCACION = LTRIM(RTRIM(IMINVTRX_SQL.Loc))
-								-- ===================== 
-						FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+
+						IF ISNUMERIC(@VP_MOVIMIENTO) = 1 
+							BEGIN
+								SELECT	@VP_LOCACION = LTRIM(RTRIM(IMINVTRX_SQL.Loc))
+										-- ===================== 
+								FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+										-- =====================
+								WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
+								AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
+								AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
+								AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
+								AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
+								AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
+								AND		IMINVTRX_SQL.ord_no	= @VP_MOVIMIENTO
 								-- =====================
-						WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
-						AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
-						AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
-						AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
-						AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
-						AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
-						AND		IMINVTRX_SQL.ord_no	= @VP_MOVIMIENTO
-						-- =====================
-						AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
-								OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
-						-- =====================
-						IF @VP_LOCACION IS NULL
-							SET @VP_LOCACION = ''
+								AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
+										OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
+								-- =====================
 
-						EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																		@VP_TAGNO_DESTINO, 0, @VP_LOCACION, 0
+								IF @VP_LOCACION IS NULL
+									SET @VP_LOCACION = ''
+								-- =====================
+							END
+						ELSE
+							BEGIN
+								SET @VP_LOCACION = @VP_LOCACION
+							END
 
+						EXECUTE	[dbo].[PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																								@PP_TAGNO_ORIGEN, @VP_TAGNO_DESTINO,
+																								@VP_PIEL, @VP_LOTE, @VP_SQF, @VP_LOCACION
 						-- /////////////////////////////////////////////////////////////////////
 	
 						DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @VP_PIEL + ' to: ' + CONVERT(VARCHAR(20),@VP_TAGNO_DESTINO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE)), 6)
@@ -222,6 +226,8 @@ AS
 			BEGIN CATCH
 				/* Ocurrió un error, deshacemos los cambios*/ 
 				ROLLBACK TRANSACTION
+				DECLARE @ErrorMessage NVARCHAR(4000);
+				SET @ErrorMessage = ERROR_MESSAGE() 
 				SET @VP_MENSAJE = 'ERROR: //TRASAC. PG_PM_TRANSFER_PIEL_DEVOLUCION // '
 			END CATCH
 			

@@ -31,7 +31,7 @@ AS
 	-- ///////////////////////////////////////////
 	DECLARE @VP_FOLIO	INT = 0
 	
-	SELECT	@VP_FOLIO=TAG
+	SELECT	TOP 1 @VP_FOLIO=TAG
 	-- =====================
 	FROM	RP_Folios  
 	-- =====================
@@ -80,16 +80,16 @@ AS
 GO
 
 
-/*
+
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT /								*NO SE USA POR EL MOMENTO*
 -- //////////////////////////////////////////////////////////////
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_VALOR_CB_LOCACION]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_GET_VALOR_CB_LOCACION]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_VALOR_LOCACION]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_VALOR_LOCACION]
 GO
 
-CREATE PROCEDURE [dbo].[PG_GET_VALOR_CB_LOCACION]
+CREATE PROCEDURE [dbo].[PG_GET_VALOR_LOCACION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
@@ -110,9 +110,9 @@ AS
 		BEGIN
 			SET @VP_LOCACION = ''
 		END
-	ELSE
+	ELSE IF ISNUMERIC(@VP_MOVIMIENTO) = 1
 		BEGIN
-			SELECT	@VP_LOCACION = LTRIM(RTRIM(IMINVTRX_SQL.Loc))
+			SELECT	TOP 1 @VP_LOCACION = LTRIM(RTRIM(IMINVTRX_SQL.Loc))
 			FROM	IMLSTRX_SQL, IMINVTRX_SQL 
 			WHERE	(IMLSTRX_SQL.Source = IMINVTRX_SQL.Source And IMLSTRX_SQL.Ord_No = IMINVTRX_SQL.Ord_No)
 			AND		IMLSTRX_SQL.Ctl_No = IMINVTRX_SQL.Ctl_No 
@@ -126,13 +126,17 @@ AS
 			IF @VP_LOCACION IS NULL
 				SET @VP_LOCACION = ''
 		END
+	ELSE
+		BEGIN
+			SET @VP_LOCACION = @VP_LOCACION
+		END
 
 	SELECT @VP_LOCACION AS LOCACION
       
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
-*/
+
 
 
 -- //////////////////////////////////////////////////////////////

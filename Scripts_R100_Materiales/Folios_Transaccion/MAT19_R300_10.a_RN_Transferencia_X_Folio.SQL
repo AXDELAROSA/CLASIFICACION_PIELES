@@ -164,7 +164,7 @@ AS
 		IF @PP_COLOR_ORIGEN = @PP_COLOR_DESTINO
 			BEGIN
 				SET @VP_RESULTADO = ''
-			END
+			END						
 		ELSE IF((@PP_COLOR_DESTINO = 'FCML5B8' And @PP_COLOR_ORIGEN = 'FCMP5B8') Or (@PP_COLOR_DESTINO = 'FCMP5B8' And @PP_COLOR_ORIGEN = 'FCML5B8') Or (@PP_COLOR_DESTINO = 'FNRUDX9' And @PP_COLOR_ORIGEN = 'FCNPDX9') Or (@PP_COLOR_DESTINO = 'FCNPDX9' And @PP_COLOR_ORIGEN = 'FNRUDX9'))
 				BEGIN
 					--SET @VP_RESULTADO =  'Advertencia, se estan mezclando pieles similares...'
@@ -215,8 +215,8 @@ AS
 			SET @VP_RESULTADO =  'Numero de <ORDEN> no valido [Cantidad de Caracteres No Valido]...Transferencia cancelada' 
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_JOBNO		INT = 0
-	SELECT	@VP_JOBNO	=	JOBNO
+	DECLARE @VP_JOBNO		VARCHAR(10)
+	SELECT TOP 1 @VP_JOBNO	=	JOBNO
 							FROM	CCJOBHDR_SQL
 							WHERE	JOBNO=@PP_ORDEN_DESTINO
 	-- ===========================
@@ -302,13 +302,13 @@ AS
 
 	DECLARE @VP_COLOR_JOBNO_DESTINO		VARCHAR(3)
 			
-	SELECT	@VP_COLOR_JOBNO_DESTINO	=	LTRIM(RTRIM(COLOUR))
+	SELECT	@VP_COLOR_JOBNO_DESTINO	= CONCAT('F', LTRIM(RTRIM(COLOUR)))
 							FROM	CCJOBHDR_SQL
 							WHERE	JOBNO=@PP_ORDEN_DESTINO
 	-- ===========================
 
 	IF @VP_RESULTADO=''
-		IF ( @VP_COLOR_JOBNO_DESTINO=@PP_COLOR_ORIGEN )
+		IF ( @VP_COLOR_JOBNO_DESTINO<>@PP_COLOR_ORIGEN )
 			SET @VP_RESULTADO =  'La <ORDEN> proporcionada corresponde a otro tipo de piel...Transferencia cancelada...' 
 
 	-- /////////////////////////////////////////////////////
@@ -365,11 +365,6 @@ AS
 		EXECUTE [dbo].[PG_RN_RP_SC_FOLIO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@PP_FOLIO_ORIGEN,
 														@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
-	
-	--IF @VP_RESULTADO=''
-	--	EXECUTE [dbo].[PG_RN_RP_SC_FOLIO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--													@PP_FOLIO_DESTINO,
-	--													@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
 
 	IF @VP_RESULTADO=''
 		EXECUTE	[dbo].[PG_RN_VALIDA_COLOR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -387,6 +382,73 @@ AS
 
 	-- /////////////////////////////////////////////////////
 GO
+
+
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> RN // VALIDACION INSERT
+-- //////////////////////////////////////////////////////////////
+
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_TRANSFER_PIEL_A_FOLIO_EXISTENTE]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_TRANSFER_PIEL_A_FOLIO_EXISTENTE]
+GO
+/*
+EXECUTE [dbo].[PG_RN_TRANSFER_PIEL_DEVOLUCION]	0, 0,
+														3777539 , 3784457,
+														'FCMKDX9', 'FCMKDX9'
+														
+*/
+CREATE PROCEDURE [dbo].[PG_RN_TRANSFER_PIEL_A_FOLIO_EXISTENTE]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================		
+	@PP_FOLIO_ORIGEN			INT,
+	@PP_FOLIO_DESTINO			INT,
+	@PP_COLOR_ORIGEN			VARCHAR(20),
+	@PP_COLOR_DESTINO			VARCHAR(20),
+	-- ===========================		
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = ''
+		
+	-- ///////////////////////////////////////////
+	IF @VP_RESULTADO=''
+		EXECUTE [dbo].[PG_RN_VALIDA_FOLIOS_DIFERENTES]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_FOLIO_ORIGEN, @PP_FOLIO_DESTINO,
+														@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
+
+	IF @VP_RESULTADO=''
+		EXECUTE [dbo].[PG_RN_RP_SC_FOLIO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_FOLIO_ORIGEN,
+														@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
+	
+	IF @VP_RESULTADO=''
+		EXECUTE [dbo].[PG_RN_RP_SC_FOLIO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@PP_FOLIO_DESTINO,
+														@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
+
+	IF @VP_RESULTADO=''
+		EXECUTE	[dbo].[PG_RN_VALIDA_COLOR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												@PP_COLOR_ORIGEN, @PP_COLOR_DESTINO,
+												@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
+
+	-- //////////////////////////////////////
+
+	IF	@VP_RESULTADO<>''
+		SET	@VP_RESULTADO = @VP_RESULTADO + ' //INS//'
+	
+	-- ///////////////////////////////////////////
+		
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
 
 
 

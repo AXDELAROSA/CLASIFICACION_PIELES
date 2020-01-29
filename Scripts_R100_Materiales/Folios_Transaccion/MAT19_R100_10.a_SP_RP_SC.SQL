@@ -201,8 +201,10 @@ AS
 	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
-
+		BEGIN
+			RAISERROR ('ERROR SP: PG_UP_RP_SC_MOVEMENT_X_FOLIO', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
@@ -241,6 +243,81 @@ GO
 
 
 -- EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO] 0,0, 0
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAGNO_ORIGEN			INT,
+	@PP_TAGNO_DESTINO			INT,
+	@PP_HIDE					VARCHAR(15),
+	@PP_LOT 					VARCHAR(15),
+	@PP_SQF						VARCHAR(15),
+	@PP_MOVIMIENTO				VARCHAR(20)
+
+AS
+
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	-- ///////////////////////////////////////////
+	
+	UPDATE RP_SC 
+	SET 
+			TAGNO		= @PP_TAGNO_DESTINO,
+			MOVEMENT	= @PP_MOVIMIENTO
+	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_ORIGEN
+	AND		LTRIM(RTRIM(HIDE))=@PP_HIDE 
+	AND		LTRIM(RTRIM(LOT))=@PP_LOT 
+	AND		LTRIM(RTRIM(SQF))=@PP_SQF
+
+	IF @@ROWCOUNT = 0
+		BEGIN
+			RAISERROR ('ERROR SP: PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+		END
+
+	-- /////////////////////////////////////////////////////////////////////
+	
+	-- /////////////////////////////////////////////////////////////////////
+
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+']'
+		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAGNO_ORIGEN AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'UPDATE',
+													'',
+													-- ===========================================
+													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAGNO_ORIGEN, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO] 0,0, 0
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]
 GO
@@ -268,8 +345,10 @@ AS
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
-
+		BEGIN
+			RAISERROR ('ERROR SP: PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
@@ -336,8 +415,10 @@ AS
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
-
+		BEGIN
+			RAISERROR ('ERROR SP: PG_UP_RP_SC_TYPE_X_FOLIO_LOTE_PIEL', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
@@ -405,8 +486,10 @@ AS
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
-
+		BEGIN
+			RAISERROR ('ERROR SP: PG_UP_RP_SC_SQF_X_FOLIO_LOTE_Y_PIEL', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
@@ -473,7 +556,7 @@ AS
 
 	IF @@ROWCOUNT = 0
 		BEGIN
-			RAISERROR ('Error raised in TRY block.', 16, 1 ) --MENSAJE - Severity -State.
+			RAISERROR ('ERROR SP: PG_UP_RP_SC_TAGNO_X_FOLIO_PIEL_LOTE_SQF', 16, 1 ) --MENSAJE - Severity -State.
 			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
@@ -535,8 +618,10 @@ AS
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
-
+		BEGIN
+			RAISERROR ('ERROR SP: PG_DL_RP_SC_X_FOLIO_Y_TIPO', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
@@ -600,8 +685,10 @@ AS
 	-- ===========================
 
 	IF @@ROWCOUNT = 0
-	SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
-
+		BEGIN
+			RAISERROR ('ERROR SP: PG_DL_RP_SC_X_FOLIO_LOTE_PIEL', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////

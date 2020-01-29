@@ -110,12 +110,12 @@ AS
 		STATUS	=	@PP_STATUS,
 		JOBNO	=	@PP_JOB_NO,
 		MACHINE	=	@PP_MACHINE 
-	WHERE TAG=@PP_TAG_NO
+	WHERE LTRIM(RTRIM(TAG))=@PP_TAG_NO
 
 	IF @@ROWCOUNT = 0
 		BEGIN
-			RAISERROR ('Error raised in TRY block.', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			RAISERROR ('ERROR SP: PG_UP_RP_FOLIO_X_FOLIO', 16, 1 ) --MENSAJE - Severity -State.
+			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	-- /////////////////////////////////////////////////////////////////////
