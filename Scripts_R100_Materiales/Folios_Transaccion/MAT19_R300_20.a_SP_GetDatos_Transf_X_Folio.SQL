@@ -84,7 +84,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT /								*NO SE USA POR EL MOMENTO*
 -- //////////////////////////////////////////////////////////////
-
+-- EXEC [PG_GET_VALOR_LOCACION] 0, 0, 2137674
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_VALOR_LOCACION]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_GET_VALOR_LOCACION]
 GO
@@ -93,7 +93,7 @@ CREATE PROCEDURE [dbo].[PG_GET_VALOR_LOCACION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_FOLIO					VARCHAR(20)
+	@PP_FOLIO					INT
 AS
 
 	-- ///////////////////////////////////////////
@@ -105,7 +105,7 @@ AS
 								FROM	RP_SC
 								WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
 	-- =========================================
-	
+
 	IF @VP_MOVIMIENTO IS NULL
 		BEGIN
 			SET @VP_LOCACION = ''
@@ -128,7 +128,7 @@ AS
 		END
 	ELSE
 		BEGIN
-			SET @VP_LOCACION = @VP_LOCACION
+			SET @VP_LOCACION = @VP_MOVIMIENTO
 		END
 
 	SELECT @VP_LOCACION AS LOCACION

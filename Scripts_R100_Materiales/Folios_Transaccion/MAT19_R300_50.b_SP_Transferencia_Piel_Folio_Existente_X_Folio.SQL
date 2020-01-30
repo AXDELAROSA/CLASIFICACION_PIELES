@@ -22,8 +22,9 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTE]	0,0,   FMCKTX7 , 3783329 , '07869' , 'Table 67' , 
-													0 , '32701' , '1071' , 'franciscoe' , 'ITX-002' 
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]	0,0,  'DEVOLUCION' , 'B' , 'FMCKTX7' , 3783390 , 2137674 , 'T62' , 'MCT' , 
+														'07927' , '07861' , 0 , 0 , '32701' , '0499' , 36.60 , 0 , 0 , 
+														'' , 'franciscoe' , 'ITX-002' 
 
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]

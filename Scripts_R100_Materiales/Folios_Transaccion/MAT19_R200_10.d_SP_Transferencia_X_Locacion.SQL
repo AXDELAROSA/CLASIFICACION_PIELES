@@ -604,7 +604,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_
 	DROP PROCEDURE [dbo].[PG_LI_RP_SC_Y_RP_FOLIO]
 GO
 
--- EXEC PG_LI_RP_SC_Y_RP_FOLIO 0 ,0, '32291', '0023' 
+-- EXEC PG_LI_RP_SC_Y_RP_FOLIO 0 ,0, '32701', '0486' 
 
 CREATE PROCEDURE [dbo].[PG_LI_RP_SC_Y_RP_FOLIO]
 	@PP_K_SISTEMA_EXE			INT,
@@ -620,7 +620,7 @@ AS
 
 	-- =========================================
 			
-	SELECT 
+	SELECT  DISTINCT
 			ISNULL(COLOUR, '')	AS COLOUR,
 			ISNULL(LOT, '')		AS LOT,
 			ISNULL(HIDE, '')	AS HIDE,
@@ -635,23 +635,23 @@ AS
 				AND	LOT=@PP_LOTE
 				AND	HIDE=@PP_PIEL	
 	-- =======================
-	ORDER BY CDATE
+	--ORDER BY CDATE
           
 
 	-----////////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
-													'',
-													-- ===========================================
-													'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_LOTE, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
+	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'SELECT',
+	--												'',
+	--												-- ===========================================
+	--												'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_LOTE, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '@PP_BUSCAR', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
@@ -827,7 +827,10 @@ AS
 			WHERE	JOBNO=@PP_JOB_NO
 			
 			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR: // UPDATE CCJOBHDR_SQL // '
+				BEGIN
+					RAISERROR ('ERROR SP: PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO', 16, 1 ) --MENSAJE - Severity -State.
+					SET @VP_MENSAJE = 'ERROR: // UPDATE CCJOBHDR_SQL // '
+				END
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
@@ -840,7 +843,10 @@ AS
 			WHERE	TAG=@PP_TAG_NO
 
 			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios // '
+				BEGIN
+					RAISERROR ('ERROR SP: PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO', 16, 1 ) --MENSAJE - Severity -State.
+					SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios // '
+				END
 		END
 	-- /////////////////////////////////////////////////////////////////////
 
