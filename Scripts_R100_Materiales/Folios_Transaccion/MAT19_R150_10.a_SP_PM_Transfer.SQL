@@ -26,7 +26,7 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_TAGNO_DESTINO			INT,
+	--@PP_TAGNO_DESTINO			INT,
 	-- ===========================
 	@PP_CB_LOCACION				VARCHAR(5),
 	@PP_TB_LOCACION				VARCHAR(5),
@@ -148,10 +148,7 @@ AS
 											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
 											@PP_TB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
 											@PP_USER, @PP_COMENTARIO, 1
-	-- ////////////////////////////////////////////////////////////////////
-
-	EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-														@PP_TAGNO_DESTINO, 0, @PP_CB_LOCACION, 0
+	
 	-- ////////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
 

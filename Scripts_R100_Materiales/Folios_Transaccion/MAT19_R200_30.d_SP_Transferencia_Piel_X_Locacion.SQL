@@ -30,16 +30,19 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_ESTATUS					VARCHAR(3),
 	@PP_TAGNO_ORIGEN			INT,
-	@PP_VP_ORDEN_ORIGEN			VARCHAR(10),
-	@PP_VP_ORDEN_DESTINO		VARCHAR(10),
-	@PP_VP_LOCACION_ORIGEN		VARCHAR(10),
-	@PP_VP_LOCACION_DESTINO	VARCHAR(10),
-	@PP_CARGAR_ORDEN			INT, -- SE SELECCIONARON TODAS LAS PIELES #0 N0, #1 SI
 	-- ===========================
-	@PP_LOTE_ARRAY				NVARCHAR(MAX),
-	@PP_PIEL_ARRAY				NVARCHAR(MAX),
+	@PP_ORDEN_ORIGEN			VARCHAR(10),
+	@PP_ORDEN_DESTINO			VARCHAR(10),
+	-- ===========================
+	@PP_LOCACION_ORIGEN			VARCHAR(10),
+	@PP_LOCACION_DESTINO		VARCHAR(10),
+	-- ===========================
+	@PP_CARGAR_ORDEN			INT, 
+	-- ===========================
+	@PP_COLOR_PIEL				VARCHAR(20),
+	@PP_TB_SQF						VARCHAR(10),
+	@PP_COMENTARIO				VARCHAR(255),
 	-- ===========================
 	@PP_USER					VARCHAR(25),
 	@PP_COMPUTER_NAME			VARCHAR(25)
@@ -48,57 +51,47 @@ AS
 	-- ///////////////////////////////////////////
 
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
-
-	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
-	IF @VP_MENSAJE=''
-		--EXECUTE [dbo].[PG_RN_TRANSFER_PIEL_DEVOLUCION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-		--												@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
-		--												@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
-		--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-		
-	-- /////////////////////////////////////////////////////////////////////
 	
 	IF @VP_MENSAJE=''
 		BEGIN
 			BEGIN TRANSACTION 
 			BEGIN TRY
 			-- ////////////////////////////////////////////////////////////////////		
-			If SUBSTRING(@PP_VP_LOCACION_DESTINO, 1, 1) = 'T' AND @PP_VP_ORDEN_DESTINO <> '' AND  @PP_CARGAR_ORDEN = 1
+			IF SUBSTRING(@PP_LOCACION_DESTINO, 1, 1) = 'T' AND @PP_LOCACION_DESTINO <> '' AND  @PP_CARGAR_ORDEN = 1
 				BEGIN
 					EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																	@PP_TAGNO_ORIGEN, @PP_VP_ORDEN_DESTINO, 
-																	@PP_VP_LOCACION_DESTINO, @PP_USER, @PP_COMPUTER_NAME		
+																	@PP_TAGNO_ORIGEN, @PP_ORDEN_DESTINO, 
+																	@PP_LOCACION_DESTINO, @PP_USER, @PP_COMPUTER_NAME		
 																						
 					-- /////////////////////////////////////////////////////////////////////
 
-					--EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-					--									@PP_TAGNO_DESTINO, @PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
-					--									@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN,  @TBL_TOTAL_SQF_X_LOTE,						 	
-					--									@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
-							-- /////////////////////////////////////////////////////////////////////
-
-					DECLARE @VP_DETAIL VARCHAR(255)= 'from: ' + @PP_VP_LOCACION_ORIGEN + ' to: ' +@PP_VP_LOCACION_DESTINO + ' orden:' + @PP_VP_ORDEN_DESTINO
-					EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-														@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
-														@PP_TAGNO_ORIGEN, 'Transfer Folio',
-														@VP_DETAIL, ''
-
-					IF 	@PP_VP_LOCACION_DESTINO = 'MFP'
-						BEGIN
-							DECLARE @tableHTML  NVARCHAR(MAX) ;  
-  
-							SET @tableHTML =  
-							    N'<H1>Work Order Report</H1>' + 
-								 N'<B>TEST</B>' ; 
-								SET ROWCOUNT 0
-								 
-							EXEC msdb.dbo.sp_send_dbmail @recipients='franciscoe@pearlleather.com.mx',  
-							    @subject = 'Transferencia hacia MFP...',  
-							    @body = @tableHTML,  
-							    @body_format = 'HTML'
-
+					EXECUTE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_COMPLEMENTO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_TAGNO_ORIGEN, @PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
+																				@PP_LOCACION_ORIGEN ,@PP_LOCACION_DESTINO,
+																				@PP_COLOR_PIEL, @PP_TB_SQF, @PP_COMENTARIO,
+																				@PP_USER, @PP_COMPUTER_NAME
+				END
+			ELSE IF @PP_TAGNO_ORIGEN = '-' AND @PP_CARGAR_ORDEN = 1
+					BEGIN	
+						EXECUTE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_COMPLEMENTO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																					@PP_TAGNO_ORIGEN, @PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
+																					@PP_LOCACION_ORIGEN ,@PP_LOCACION_DESTINO,
+																					@PP_COLOR_PIEL, @PP_TB_SQF, @PP_COMENTARIO,
+																					@PP_USER, @PP_COMPUTER_NAME
 					END
-			END
+				ELSE  IF @PP_TAGNO_ORIGEN <> '-' AND @PP_CARGAR_ORDEN = 1
+						BEGIN
+							SET	@PP_ORDEN_DESTINO = @PP_ORDEN_ORIGEN
+
+							EXECUTE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																		@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+
+							EXECUTE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_COMPLEMENTO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																						@PP_TAGNO_ORIGEN, @PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
+																						@PP_LOCACION_ORIGEN ,@PP_LOCACION_DESTINO,
+																						@PP_COLOR_PIEL, @PP_TB_SQF, @PP_COMENTARIO,
+																						@PP_USER, @PP_COMPUTER_NAME
+					END
 		-- ////////////////////////////////////////////////////////////////////	
 								
 			COMMIT TRANSACTION 
@@ -135,7 +128,7 @@ AS
 													'SELECT',
 													'',
 													-- ===========================================
-													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
 													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
 													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
 													0, 0, @PP_TAGNO_ORIGEN, '' , 0.00, 0.00,
