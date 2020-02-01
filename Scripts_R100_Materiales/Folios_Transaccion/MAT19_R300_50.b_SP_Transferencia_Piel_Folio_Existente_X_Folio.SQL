@@ -455,6 +455,7 @@ AS
 					GROUP BY COLOR, LOTE
 									
 					-- /////////////////////////////////////////////////////////////////////
+					DECLARE @VP_ORDEN_DESTINO	VARCHAR(10)
 
 					EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,

@@ -47,6 +47,7 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_COMPLEMENTO]
 AS
 
 	-- ///////////////////////////////////////////
+	-- ///////////////////////////////////////////
 	
 	IF (	SELECT COUNT(*) FROM sys.table_types
 			WHERE name = 'TVPParam' AND schema_id = 1	) = 0
@@ -67,11 +68,12 @@ AS
 	-- =====================
 	GROUP BY	COLOUR, LOT
 	-- =====================
-	
+
+	DECLARE	@VP_SQF DECIMAL(13,2) = CONVERT(DECIMAL(13,2),@PP_TB_SQF)
 	EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 										@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
-										@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN,  @TBL_TOTAL_SQF_X_LOTE,						 	
-										@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
+										@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN, @TBL_TOTAL_SQF_X_LOTE,						 	
+										@VP_SQF, @PP_COMENTARIO, @PP_USER
 	-- /////////////////////////////////////////////////////////////////////
 	
 	DECLARE @VP_COLOR VARCHAR(10) 
@@ -80,7 +82,7 @@ AS
 				 @VP_TOTAL_SQF	= SQF
 								FROM	@TBL_TOTAL_SQF_X_LOTE
 	
-	IF @PP_ORDEN_ORIGEN = 'MIT' And @PP_LOCACION_DESTINO = 'MHI' 
+	IF @PP_LOCACION_ORIGEN = 'MIT' And @PP_LOCACION_DESTINO = 'MHI' 
 		BEGIN
 			IF EXISTS ( SELECT TOP 1 RP_Folios.ID FROM RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND COLOUR = @VP_COLOR)
 				BEGIN
@@ -101,8 +103,8 @@ AS
 		END
 	ELSE
 		BEGIN
-			EXECUTE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-														@PP_TAGNO_ORIGEN, 'B', NULL, NULL
+			EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_TAGNO_ORIGEN, 0, @PP_LOCACION_DESTINO, 0
 		END
 	
 	
@@ -114,7 +116,7 @@ AS
 	
 	IF 	@PP_LOCACION_DESTINO = 'MFP'
 		BEGIN
-			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx;Alejandrod@pearlleather.com.mx'
+			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
 			--SET @VP_RECIPIENTS = 'dianan@pearlleather.com.mx;manuelg@pearlleather.com.mx;fernandog@pearlleather.com.mx;pedrov@pearlleather.com.mx'
 			
 			DECLARE @VP_SUBJECT		VARCHAR(255) = 'Transferencia hacia MFP...'

@@ -26,8 +26,6 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	--@PP_TAGNO_DESTINO			INT,
-	-- ===========================
 	@PP_CB_LOCACION				VARCHAR(5),
 	@PP_TB_LOCACION				VARCHAR(5),
 	-- ===========================
@@ -50,17 +48,6 @@ AS
 			@VP_TRANSACCION_DOC  = RIGHT('00000000' + Ltrim(Rtrim(NEXT_DOC_NO)), 8)
 	-- =====================
 	FROM	IMCTLFIL_SQL
-	-- ///////////////////////////////////////////
-
-	 IF @PP_CB_ORDEN = '' 
-		IF @PP_ORDEN_DESTINO <> '' 
-			BEGIN
-              SET	@PP_CB_ORDEN = @PP_ORDEN_DESTINO
-			END
-        ELSE
-			BEGIN
-              SET	@PP_CB_ORDEN = '0'
-            END
 	-- ///////////////////////////////////////////
 
 	EXECUTE [dbo].[PG_UP_IMCTLFIL_SQL_NEXT_DOC_NO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -122,7 +109,7 @@ AS
 	-- ////////////////////////////////////////////////////////////////////
 	
 	DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
-	DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_CB_ORDEN + '00000' , 5)
+	DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_ORDEN_DESTINO + '00000' , 5)
 
 	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
@@ -148,7 +135,9 @@ AS
 											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
 											@PP_TB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
 											@PP_USER, @PP_COMENTARIO, 1
-	
+	-- ////////////////////////////////////////////////////////////////////
+
+
 	-- ////////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
 
