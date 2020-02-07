@@ -22,8 +22,8 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION]	0,0, 3783339 , '-' , '' , 'MHI' , 'MFP' , 1 , 'FMCKTX7' , '0' , 
-												'' , 'franciscoe' , 'ITX-002' 
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION]	0,0,  3785638 , '-' , '09400' , 'MHI' , 'T12' , 1 , 
+												'FMCKTX7' , '0' , '' , 'franciscoe' , 'ITX-002' 
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION]
 	@PP_K_SISTEMA_EXE			INT,
@@ -99,9 +99,9 @@ AS
 			BEGIN CATCH
 				/* Ocurrió un error, deshacemos los cambios*/ 
 				ROLLBACK TRANSACTION
-				DECLARE @ErrorMessage NVARCHAR(4000);
-				SET @ErrorMessage = ERROR_MESSAGE() 
-				SET @VP_MENSAJE = 'ERROR: //TRASAC. [PG_PM_TRANSFER_PIEL_X_LOCACION] // '
+				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
+				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
+				SET @VP_MENSAJE = 'ERROR: // TRANS: [PG_PM_TRANSFER_PIEL_X_LOCACION] // ' + @VP_ERROR_TRANS
 			END CATCH
 			
 		END
@@ -110,7 +110,7 @@ AS
 	IF @VP_MENSAJE<>''
 		BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = 'No es posible transferir el [FOLIO]: ' + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+'] ' + @VP_MENSAJE 
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
 		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'

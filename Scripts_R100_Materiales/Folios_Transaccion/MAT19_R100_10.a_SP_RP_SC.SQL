@@ -15,7 +15,7 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SELECT / SI RECIBE EL FOLIO EN #0 OBTINE UNO NUEVO DE LA TABLA RP_SC
+-- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_RP_SC]') AND type in (N'P', N'PC'))
@@ -61,22 +61,207 @@ AS
           
 
 	-----////////////////////////////////////////////////////////////////
-
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
-													'',
-													-- ===========================================
-													'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_LOTE, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
-
 	-- ////////////////////////////////////////////////////////////////////
 GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE] 0,0,  3777539
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO_GB_COLOR_LOTE]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	COLOUR	AS COLOUR,
+			CONCAT('         ', RIGHT('000000' + Ltrim(Rtrim(LOT)), 6))		AS LOT,
+			SUM(CAST(SQF AS DECIMAL(4,2)))	AS SQF
+	-- =====================
+	FROM	RP_SC
+	-- =====================
+	WHERE	TAGNO=@PP_TAG_NO 
+	-- =====================
+	GROUP BY	COLOUR, LOT
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_RP_FOLIO_STATUS_B]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_RP_FOLIO_STATUS_B]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_X_RP_FOLIO_STATUS_B]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_STATUS					VARCHAR(50)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+			
+	SELECT	TAGNO, 
+			COLOUR, 
+			COUNT(TAGNO) AS PIELES, 
+			SUM(CAST(SQF AS DECIMAL(4,2))) AS SQF 
+	-- =====================
+	FROM	RP_SC 
+	-- =====================
+	WHERE	TAGNO IN (	SELECT	TAG 
+						FROM	RP_Folios 
+						WHERE	STATUS=@PP_STATUS )
+	-- =====================
+	GROUP BY TAGNO, COLOUR
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  3777539
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	DISTINCT
+			COLOUR  AS COLOR,
+			LOT		AS LOTE,
+			HIDE	AS PIEL,
+			SQF,
+			ISNULL(MOVEMENT, '0') AS MOVEMENT
+	-- =====================
+	FROM	RP_SC
+	WHERE	TAGNO=@PP_TAG_NO 
+	AND		type<>'D'
+	ORDER BY HIDE ASC
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO] 0,0,  1524141
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	DISTINCT
+			LOT		AS LOTE
+	-- =====================
+	FROM	RP_SC
+	WHERE	TAGNO=@PP_TAG_NO 
+	AND		type<>'D'
+	-- =====================
+	
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+
+-- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  3777539
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG_NO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	ISNULL(COLOUR, '')		AS COLOR,
+			ISNULL(LOT, '')			AS LOTE,
+			ISNULL(HIDE, '')		AS PIEL,
+			ISNULL(SQF, '')			AS SQF,
+			ISNULL(TYPE, '')		AS TIPO,
+			ISNULL(MOVEMENT, '')	AS MOVIMIENTO	
+	-- =====================
+	FROM	RP_SC
+	WHERE	TAGNO=@PP_TAG_NO 
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
 
 
 
@@ -203,23 +388,23 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_SC_MOVEMENT_X_FOLIO', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -277,24 +462,24 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAGNO_ORIGEN AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAGNO_ORIGEN AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -347,23 +532,23 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -417,23 +602,23 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_SC_TYPE_X_FOLIO_LOTE_PIEL', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -488,23 +673,23 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_SC_SQF_X_FOLIO_LOTE_Y_PIEL', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -557,21 +742,21 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_SC_TAGNO_X_FOLIO_PIEL_LOTE_SQF', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAGNO_ORIGEN AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAGNO_ORIGEN AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -620,23 +805,23 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_DL_RP_SC_X_FOLIO_Y_TIPO', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -687,23 +872,23 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_DL_RP_SC_X_FOLIO_LOTE_PIEL', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
+			--SET @VP_MENSAJE = 'ERROR: // DELETE RP_SC  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 

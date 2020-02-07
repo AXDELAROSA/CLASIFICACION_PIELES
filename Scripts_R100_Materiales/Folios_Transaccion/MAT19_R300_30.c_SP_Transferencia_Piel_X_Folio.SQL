@@ -39,26 +39,12 @@ AS
 		
 	SELECT	TOP (@VP_LI_N_REGISTROS)
 			IMCTLFIL_SQL.*,
-			RIGHT('00000000' + Ltrim(Rtrim(NEXT_DOC_NO)), 8)	 AS NEXT_DOC
+			RIGHT('00000000' + LTRIM(RTRIM(NEXT_DOC_NO)), 8)	 AS NEXT_DOC
 	-- =====================
 	FROM	IMCTLFIL_SQL
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
-
-	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'SELECT',
-	--												'',
-	--												-- ===========================================
-	--												'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_TODOS, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', '@PP_BUSCAR', '', '', ''
-
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
@@ -93,23 +79,26 @@ AS
 			-- =====================
 
 			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR: // UPDATE IMCTLFIL_SQL // '
+				BEGIN
+					RAISERROR ('ERROR SP: PG_UP_IMCTLFIL_SQL_NEXT_DOC_NO', 16, 1 ) --MENSAJE - Severity -State.
+					--SET @VP_MENSAJE = 'ERROR: // UPDATE IMCTLFIL_SQL // '
+				END
 		END
 	
 	-- /////////////////////////////////////////////////////////////////////
 	
 		
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [DOC_NO]: ' + @VP_MENSAJE 
-		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TODOS)+']'
-		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [DOC_NO]: ' + @VP_MENSAJE 
+	--	--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TODOS)+']'
+	--	--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-		SELECT	@VP_MENSAJE AS MENSAJE, 0 AS CLAVE
+	--	SELECT	@VP_MENSAJE AS MENSAJE, 0 AS CLAVE
 			
 
 	-----////////////////////////////////////////////////////////////////
@@ -174,7 +163,10 @@ AS
 		AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
 
 		IF @@ROWCOUNT = 0
-			SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
+			BEGIN
+				RAISERROR ('ERROR SP: PG_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_QUITAR', 16, 1 ) --MENSAJE - Severity -State.
+				--SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
+			END
 
 		END
 
@@ -182,15 +174,18 @@ AS
 	
 	IF @VP_MENSAJE<>''
 		BEGIN
+		--SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE  + '[#LOC.'+ @PP_LOCACION_ORIGEN +']' 
+		SET		@VP_MENSAJE = ' PG_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_QUITAR // PG_RN_IMLSMST_SQL_UPDATE ' + @VP_MENSAJE 
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_ORIGEN +']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		RAISERROR (@VP_MENSAJE, 16, 1 ) --MENSAJE - Severity -State.
+		--SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE 
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_ORIGEN +']'
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
 		END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_ORIGEN AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_ORIGEN AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
@@ -261,7 +256,10 @@ AS
 					AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
 
 					IF @@ROWCOUNT = 0
-						SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
+						BEGIN
+							RAISERROR ('ERROR SP: PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR', 16, 1 ) --MENSAJE - Severity -State.
+							--SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
+						END
 
 				END
 			ELSE
@@ -277,7 +275,7 @@ AS
                                                mfg_batch_no, dt_lst_cntd, times_cntd_ytd, pct_err_lst_cnt, 
                                                frz_cst, frz_qty, frz_dt, frz_tm, tag_qty, filler_0004 )
 									VALUES	( @PP_COLOR, '   ', @PP_LOCACION_DESTINO,'   ',
-                                              @PP_LOTE, @VP_F_TRANSACCION, @VP_TIME, '   ',
+                                              (CONCAT('         ',@PP_LOTE)), @VP_F_TRANSACCION, @VP_TIME, '   ',
                                               'IM', 'A', @VP_F_TRANSACCION, @VP_F_TRANSACCION, @VP_F_TRANSACCION,
                                                @PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO, '0.000000', '0.000000',
                                                @PP_SQF, @PP_SQF, '0.000000', '00000000', 
@@ -290,17 +288,17 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_DESTINO +']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_DESTINO +']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_DESTINO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_DESTINO AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
@@ -370,7 +368,7 @@ AS
                                       EXP_DAYS, ITEM_NO, MFG_SER_LOT_NO, BIN_NO,
                                       TRX_COST, SER_LOT_QTY_SELECT, MFG_BATCH_NO, ITEM_FILLER)
                              VALUES ( 'I', @PP_TRANSACCION_NO, '0', '0', 
-                                      @PP_NIVEL_NO, '0', @PP_LOTE, @VP_F_TRANSACCION,
+                                      @PP_NIVEL_NO, '0', (CONCAT('         ',@PP_LOTE)), @VP_F_TRANSACCION,
                                       @VP_TIME, @PP_SQF, @VP_F_TRANSACCION, @VP_F_TRANSACCION, 
                                       '30', @PP_COLOR, '   ', @PP_INDICE, 
                                       '0.000000', '0.000000', '0', '' )
@@ -381,17 +379,17 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible insertar en [IMLSTRX_SQL]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#TRA.'+ @PP_TRANSACCION_NO +']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible insertar en [IMLSTRX_SQL]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#TRA.'+ @PP_TRANSACCION_NO +']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TRANSACCION_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TRANSACCION_NO AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
@@ -452,23 +450,25 @@ AS
 		AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
 
 		IF @@ROWCOUNT = 0
-			SET @VP_MENSAJE = 'ERROR: // UPDATE IMINVLOC_SQL // '
-
+			BEGIN
+				RAISERROR ('ERROR SP: PG_UP_IMINVLOC_SQL_X_LOCACION_COLOR_QUITAR', 16, 1 ) --MENSAJE - Severity -State.		
+				--SET @VP_MENSAJE = 'ERROR: // UPDATE IMINVLOC_SQL // '
+			END
 		END
 
 	-- /////////////////////////////////////////////////////////////////////
 	
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [IMINVLOC_SQL]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_ORIGEN +']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [IMINVLOC_SQL]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_ORIGEN +']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_ORIGEN AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_ORIGEN AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
@@ -524,16 +524,19 @@ AS
 	
 	IF @VP_MENSAJE=''
 		BEGIN
-			IF EXISTS( SELECT ITEM_NO FROM IMLSMST_SQL WHERE LOC=@PP_LOCACION_DESTINO AND ITEM_NO=@PP_COLOR )
+			IF EXISTS( SELECT ITEM_NO FROM IMINVLOC_SQL WHERE LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO AND LTRIM(RTRIM(ITEM_NO))=@PP_COLOR )
 				BEGIN
 					UPDATE	IMINVLOC_SQL
 					SET		
 							QTY_ON_HAND =  QTY_ON_HAND + @PP_SQF
-					WHERE	LOC=@PP_LOCACION_DESTINO
-					AND		ITEM_NO=@PP_COLOR
+					WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO
+					AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
 
 					IF @@ROWCOUNT = 0
-						SET @VP_MENSAJE = 'ERROR: // UPDATE IMINVLOC_SQL // '
+						BEGIN
+							RAISERROR ('ERROR SP: PG_IN_UP_IMINVLOC_SQL_X_LOCACION_COLOR_AGREGAR', 16, 1 ) --MENSAJE - Severity -State.	
+							--SET @VP_MENSAJE = 'ERROR: // UPDATE IMINVLOC_SQL // '
+						END
 
 				END
 			ELSE
@@ -550,17 +553,17 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [IMINVLOC_SQL]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_DESTINO +']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [IMINVLOC_SQL]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_DESTINO +']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_DESTINO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_DESTINO AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
@@ -660,17 +663,17 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible insertar en [IMINVTRX_SQL]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#TRA.'+ @PP_TRANSACCION_NO +']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible insertar en [IMINVTRX_SQL]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#TRA.'+ @PP_TRANSACCION_NO +']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TRANSACCION_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TRANSACCION_NO AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
@@ -722,7 +725,7 @@ AS
 			ISNULL(COLOUR, '')  AS COLOUR
 	-- =====================
 	FROM	RP_Folios 
-	INNER JOIN RP_SC ON TAG=TAGNO AND STATUS=@PP_STATUS
+	INNER JOIN RP_SC ON TAG=TAGNO AND LTRIM(RTRIM(STATUS))=@PP_STATUS
 	-- =====================
 	
 	-----////////////////////////////////////////////////////////////////
@@ -803,7 +806,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_
 	DROP PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 GO
 
--- EXEC [PG_SK_CCJOBHDR_SQL_X_ORDEN] 0,0,'00001'
+-- EXEC [PG_SK_CCJOBHDR_SQL_X_ORDEN] 0,144, 09490
 
 CREATE PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 	@PP_K_SISTEMA_EXE			INT,
@@ -821,24 +824,10 @@ AS
 	SELECT	*
 	-- =====================
 	FROM	CCJOBHDR_SQL
-	WHERE	JOBNO = @PP_ORDEN_NO
+	WHERE	LTRIM(RTRIM(JOBNO)) = @PP_ORDEN_NO
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
-
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
-													'',
-													-- ===========================================
-													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
-
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
@@ -853,7 +842,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_
 	DROP PROCEDURE [dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]
 GO
 
--- EXEC [PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN] 0,0,'00001'
+-- EXEC [PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN] 0,0,   'FMCKTX7   ' , 'T38' , '09490' 
 
 CREATE PROCEDURE [dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]
 	@PP_K_SISTEMA_EXE			INT,
@@ -873,17 +862,17 @@ AS
 				IMINVTRX_SQL.doc_ord_no, IMINVTRX_SQL.quantity, IMLSTRX_SQL.trx_qty 
 		-- =====================
         FROM	IMLSTRX_SQL 
-		INNER	JOIN	IMINVTRX_SQL	ON	IMLSTRX_SQL.source = IMINVTRX_SQL.source 
-										AND IMLSTRX_SQL.ord_no = IMINVTRX_SQL.ord_no 
-										AND IMLSTRX_SQL.ctl_no = IMINVTRX_SQL.ctl_no 
-										AND IMLSTRX_SQL.line_no = IMINVTRX_SQL.line_no 
-										AND IMLSTRX_SQL.lev_no = IMINVTRX_SQL.lev_no 
-										AND IMLSTRX_SQL.seq_no = IMINVTRX_SQL.seq_no 
+		INNER	JOIN	IMINVTRX_SQL	ON	Ltrim(Rtrim(IMLSTRX_SQL.source)) = Ltrim(Rtrim(IMINVTRX_SQL.source))
+										AND Ltrim(Rtrim(IMLSTRX_SQL.ord_no)) = Ltrim(Rtrim(IMINVTRX_SQL.ord_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.ctl_no)) = Ltrim(Rtrim(IMINVTRX_SQL.ctl_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.line_no)) =Ltrim(Rtrim(IMINVTRX_SQL.line_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.lev_no)) = Ltrim(Rtrim(IMINVTRX_SQL.lev_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.seq_no)) = Ltrim(Rtrim(IMINVTRX_SQL.seq_no)) 
         -- =====================
-		WHERE IMINVTRX_SQL.item_no = Ltrim(Rtrim(@PP_COLOR))
-        AND IMINVTRX_SQL.loc = Ltrim(Rtrim(@PP_LOCACION)) 
-        AND (IMINVTRX_SQL.doc_ord_no = Ltrim(Rtrim(@PP_ORDEN_NO))
-			OR IMINVTRX_SQL.doc_ord_no = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
+		WHERE Ltrim(Rtrim(IMINVTRX_SQL.item_no)) = Ltrim(Rtrim(@PP_COLOR))
+        AND Ltrim(Rtrim(IMINVTRX_SQL.loc)) = Ltrim(Rtrim(@PP_LOCACION)) 
+        AND (Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = Ltrim(Rtrim(@PP_ORDEN_NO))
+			OR Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
 		--	OR IMINVTRX_SQL.doc_ord_no =  Ltrim(Rtrim(@PP_ORDEN_NO))
         ) 
 		 -- =====================

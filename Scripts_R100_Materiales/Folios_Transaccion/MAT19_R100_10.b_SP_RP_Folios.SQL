@@ -13,6 +13,50 @@ USE [DATA_02Pruebas]
 GO
 
 
+
+
+-- EXECUTE [dbo].[PG_SK_RP_FOLIO_X_TAG] 0,0,  'FNLGPS4' 
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / FICHA
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_FOLIO_X_TAG]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_RP_FOLIO_X_TAG]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_RP_FOLIO_X_TAG]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TAG						INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		
+	SELECT	ID,
+			ISNULL(TAG, 0)		AS ID,
+			ISNULL(STATUS,'')	AS STATUS,
+			ISNULL(MACHINE,'')	AS MACHINE,
+			ISNULL(JOBNO,'')	AS JOBNO,
+			ISNULL(JOBNO2,'')	AS JOBNO2
+	-- =====================
+	FROM	RP_Folios 
+	WHERE	TAG = @PP_TAG
+	-- =====================
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
 -- EXECUTE [dbo].[PG_IN_RP_FOLIOS] 0,0, 0
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_RP_FOLIOS]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_RP_FOLIOS]
@@ -41,22 +85,20 @@ AS
 			VALUES(
 					@PP_TAG_NO, @PP_ESTATUS, @PP_MAQUINA, @PP_JOBNO, @PP_JOBNO2	)
 			
-			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR: // INSERT RP_Folios // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
@@ -115,22 +157,22 @@ AS
 	IF @@ROWCOUNT = 0
 		BEGIN
 			RAISERROR ('ERROR SP: PG_UP_RP_FOLIO_X_FOLIO', 16, 1 ) --MENSAJE - Severity -State.
-			SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios  // '
+			--SET @VP_MENSAJE = 'ERROR: // UPDATE RP_Folios  // '
 		END
 	-- /////////////////////////////////////////////////////////////////////
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 

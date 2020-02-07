@@ -57,17 +57,17 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 
-	IF @VP_MENSAJE<>''
-		BEGIN
+	--IF @VP_MENSAJE<>''
+	--	BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible insert el [JOBNO]: ' + @VP_MENSAJE 
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		SET		@VP_MENSAJE = @VP_MENSAJE + '[#JOB.'+CONVERT(VARCHAR(10),@PP_JOB_NO)+']'
-		SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+	--	SET		@VP_MENSAJE = 'No es posible insert el [JOBNO]: ' + @VP_MENSAJE 
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#JOB.'+CONVERT(VARCHAR(10),@PP_JOB_NO)+']'
+	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
-		END
+	--	END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_JOB_NO AS CLAVE
+	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_JOB_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
