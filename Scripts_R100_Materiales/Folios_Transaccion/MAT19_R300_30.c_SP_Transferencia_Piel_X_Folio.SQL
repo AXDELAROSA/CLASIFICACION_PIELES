@@ -778,18 +778,18 @@ AS
 
 	-----////////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
-													'',
-													-- ===========================================
-													'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_SER_LOT_NO_1, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
+	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'SELECT',
+	--												'',
+	--												-- ===========================================
+	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_SER_LOT_NO_1, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '@PP_BUSCAR', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
@@ -816,11 +816,6 @@ CREATE PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 AS
 
 	-- ///////////////////////////////////////////
-
-	DECLARE @VP_LI_N_REGISTROS		INT = 10000
-
-	-- =========================================
-			-- SELECT TOP 100 * FROM CCJOBHDR_SQL
 	SELECT	*
 	-- =====================
 	FROM	CCJOBHDR_SQL
