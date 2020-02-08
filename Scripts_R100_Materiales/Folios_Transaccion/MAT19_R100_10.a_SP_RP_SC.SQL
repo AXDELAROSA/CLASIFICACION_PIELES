@@ -211,7 +211,8 @@ AS
 	-- =========================================
 		
 	SELECT	DISTINCT
-			LOT		AS LOTE
+			CONCAT('         ', RIGHT('000000' + Ltrim(Rtrim(LOT)), 6))		AS LOTE
+			--LOT		AS LOTE
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 

@@ -40,6 +40,7 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_NUEVO]
 	-- ===========================
 	@PP_LOTE_ARRAY				NVARCHAR(MAX),
 	@PP_PIEL_ARRAY				NVARCHAR(MAX),
+	@PP_SQF_ARRAY				NVARCHAR(MAX),
 	-- ===========================
 	@PP_USER					VARCHAR(25),
 	@PP_COMPUTER_NAME			VARCHAR(25)
@@ -104,10 +105,8 @@ AS
 				SET NOCOUNT ON
 				
 				DECLARE @VP_POSICION_PIEL			INT
-				DECLARE @VP_POSICION_COLOR			INT
 				DECLARE @VP_POSICION_LOTE			INT
 				DECLARE @VP_POSICION_SQF			INT
-				DECLARE @VP_POSICION_MOVIMIENTO		INT
 
 				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
 				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
@@ -117,24 +116,28 @@ AS
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
 				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
 				SET	@PP_PIEL_ARRAY			= @PP_PIEL_ARRAY		+ '/'		
+				SET	@PP_SQF_ARRAY			= @PP_SQF_ARRAY			+ '/'
 			
 				--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
 				WHILE patindex('%/%' , @PP_PIEL_ARRAY) <> 0
 					BEGIN
 						SELECT @VP_POSICION_PIEL	=	patindex('%/%' , @PP_PIEL_ARRAY)
 						SELECT @VP_POSICION_LOTE	=	patindex('%/%' , @PP_LOTE_ARRAY)
+						SELECT @VP_POSICION_SQF	=		patindex('%/%' , @PP_SQF_ARRAY)
 						
 						--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
 						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
+						SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY,  @VP_POSICION_SQF - 1)
 						
-						SELECT	TOP 1 @VP_SQF_VALOR = LTRIM(RTRIM(SQF)),
+						SELECT	TOP 1 
 								@VP_MOVIMIENTO_VALOR = LTRIM(RTRIM(MOVEMENT))
 												FROM	RP_SC 
 												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
 												AND		LTRIM(RTRIM(TAGNO)) = @PP_TAGNO_ORIGEN
 												AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_VALOR
 												AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_VALOR
+												AND		LTRIM(RTRIM(SQF)) = @VP_SQF_VALOR
 
 						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
 								VALUES	(
@@ -147,6 +150,7 @@ AS
 						--Reemplazamos lo procesado con nada con la funcion stuff
 						SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
 						SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
+						SELECT @PP_SQF_ARRAY			= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION_SQF, '')
 
 					END
 								
