@@ -22,7 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_
 	DROP PROCEDURE [dbo].[PG_LI_RP_SC]
 GO
 
--- EXEC PG_LI_RP_SC_Y_RP_FOLIO 0 ,0, '32291', '0023' 
+-- EXEC PG_LI_RP_SC 0 ,0, '32291', '0023' 
 
 CREATE PROCEDURE [dbo].[PG_LI_RP_SC]
 	@PP_K_SISTEMA_EXE			INT,
@@ -668,7 +668,7 @@ AS
 		-- ===========================
 	WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAG_NO 
 	AND		LTRIM(RTRIM(LOT))=@PP_LOTE
-	AND		LTRIM(RTRIM(LOT))=@PP_PIEL
+	AND		LTRIM(RTRIM(HIDE))=@PP_PIEL
 	-- ===========================
 
 	IF @@ROWCOUNT = 0

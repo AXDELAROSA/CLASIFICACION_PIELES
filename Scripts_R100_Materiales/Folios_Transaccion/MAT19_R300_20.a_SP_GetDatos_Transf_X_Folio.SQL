@@ -139,6 +139,70 @@ GO
 
 
 
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]
+GO
+
+-- EXEC [PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN] 0,0,  'FMCKTX7' , 'T17' , '09489' 
+
+CREATE PROCEDURE [dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_COLOR					VARCHAR(20),
+	@PP_LOCACION				VARCHAR(5),
+	@PP_ORDEN_NO				VARCHAR(10)
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+
+	-- =========================================
+		SELECT	DISTINCT IMLSTRX_SQL.ser_lot_no AS LOTE
+		-- =====================
+        FROM	IMLSTRX_SQL 
+		INNER	JOIN	IMINVTRX_SQL	ON	Ltrim(Rtrim(IMLSTRX_SQL.source)) = Ltrim(Rtrim(IMINVTRX_SQL.source))
+										AND Ltrim(Rtrim(IMLSTRX_SQL.ord_no)) = Ltrim(Rtrim(IMINVTRX_SQL.ord_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.ctl_no)) = Ltrim(Rtrim(IMINVTRX_SQL.ctl_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.line_no)) =Ltrim(Rtrim(IMINVTRX_SQL.line_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.lev_no)) = Ltrim(Rtrim(IMINVTRX_SQL.lev_no)) 
+										AND Ltrim(Rtrim(IMLSTRX_SQL.seq_no)) = Ltrim(Rtrim(IMINVTRX_SQL.seq_no)) 
+        -- =====================
+		WHERE Ltrim(Rtrim(IMINVTRX_SQL.item_no)) = Ltrim(Rtrim(@PP_COLOR))
+        AND Ltrim(Rtrim(IMINVTRX_SQL.loc)) = Ltrim(Rtrim(@PP_LOCACION)) 
+        AND (Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = Ltrim(Rtrim(@PP_ORDEN_NO))
+			OR Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
+        ) 
+		 -- =====================
+		ORDER BY IMLSTRX_SQL.ser_lot_no
+
+	-----////////////////////////////////////////////////////////////////
+
+	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'SELECT',
+	--												'',
+	--												-- ===========================================
+	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '@PP_BUSCAR', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
