@@ -165,7 +165,7 @@ AS
 	DECLARE @VP_LI_N_REGISTROS		INT = 10000
 
 	-- =========================================
-		SELECT	DISTINCT IMLSTRX_SQL.ser_lot_no AS LOTE
+		SELECT	DISTINCT LTRIM(RTRIM(IMLSTRX_SQL.ser_lot_no)) AS LOTE
 		-- =====================
         FROM	IMLSTRX_SQL 
 		INNER	JOIN	IMINVTRX_SQL	ON	Ltrim(Rtrim(IMLSTRX_SQL.source)) = Ltrim(Rtrim(IMINVTRX_SQL.source))
@@ -181,7 +181,7 @@ AS
 			OR Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
         ) 
 		 -- =====================
-		ORDER BY IMLSTRX_SQL.ser_lot_no
+		--ORDER BY IMLSTRX_SQL.ser_lot_no
 
 	-----////////////////////////////////////////////////////////////////
 
