@@ -71,8 +71,9 @@ AS
 				-- /////////////////////////////////////////////////////////////////////
 				
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
-				EXECUTE [dbo].[PG_SK_CATALOGO_K_MAX_GET]	0, 'RP_SC', 'TAGNO',
-															@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
+				EXECUTE [DATA_02Pruebas].[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
+																			'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+																			@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 				-- =====================
 
 				IF @VP_MENSAJE = ''

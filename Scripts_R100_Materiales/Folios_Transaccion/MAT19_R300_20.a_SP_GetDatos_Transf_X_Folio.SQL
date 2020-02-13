@@ -40,8 +40,9 @@ AS
 
 	IF @VP_FOLIO IS NULL OR @VP_FOLIO = ''
 		BEGIN
-			EXECUTE [dbo].[PG_SK_CATALOGO_K_MAX_GET]	0, 'RP_SC', 'TAGNO',
-														@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
+			EXECUTE [DATA_02Pruebas].[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
+																		'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+																		@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
 		END
 	-- =========================================
 		
