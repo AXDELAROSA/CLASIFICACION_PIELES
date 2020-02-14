@@ -174,7 +174,23 @@ AS
 			LOT		AS LOTE,
 			HIDE	AS PIEL,
 			SQF,
-			ISNULL(MOVEMENT, '0') AS MOVEMENT
+			--ISNULL(MOVEMENT, '') AS MOVEMENT
+			(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	IMINVTRX_SQL.Loc
+																-- ===================== 
+														FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+																-- =====================
+														WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
+														AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
+														AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
+														AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
+														AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
+														AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
+														AND		IMINVTRX_SQL.ord_no	= MOVEMENT
+														-- =====================
+														AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
+																OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
+														)
+				ELSE	MOVEMENT END ) AS MOVEMENT
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 
