@@ -1,3 +1,5 @@
+--ORIGINAL
+
 DECLARE @tableHTML  NVARCHAR(MAX) ;  
   
 SET @tableHTML =  
@@ -21,4 +23,36 @@ EXEC msdb.dbo.sp_send_dbmail @recipients='franciscoe@pearlleather.com.mx',
     @subject = 'TEST',  
     @body = @tableHTML,  
     @body_format = 'HTML', 
-	@file_attachments = 'C:\Users\Administrator.JUAREZ.000\Desktop\New folder\TEST.txt';
+	@file_attachments = 'C:\Users\Administrator.JUAREZ.000\Desktop\New folder\TEST.txt';		--EL ARCHIVO A ENVIAR DEBE ESTAR EN EL MISMO (SERVIDOR, EQUIPO) QUE SE TIENE INSTALADO 
+													--EL SQLSERVER
+
+-- CREADO EN BD
+BEGIN
+			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx;Alejandrod@pearlleather.com.mx'
+			--SET @VP_RECIPIENTS = 'dianan@pearlleather.com.mx;manuelg@pearlleather.com.mx;fernandog@pearlleather.com.mx;pedrov@pearlleather.com.mx'
+			
+			DECLARE @VP_SUBJECT		VARCHAR(255) = 'Transferencia hacia MFP...'
+			DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
+			DECLARE @VP_BODY		NVARCHAR(MAX) 
+			
+			SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
+								N'<thead>' + 
+								  N'<tr BGCOLOR="#ADD8E6">' + 
+								    N'<th colspan="5">Se ha creado una nueva transferencia (Entrada a MFP)... </th>' + 
+								  N'</tr>' + 
+								  N'<tr BGCOLOR="#48D1CC">' + 
+								    N'<th>Fecha</th><th>Color</th><th>Cantidad</th><th>Comentario</th><th>Usuario</th>' + 
+								  N'</tr>' + 
+								N'</thead>' + 
+								N'<tbody>' + 
+								  N'<tr>' + 
+								  N'<td>'+ @VP_FECHA +'</td><td>'+ @PP_COLOR_PIEL +'</td><td>'+ @VP_TOTAL_SQF +'</td><td>'+ @PP_COMENTARIO+'</td><td>'+ @PP_USER +'</td>' + 
+								  N'</tr>' + 
+								N'</tbody>' + 
+							N'</table>' ;
+				SET ROWCOUNT 0
+				 				
+			EXECUTE	[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+	
+	END
