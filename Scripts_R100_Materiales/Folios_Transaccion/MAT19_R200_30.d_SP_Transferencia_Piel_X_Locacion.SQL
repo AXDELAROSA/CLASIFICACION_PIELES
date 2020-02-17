@@ -121,10 +121,10 @@ AS
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'SELECT',
+													'PROCESO',
 													'',
 													-- ===========================================
 													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
@@ -132,7 +132,7 @@ AS
 													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
 													0, 0, @PP_TAGNO_ORIGEN, '' , 0.00, 0.00,
 													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '@PP_BUSCAR', '', '', ''
+													'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO

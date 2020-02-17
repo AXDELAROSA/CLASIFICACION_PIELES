@@ -85,25 +85,10 @@ AS
 				END
 		END
 	
-	-- /////////////////////////////////////////////////////////////////////
-	
-		
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [DOC_NO]: ' + @VP_MENSAJE 
-	--	--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TODOS)+']'
-	--	--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--	SELECT	@VP_MENSAJE AS MENSAJE, 0 AS CLAVE
-			
+	-- /////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////
 
-	-----////////////////////////////////////////////////////////////////
-
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',
@@ -174,22 +159,17 @@ AS
 	
 	IF @VP_MENSAJE<>''
 		BEGIN
-		--SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE  + '[#LOC.'+ @PP_LOCACION_ORIGEN +']' 
+		
 		SET		@VP_MENSAJE = ' PG_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_QUITAR // PG_RN_IMLSMST_SQL_UPDATE ' + @VP_MENSAJE 
 		
 		RAISERROR (@VP_MENSAJE, 16, 1 ) --MENSAJE - Severity -State.
-		--SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE 
-		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_ORIGEN +']'
-		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
 		
 		END
 	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_ORIGEN AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',
@@ -286,23 +266,10 @@ AS
 						SET @VP_MENSAJE = 'ERROR: // INSERT IMLSMST_SQL // '
 				END
 		END
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [IMLSMST_SQL]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_DESTINO +']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_DESTINO AS CLAVE
-
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',
@@ -377,23 +344,10 @@ AS
 				SET @VP_MENSAJE = 'ERROR: // INSERT IMLSTRX_SQL // '
 				
 		END
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible insertar en [IMLSTRX_SQL]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#TRA.'+ @PP_TRANSACCION_NO +']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TRANSACCION_NO AS CLAVE
-
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'INSERT',
@@ -456,23 +410,10 @@ AS
 			END
 		END
 
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [IMINVLOC_SQL]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_ORIGEN +']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_ORIGEN AS CLAVE
-
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',
@@ -551,23 +492,10 @@ AS
 						SET @VP_MENSAJE = 'ERROR: // INSERT IMINVLOC_SQL // '
 				END
 		END
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [IMINVLOC_SQL]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOC.'+ @PP_LOCACION_DESTINO +']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_LOCACION_DESTINO AS CLAVE
-
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',
@@ -661,23 +589,10 @@ AS
 				SET @VP_MENSAJE = 'ERROR: // INSERT IMINVTRX_SQL // '
 				
 		END
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible insertar en [IMINVTRX_SQL]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#TRA.'+ @PP_TRANSACCION_NO +']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TRANSACCION_NO AS CLAVE
-
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'INSERT',
@@ -728,22 +643,8 @@ AS
 	INNER JOIN RP_SC ON TAG=TAGNO AND LTRIM(RTRIM(STATUS))=@PP_STATUS
 	-- =====================
 	
-	-----////////////////////////////////////////////////////////////////
-
-	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'SELECT',
-	--												'',
-	--												-- ===========================================
-	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_STATUS, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', '@PP_BUSCAR', '', '', ''
-
-	-- ////////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////
+	-- ///////////////////////////////////////////////////////////////
 GO
 
 
@@ -776,22 +677,8 @@ AS
 		OR (	LTRIM(RTRIM(SER_LOT_NO1)) = @PP_SER_LOT_NO_2	AND	LTRIM(RTRIM(SER_LOT_NO2)) = @PP_SER_LOT_NO_1	)
 	-- =====================
 
-	-----////////////////////////////////////////////////////////////////
-
-	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'SELECT',
-	--												'',
-	--												-- ===========================================
-	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_SER_LOT_NO_1, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', '@PP_BUSCAR', '', '', ''
-
-	-- ////////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////
+	-- ///////////////////////////////////////////////////////////////
 GO
 
 
@@ -873,22 +760,8 @@ AS
 		 -- =====================
 		ORDER BY IMLSTRX_SQL.ser_lot_no, IMINVTRX_SQL.lev_no DESC
 
-	-----////////////////////////////////////////////////////////////////
-
-	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'SELECT',
-	--												'',
-	--												-- ===========================================
-	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', '@PP_BUSCAR', '', '', ''
-
-	-- ////////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////
+	-- //////////////////////////////////////////////////////////////////
 GO
 
 

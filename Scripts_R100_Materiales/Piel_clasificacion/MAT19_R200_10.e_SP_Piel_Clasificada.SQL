@@ -82,7 +82,10 @@ AS
 			BEGIN CATCH
 				/* Ocurrió un error, deshacemos los cambios*/ 
 				ROLLBACK TRANSACTION
-				SET @VP_MENSAJE = 'ERROR: //TRASAC. UPDATE RP_SC // '
+				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
+				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
+				SET @VP_MENSAJE = 'ERROR: //TRASAC. PG_UP_RP_SC_K_CLASIFICACION // ' + @VP_ERROR_TRANS
+
 			END CATCH
 
 		END
@@ -105,20 +108,20 @@ AS
 	SELECT	@VP_MENSAJE AS MENSAJE, @PP_PIEL AS CLAVE
 
 	-- //////////////////////////////////////////////////////////////
-	/*
-		EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+
+	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'UPDATE',
+													'PROCESO',
 													'',
 													-- ===========================================
-													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
 													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
 													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @VP_PIEL, '' , 0.00, 0.00,
+													0, 0, @PP_PIEL, '' , 0.00, 0.00,
 													-- === @PP_VALOR_1 al 6_DATO
-													'', '', 'UP', '', '', ''
-*/
+													'', '', '', '', '', ''
+
 	-- //////////////////////////////////////////////////////////////
 GO
 

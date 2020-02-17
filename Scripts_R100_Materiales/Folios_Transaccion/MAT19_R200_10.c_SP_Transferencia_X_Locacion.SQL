@@ -82,21 +82,10 @@ AS
 		END
 	-- /////////////////////////////////////////////////////////////////////
 
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO] en [RP_SC_PRT]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'INSERT',
@@ -178,9 +167,9 @@ AS
 	-- /////////////////////////////////////////////////////////////////////
 	
 	DECLARE @VP_TAG_NO_NUEVO		INT = 0
-	EXECUTE [DATA_02Pruebas].[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																'DATA_02Pruebas', 'RP_SC', 'TAGNO',
-																@OU_K_TABLA_DISPONIBLE = @VP_TAG_NO_NUEVO	OUTPUT
+	EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
+														'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+														@OU_K_TABLA_DISPONIBLE = @VP_TAG_NO_NUEVO	OUTPUT
 	-- =====================
 
 	IF @VP_MENSAJE = ''
@@ -201,22 +190,10 @@ AS
 										@VP_TAG_NO_NUEVO, 1
 		END
 	-- /////////////////////////////////////////////////////////////////////
-
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAG_NO_NUEVO)+']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @VP_TAG_NO_NUEVO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'INSERT',
@@ -276,23 +253,10 @@ AS
 												@VP_DETAIL, @PP_HIDE
 
 		END
-	-- /////////////////////////////////////////////////////////////////////
-
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO_ANTERIOR)+']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO_ANTERIOR AS CLAVE
-	
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',
@@ -405,21 +369,7 @@ AS
           
 
 	-----////////////////////////////////////////////////////////////////
-
-	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'SELECT',
-	--												'',
-	--												-- ===========================================
-	--												'[LI]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_LOTE, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', '@PP_BUSCAR', '', '', ''
-
-	-- ////////////////////////////////////////////////////////////////////
+	-- //////////////////////////////////////////////////////////////////
 GO
 
 
@@ -553,23 +503,10 @@ AS
 												@VP_DETAIL, ''
 			
 		END
-	-- /////////////////////////////////////////////////////////////////////
-
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
-	
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'INSERT',

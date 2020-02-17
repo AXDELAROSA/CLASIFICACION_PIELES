@@ -86,23 +86,10 @@ AS
 					@PP_TAG_NO, @PP_ESTATUS, @PP_MAQUINA, @PP_JOBNO, @PP_JOBNO2	)
 			
 		END
-	-- /////////////////////////////////////////////////////////////////////
-
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible insertar el [FOLIO]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
-	
+	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'INSERT',
@@ -162,21 +149,7 @@ AS
 	-- /////////////////////////////////////////////////////////////////////
 	-- /////////////////////////////////////////////////////////////////////
 
-	--IF @VP_MENSAJE<>''
-	--	BEGIN
-		
-	--	SET		@VP_MENSAJE = 'No es posible actualizar el [FOLIO]: ' + @VP_MENSAJE 
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@PP_TAG_NO)+']'
-	--	SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
-		
-	--	END
-	
-	--SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAG_NO AS CLAVE
-	
-	-- //////////////////////////////////////////////////////////////
-
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'UPDATE',

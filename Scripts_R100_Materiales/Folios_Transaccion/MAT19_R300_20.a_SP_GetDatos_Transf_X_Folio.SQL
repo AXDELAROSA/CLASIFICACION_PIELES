@@ -40,9 +40,9 @@ AS
 
 	IF @VP_FOLIO IS NULL OR @VP_FOLIO = ''
 		BEGIN
-			EXECUTE [DATA_02Pruebas].[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																		'DATA_02Pruebas', 'RP_SC', 'TAGNO',
-																		@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
+			EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
+																'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+																@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
 		END
 	-- =========================================
 		
@@ -83,7 +83,7 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SELECT /								*NO SE USA POR EL MOMENTO*
+-- // STORED PROCEDURE ---> SELECT /								
 -- //////////////////////////////////////////////////////////////
 -- EXEC [PG_GET_VALOR_LOCACION] 0, 0, 2137674
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_VALOR_LOCACION]') AND type in (N'P', N'PC'))
@@ -140,6 +140,32 @@ GO
 
 
 
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT /								
+-- //////////////////////////////////////////////////////////////
+-- EXEC [PG_GET_VALOR_LOCACION_X_ORDEN] 0, 0, '09489'
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_VALOR_LOCACION_X_ORDEN]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_VALOR_LOCACION_X_ORDEN]
+GO
+
+CREATE PROCEDURE [dbo].[PG_GET_VALOR_LOCACION_X_ORDEN]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN					VARCHAR(10)
+AS
+	-- ///////////////////////////////////////////
+	SELECT	LTRIM(RTRIM(alt1_loc)) AS LOCACCION 
+	FROM	IMLOCFIL_SQL
+	WHERE	LOC_DESC = (	SELECT TOP 1  MACHINE 
+							FROM	CCJOBHDR_SQL 
+							WHERE	LTRIM(RTRIM(JOBNO)) = @PP_ORDEN		)
+      
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
 
 
 -- //////////////////////////////////////////////////////////////
@@ -184,22 +210,8 @@ AS
 		 -- =====================
 		--ORDER BY IMLSTRX_SQL.ser_lot_no
 
-	-----////////////////////////////////////////////////////////////////
-
-	--EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'SELECT',
-	--												'',
-	--												-- ===========================================
-	--												'[SK]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_ORDEN_NO, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', '@PP_BUSCAR', '', '', ''
-
-	-- ////////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////
 GO
 
 
