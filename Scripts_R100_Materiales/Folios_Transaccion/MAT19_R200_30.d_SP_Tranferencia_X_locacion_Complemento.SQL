@@ -81,7 +81,14 @@ AS
 	SELECT TOP 1 @VP_COLOR		= COLOR,
 				 @VP_TOTAL_SQF	= SQF
 								FROM	@TBL_TOTAL_SQF_X_LOTE
-	
+	-- /////////////////////////////////////////////////////////////////////
+
+	EXECUTE [dbo].[PG_PR_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+										3, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
+										@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
+										@PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
+	-- /////////////////////////////////////////////////////////////////////
+
 	IF @PP_LOCACION_ORIGEN = 'MIT' And @PP_LOCACION_DESTINO = 'MHI' 
 		BEGIN
 			IF EXISTS ( SELECT TOP 1 RP_Folios.ID FROM RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND COLOUR = @VP_COLOR)

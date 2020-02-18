@@ -149,7 +149,7 @@ SET NOCOUNT OFF
 -- //////////////////////////////////////////////////////////////
 
 CREATE TABLE [dbo].[PIEL_LOG] (
-	[K_PIEL_LOG]				[INT]			NOT NULL,
+	[K_PIEL_LOG]				[INT] IDENTITY (1,1)			NOT NULL,
 	-- =================================
 	[K_TIPO_PIEL_LOG]			[INT]			NOT NULL,
 	-- =================================	

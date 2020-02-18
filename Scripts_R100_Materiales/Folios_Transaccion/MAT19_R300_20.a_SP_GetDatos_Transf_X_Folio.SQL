@@ -141,34 +141,6 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SELECT /								
--- //////////////////////////////////////////////////////////////
--- EXEC [PG_GET_VALOR_LOCACION_X_ORDEN] 0, 0, '09489'
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_VALOR_LOCACION_X_ORDEN]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_GET_VALOR_LOCACION_X_ORDEN]
-GO
-
-CREATE PROCEDURE [dbo].[PG_GET_VALOR_LOCACION_X_ORDEN]
-	@PP_K_SISTEMA_EXE			INT,
-	@PP_K_USUARIO_ACCION		INT,
-	-- ===========================
-	@PP_ORDEN					VARCHAR(10)
-AS
-	-- ///////////////////////////////////////////
-	SELECT	LTRIM(RTRIM(alt1_loc)) AS LOCACCION 
-	FROM	IMLOCFIL_SQL
-	WHERE	LOC_DESC = (	SELECT TOP 1  MACHINE 
-							FROM	CCJOBHDR_SQL 
-							WHERE	LTRIM(RTRIM(JOBNO)) = @PP_ORDEN		)
-      
-	-- ////////////////////////////////////////////////////////////////////
-GO
-
-
-
-
-
--- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
