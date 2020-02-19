@@ -206,6 +206,20 @@ AS
 								SET @VP_LOCACION = @VP_MOVIMIENTO
 							END
 
+						-- ///////////////////////////////////////////
+						DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE AS INT)
+						DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL AS INT)
+						DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF AS DECIMAL(19,4))
+
+						-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
+
+						EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															3, @PP_TAGNO_ORIGEN, @PP_CB_COLOR,
+															@VP_LOTE_INT, @VP_PIEL_INT, @VP_SQF_DEC, 
+															@VP_LOCACION, 0, 
+															@VP_TAGNO_DESTINO, @VP_LOCACION, 0
+						-- ///////////////////////////////////////////
+
 						EXECUTE	[dbo].[PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																								@PP_TAGNO_ORIGEN, @VP_TAGNO_DESTINO,
 																								@VP_PIEL, @VP_LOTE, @VP_SQF, @VP_LOCACION

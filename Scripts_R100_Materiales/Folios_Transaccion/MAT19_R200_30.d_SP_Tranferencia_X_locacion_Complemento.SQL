@@ -81,12 +81,7 @@ AS
 	SELECT TOP 1 @VP_COLOR		= COLOR,
 				 @VP_TOTAL_SQF	= SQF
 								FROM	@TBL_TOTAL_SQF_X_LOTE
-	-- /////////////////////////////////////////////////////////////////////
-
-	EXECUTE [dbo].[PG_PR_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-										3, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
-										@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
-										@PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
+	
 	-- /////////////////////////////////////////////////////////////////////
 
 	IF @PP_LOCACION_ORIGEN = 'MIT' And @PP_LOCACION_DESTINO = 'MHI' 
@@ -95,12 +90,26 @@ AS
 				BEGIN
 					DECLARE @VP_FOLIO	INT
 					SELECT TOP 1 @VP_FOLIO = TAG from RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND COLOUR = @VP_COLOR 
-	
+					
+					-- /////////////////////////////////////////////////////////////////////
+					EXECUTE [dbo].[PG_PR_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														1, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
+														@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
+														@VP_FOLIO, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
+					-- /////////////////////////////////////////////////////////////////////
+
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_ORIGEN, @VP_FOLIO, @PP_LOCACION_DESTINO, 1
 				END
 			ELSE
 				BEGIN
+					-- /////////////////////////////////////////////////////////////////////
+					EXECUTE [dbo].[PG_PR_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														1, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
+														@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
+														0, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
+					-- /////////////////////////////////////////////////////////////////////
+
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_ORIGEN, 0, @PP_LOCACION_DESTINO, 0
 					
@@ -110,6 +119,18 @@ AS
 		END
 	ELSE
 		BEGIN
+			DECLARE @VP_TIPO_PIEL_LOG INT = 4
+
+			IF @PP_ORDEN_DESTINO = ''
+				SET @VP_TIPO_PIEL_LOG = 2
+
+			-- /////////////////////////////////////////////////////////////////////
+			EXECUTE [dbo].[PG_PR_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
+												@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
+												0, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
+			-- /////////////////////////////////////////////////////////////////////
+
 			EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@PP_TAGNO_ORIGEN, 0, @PP_LOCACION_DESTINO, 0
 		END

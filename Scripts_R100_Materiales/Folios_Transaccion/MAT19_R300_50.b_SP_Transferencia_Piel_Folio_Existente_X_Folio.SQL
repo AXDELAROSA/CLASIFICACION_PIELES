@@ -62,8 +62,12 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]
 AS
 
 	-- ///////////////////////////////////////////
-
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+
+	DECLARE @VP_TIPO_PIEL_LOG INT = 5
+
+	IF @PP_TIPO_TRANSFERENCIA = 'DEVOLUCION'
+		SET @VP_TIPO_PIEL_LOG = 6
 	-- ///////////////////////////////////////////
 		
 	DECLARE @VP_COLOR_ORIGEN	VARCHAR(20)
@@ -247,9 +251,20 @@ AS
 						
 						WHILE @@FETCH_STATUS = 0
 							BEGIN
-								DECLARE @VP_F_ACTUAL	AS DATE = GETDATE()
+								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
+
+								DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE_TBL AS INT)
+								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
+								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(19,4))
+
+								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
+																	@VP_LOTE_INT, @VP_PIEL_INT, @VP_SQF_DEC, 
+																	@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN, 
+																	@PP_TAGNO_DESTINO, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
 
 								-- /////////////////////////INGRESO EL FOLIO NUEVO////////////////////////////////////////////
+								DECLARE @VP_F_ACTUAL	AS DATE = GETDATE()
 								EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@VP_F_ACTUAL, @PP_CB_COLOR, @VP_LOTE_TBL, 
 																@VP_PIEL_TBL, @VP_SQF_TBL, @PP_TAGNO_DESTINO, 
@@ -358,6 +373,17 @@ AS
 						-- /////////////////////////////////////////////////////////////////////
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN
+								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
+								 SET @VP_LOTE_INT 	= CAST(@VP_LOTE_TBL AS INT)
+								 SET @VP_PIEL_INT 	= CAST(@VP_PIEL_TBL AS INT)
+
+								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
+																	@VP_LOTE_INT, @VP_PIEL_INT, @PP_TB_SQF, 
+																	@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN, 
+																	@PP_TAGNO_DESTINO, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
+
+								-- ///////////////////////////SI LA PIEL EXISTE SE SUMA A LO QUE TIENE, SI NO SOLO SE AGREGA////////////
 								IF (@PP_LOTE_PIEL_EXISTE=1)
 									BEGIN
 										IF  @PP_LOTE_PIEL_EXISTE_ADD = 1
@@ -400,9 +426,19 @@ AS
 							END
 						ELSE
 							BEGIN
-								SET @VP_TOTAL_SQF =  CAST(@VP_SQF_TBL AS DECIMAL(13,2)) - @PP_TB_SQF
+								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
+								 SET @VP_LOTE_INT 	= CAST(@VP_LOTE_TBL AS INT)
+								 SET @VP_PIEL_INT 	= CAST(@VP_PIEL_TBL AS INT)
+
+								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
+																	@VP_LOTE_INT, @VP_PIEL_INT, @PP_TB_SQF, 
+																	@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN, 
+																	@PP_TAGNO_DESTINO, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
 
 								-- ///////////////RESTA AL FOLIO ORIGEN EL SQF QUE SE AGREGO AL FOLIO DESTINO ///////////////
+								SET @VP_TOTAL_SQF =  CAST(@VP_SQF_TBL AS DECIMAL(13,2)) - @PP_TB_SQF
+								
 								EXECUTE	[dbo].[PG_UP_RP_SC_SQF_X_FOLIO_LOTE_Y_PIEL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																						@VP_TOTAL_SQF, @PP_TAGNO_ORIGEN,
 																						@VP_LOTE_TBL, @VP_PIEL_TBL

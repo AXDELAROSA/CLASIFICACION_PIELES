@@ -134,9 +134,11 @@ SET NOCOUNT ON
 -- ===============================================
 
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 1, 'INGRESO A ALMACEN',				'INGRE_ALMN', 1, '', 1
-EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 2, 'TRANSFERENCIA A ORDEN',			'TRANSF_ORD', 2, '', 1
-EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 3, 'TRANSFERENCIA A LOCACION ',		'TRANSF_LOC', 3, '', 1
-EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 4, 'DEVOLUCION',						'DEVOLUCION', 4, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 2, 'TRANSFERENCIA A LOCACION ',		'TRANSF_LOC', 2, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 3, 'FOLIO NUEVO',						'FOLIO_NUEV', 3, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 4, 'TRANSFERENCIA A ORDEN',			'TRANSF_ORD', 4, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 5, 'TRANSFERENCIA A FOLIO',			'TRANSF_FOL', 5, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 6, 'DEVOLUCION',						'DEVOLUCION', 6, '', 1
 GO
 -- ===============================================
 SET NOCOUNT OFF
@@ -153,11 +155,13 @@ CREATE TABLE [dbo].[PIEL_LOG] (
 	-- =================================
 	[K_TIPO_PIEL_LOG]			[INT]			NOT NULL,
 	-- =================================	
+	[FOLIO_ORIGEN]				INT				NOT NULL,	
 	[COLOR]						VARCHAR(20)		NOT NULL,	
 	[LOTE]						INT				NOT NULL,	
 	[PIEL]						INT				NOT NULL,	
 	[LOCACION_ORIGEN]			VARCHAR(5)		NOT NULL,	
 	[ORDEN_ORIGEN]				INT				NULL DEFAULT 0,
+	[FOLIO_DESTINO]				INT				NOT NULL,
 	[LOCACION_DESTINO]			VARCHAR(5)		NOT NULL,	
 	[ORDEN_DESTIDO]				INT				NULL DEFAULT 0,
 	[SQF]						DECIMAL(13,4)	NOT NULL,
