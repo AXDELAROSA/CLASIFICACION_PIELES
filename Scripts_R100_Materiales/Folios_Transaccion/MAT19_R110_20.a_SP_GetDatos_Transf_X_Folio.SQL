@@ -41,7 +41,7 @@ AS
 	IF @VP_FOLIO IS NULL OR @VP_FOLIO = ''
 		BEGIN
 			EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+																'DATA_02', 'RP_SC', 'TAGNO',
 																@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
 		END
 	-- =========================================

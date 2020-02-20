@@ -1,8 +1,8 @@
 -- //////////////////////////////////////////////////////////////
 -- // ARCHIVO:			
 -- //////////////////////////////////////////////////////////////
--- // BASE DE DATOS:	PEARL19_V9999_R0
--- // MODULO:			PIEL_CLASIFICADA
+-- // BASE DE DATOS:	[DATA_02Pruebas]
+-- // MODULO:			TRANSFERENCIA DE FOLIOS
 -- // OPERACION:		LIBERACION / STORED PROCEDURES
 -- //////////////////////////////////////////////////////////////
 -- // Autor:			FEG
@@ -72,7 +72,7 @@ AS
 				
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+																	'DATA_02', 'RP_SC', 'TAGNO',
 																	@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 				-- =====================
 

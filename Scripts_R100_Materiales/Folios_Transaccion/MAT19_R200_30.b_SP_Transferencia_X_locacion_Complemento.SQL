@@ -1,8 +1,8 @@
 -- //////////////////////////////////////////////////////////////
 -- // ARCHIVO:			
 -- //////////////////////////////////////////////////////////////
--- // BASE DE DATOS:	PEARL19_V9999_R0
--- // MODULO:			PIEL_CLASIFICADA
+-- // BASE DE DATOS:	[DATA_02Pruebas]
+-- // MODULO:			TRANSFERENCIA DE FOLIOS
 -- // OPERACION:		LIBERACION / STORED PROCEDURES
 -- //////////////////////////////////////////////////////////////
 -- // Autor:			FEG
@@ -144,8 +144,7 @@ AS
 	
 	IF 	@PP_LOCACION_DESTINO = 'MFP'
 		BEGIN
-			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
-			--SET @VP_RECIPIENTS = 'dianan@pearlleather.com.mx;manuelg@pearlleather.com.mx;fernandog@pearlleather.com.mx;pedrov@pearlleather.com.mx'
+			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'dianan@pearlleather.com.mx;manuelg@pearlleather.com.mx;fernandog@pearlleather.com.mx;pedrov@pearlleather.com.mx'
 			
 			DECLARE @VP_SUBJECT		VARCHAR(255) = 'Transferencia hacia MFP...'
 			DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)

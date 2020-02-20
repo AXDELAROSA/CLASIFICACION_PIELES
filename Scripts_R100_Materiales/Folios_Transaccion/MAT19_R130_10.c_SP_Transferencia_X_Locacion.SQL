@@ -1,8 +1,8 @@
 -- //////////////////////////////////////////////////////////////
 -- // ARCHIVO:			
 -- //////////////////////////////////////////////////////////////
--- // BASE DE DATOS:	PEARL19_V9999_R0
--- // MODULO:			PIEL_CLASIFICADA
+-- // BASE DE DATOS:	[DATA_02Pruebas]
+-- // MODULO:			TRANFERIR FOLIOS
 -- // OPERACION:		LIBERACION / STORED PROCEDURES
 -- //////////////////////////////////////////////////////////////
 -- // Autor:			FEG
@@ -32,7 +32,7 @@ CREATE PROCEDURE [dbo].[PG_SK_FOLIO_X_COLOUR]
 AS
 
 	-- ///////////////////////////////////////////
-
+	-- select distinct tag,status,machine,jobno,colour from rp_folios inner join rp_sc on RP_Folios.TAG=RP_SC.TAGNO and colour= 'FMCKTX7' ORDER BY TAG
 	SELECT	DISTINCT
 			TAG,
 			STATUS,
@@ -168,7 +168,7 @@ AS
 	
 	DECLARE @VP_TAG_NO_NUEVO		INT = 0
 	EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-														'DATA_02Pruebas', 'RP_SC', 'TAGNO',
+														'DATA_02', 'RP_SC', 'TAGNO',
 														@OU_K_TABLA_DISPONIBLE = @VP_TAG_NO_NUEVO	OUTPUT
 	-- =====================
 
