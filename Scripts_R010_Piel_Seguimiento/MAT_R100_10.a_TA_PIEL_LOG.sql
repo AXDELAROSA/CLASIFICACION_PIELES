@@ -139,6 +139,7 @@ EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 3, 'FOLIO NUEVO',						'FOLIO_NUEV', 3
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 4, 'TRANSFERENCIA A ORDEN',			'TRANSF_ORD', 4, '', 1
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 5, 'TRANSFERENCIA A FOLIO',			'TRANSF_FOL', 5, '', 1
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 6, 'DEVOLUCION',						'DEVOLUCION', 6, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 7, 'ISSUE_OUT',						'ISSUE_OUT', 7, '', 1
 GO
 -- ===============================================
 SET NOCOUNT OFF
