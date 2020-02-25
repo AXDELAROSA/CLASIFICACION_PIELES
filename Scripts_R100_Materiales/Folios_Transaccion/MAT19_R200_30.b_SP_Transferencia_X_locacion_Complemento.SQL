@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -50,12 +50,12 @@ AS
 	-- ///////////////////////////////////////////
 	
 	IF (	SELECT COUNT(*) FROM sys.table_types
-			WHERE name = 'TVPParam' AND schema_id = 1	) = 0
-			CREATE TYPE dbo.TVPParam AS TABLE(	COLOR		VARCHAR(20),
+			WHERE name = 'TVPParamXLocacion' AND schema_id = 1	) = 0
+			CREATE TYPE dbo.TVPParamXLocacion AS TABLE(	COLOR		VARCHAR(20),
 												LOTE		VARCHAR(20),
 												SQF			VARCHAR(20)	)
 	
-	DECLARE @TBL_TOTAL_SQF_X_LOTE	TVPParam 
+	DECLARE @TBL_TOTAL_SQF_X_LOTE	TVPParamXLocacion 
 	
 	INSERT INTO  @TBL_TOTAL_SQF_X_LOTE 
 	SELECT	COLOUR,
@@ -70,10 +70,10 @@ AS
 	-- =====================
 
 	DECLARE	@VP_SQF DECIMAL(13,2) = CONVERT(DECIMAL(13,2),@PP_TB_SQF)
-	EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-										@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
-										@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN, @TBL_TOTAL_SQF_X_LOTE,						 	
-										@VP_SQF, @PP_COMENTARIO, @PP_USER
+	EXECUTE [dbo].[PG_PM_TRANSFER_X_LOCACION]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
+													@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN, @TBL_TOTAL_SQF_X_LOTE,						 	
+													@VP_SQF, @PP_COMENTARIO, @PP_USER
 	-- /////////////////////////////////////////////////////////////////////
 	
 	DECLARE @VP_COLOR VARCHAR(10) 

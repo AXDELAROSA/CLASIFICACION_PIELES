@@ -18,11 +18,11 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_PM_TRANSFER]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_X_LOCACION]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_X_LOCACION]
 GO
 -- EXECUTE   [dbo].[PG_GET_FOLIO_DESTINO] 0,0, 'B' , 'FCMKDX9' 
-CREATE PROCEDURE [dbo].[PG_PM_TRANSFER]
+CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_X_LOCACION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
@@ -32,7 +32,7 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER]
 	@PP_ORDEN_DESTINO			VARCHAR(10),
 	@PP_CB_ORDEN				VARCHAR(10),
 	-- ===========================
-	@TBL_TOTAL_SQF_X_LOTE		TVPParam READONLY,
+	@TBL_TOTAL_SQF_X_LOTE		TVPParamXLocacion READONLY,
 	-- ===========================
 	@PP_TB_SQF					DECIMAL(13,2),
 	-- ===========================
@@ -109,7 +109,7 @@ AS
 	-- ////////////////////////////////////////////////////////////////////
 	
 	DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
-	DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_ORDEN_DESTINO + '00000' , 5)
+	DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_CB_ORDEN + '00000' , 5)
 
 	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
@@ -118,7 +118,7 @@ AS
 	
 	-- ////////////////////////////////////////////////////////////////////
 
-	SET @PP_CB_ORDEN = RIGHT(@VP_TRANSACCION_DOC, 5)
+	SET @PP_CB_ORDEN = '00000'
 
 	IF @PP_ORDEN_DESTINO <> '' 
 		BEGIN
@@ -126,7 +126,7 @@ AS
 		END
     ELSE
 		BEGIN
-             SET	@VP_ORDERNO = LEFT(@PP_CB_ORDEN + '00000' , 5)
+             SET	@VP_ORDERNO = '00000'
         END
 
 	SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'

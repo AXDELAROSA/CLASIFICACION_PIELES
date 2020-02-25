@@ -22,9 +22,9 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]	0,0,  'FOLIO_EXISTENTE' , 'B' , 'FMCKTX7' , 3785629 , 3785640 , 'MHI' , 'T38' , 
-														'' , '09490' , 1 , 0 , '32782/32782/32782' , '0368/0367/0366' , 0 , 0 , 0 , 
-														'' , 'franciscoe' , 'ITX-002' 
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]	0,0,   'DEVOLUCION' , 'B' , 'FMCKTX7' , 3785644 , 2137674 , 'T17' , 'MHI' , 
+														'09404' , '' , 0 , 1 , '32641/32641/32641/59071/59071/59071' , 
+														'0371/0333/0295/0258/0120/0152' , 0 , 0 , 0 , '' , 'franciscoe' , 'ITX-002' 
 
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]

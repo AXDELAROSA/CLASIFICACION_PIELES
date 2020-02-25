@@ -94,55 +94,57 @@ AS
 				DEALLOCATE CU_PIELES_A_BORRAR
 				-- ////////////////////////////////////////////////////////////////////	
 
-				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx;rafaelf@pearlleather.com.mx'
-				--'dianan@pearlleather.com.mx;manuelg@pearlleather.com.mx;fernandog@pearlleather.com.mx;pedrov@pearlleather.com.mx'
-			
-			DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out MQU'
-			DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
-			DECLARE @VP_BODY		NVARCHAR(MAX) 
-			
-			SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
-								N'<thead>' + 
-								  N'<tr BGCOLOR="#ADD8E6">' + 
-								    N'<th colspan="7">Se han eliminado las siguientes pieles</th>' + 
+				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX) -- = 'franciscoe@pearlleather.com.mx;rafaelf@pearlleather.com.mx'
+				SET @VP_RECIPIENTS = 'manuelg@pearlleather.com.mx;omard@pearlleather.com.mx;adelaree@pearlleather.com.mx;guillermom@pearlleather.com.mx;jorgeh@pearlleather.com.mx;miguelc@pearlleather.com.mx;pedrov@pearlleather.com.mx'
+			    
+
+
+				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out MQU'
+				DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
+				DECLARE @VP_BODY		NVARCHAR(MAX) 
+				
+				SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
+									N'<thead>' + 
+									  N'<tr BGCOLOR="#ADD8E6">' + 
+									    N'<th colspan="7">Se han eliminado las siguientes pieles</th>' + 
+									  N'</tr>' + 
+									  N'<tr BGCOLOR="#48D1CC">' + 
+									    N'<th>Folio</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Usuario</th><th>Fecha</th>' + 
+									  N'</tr>' + 
+									N'</thead>' + 
+									N'<tbody>' + 
+									  N'<tr>' + 
+								CAST ( ( SELECT td = RTRIM(LTRIM(TAGNO)),'',  
+								                td = RTRIM(LTRIM(COLOUR)), '',  
+								                td = RTRIM(LTRIM(LOT)), '',  
+								                td = RTRIM(LTRIM(HIDE)), '',  
+								                td = RTRIM(LTRIM(SQF)), '',  
+												td = @PP_USER, '',  
+								                td = CONVERT(DATE,GETDATE())  
+								         FROM RP_SC
+										 WHERE RTRIM(LTRIM(TAGNO)) = @PP_FOLIO_ORIGEN
+								          FOR XML PATH('tr'), TYPE   
+								) AS NVARCHAR(MAX) ) +  
 								  N'</tr>' + 
-								  N'<tr BGCOLOR="#48D1CC">' + 
-								    N'<th>Folio</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Usuario</th><th>Fecha</th>' + 
-								  N'</tr>' + 
-								N'</thead>' + 
-								N'<tbody>' + 
-								  N'<tr>' + 
-							CAST ( ( SELECT td = RTRIM(LTRIM(TAGNO)),'',  
-							                td = RTRIM(LTRIM(COLOUR)), '',  
-							                td = RTRIM(LTRIM(LOT)), '',  
-							                td = RTRIM(LTRIM(HIDE)), '',  
-							                td = RTRIM(LTRIM(SQF)), '',  
-											td = @PP_USER, '',  
-							                td = CONVERT(DATE,GETDATE())  
-							         FROM RP_SC
-									 WHERE RTRIM(LTRIM(TAGNO)) = @PP_FOLIO_ORIGEN
-							          FOR XML PATH('tr'), TYPE   
-							) AS NVARCHAR(MAX) ) +  
-							  N'</tr>' + 
-								N'</tbody>' + 
-							N'</table>' ; 
-				SET ROWCOUNT 0
-				 				
-			EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-														@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+									N'</tbody>' + 
+								N'</table>' ; 
+					SET ROWCOUNT 0
+					 				
+				EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+					-- ////////////////////////////////////////////////////////////////////	
+				DELETE	RP_SC
+				WHERE	LTRIM(RTRIM(TAGNO)) = @PP_FOLIO_ORIGEN
+
+				IF @@ROWCOUNT = 0
+					RAISERROR ('No fue posible borrar las Piles', 16, 1 ) --MENSAJE - Severity -State.
 				-- ////////////////////////////////////////////////////////////////////	
-			DELETE	RP_SC
-			WHERE	LTRIM(RTRIM(TAGNO)) = @PP_FOLIO_ORIGEN
 
-			IF @@ROWCOUNT = 0
-				RAISERROR ('No fue posible borrar las Piles', 16, 1 ) --MENSAJE - Severity -State.
-			-- ////////////////////////////////////////////////////////////////////	
-
-			DELETE	RP_Folios
-			WHERE	LTRIM(RTRIM(TAG)) = @PP_FOLIO_ORIGEN
-			
-			IF @@ROWCOUNT = 0
-				RAISERROR ('No fue posible borrar el folio', 16, 1 ) --MENSAJE - Severity -State.
+				DELETE	RP_Folios
+				WHERE	LTRIM(RTRIM(TAG)) = @PP_FOLIO_ORIGEN
+				
+				IF @@ROWCOUNT = 0
+					RAISERROR ('No fue posible borrar el folio', 16, 1 ) --MENSAJE - Severity -State.
 						
 		COMMIT TRANSACTION 
 		END TRY
