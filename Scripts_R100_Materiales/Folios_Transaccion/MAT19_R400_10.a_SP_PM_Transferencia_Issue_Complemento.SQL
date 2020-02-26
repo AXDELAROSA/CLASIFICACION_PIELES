@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -76,9 +76,9 @@ AS
 												@VP_TRANSACCION_DOC, @VP_INDICE, 0
 
 		-- ///////////////////////////////////////////
-		EXECUTE [dbo].[PG_IN_IMLSTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-												@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL, 
-												@VP_TRANSACCION_DOC, @VP_INDICE, 1
+		--EXECUTE [dbo].[PG_IN_IMLSTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+		--										@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL, 
+		--										@VP_TRANSACCION_DOC, @VP_INDICE, 1
 
 		-- ///////////////////////////////////////////
 		EXECUTE [dbo].[PG_UP_IMINVLOC_SQL_X_LOCACION_COLOR_QUITAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -99,19 +99,47 @@ AS
 	DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
 	DECLARE @VP_ORDERNO VARCHAR (10) =  '00000'
 
-	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
-											@PP_LOCACION_ORIGEN, 0, @VP_ORDERNO, 
-											@PP_USER, @PP_COMENTARIO, 0
+	-- SE QUITO PORQUE NO RECIBE EL DOC_TYPE COMO PARAMETRO EN EL SEPE POR DEFAULT ES T Y SE NECESITABA PONER I
+	--EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--										@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
+	--										@PP_LOCACION_ORIGEN, 0, @VP_ORDERNO, 
+	--										@PP_USER, @PP_COMENTARIO, 0
 	
 	-- ////////////////////////////////////////////////////////////////////
 
-	SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
+	DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
+	DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
+	
+	INSERT INTO  IMINVTRX_SQL (	SOURCE, ORD_NO, ITEM_NO, LOC, TRX_DT, 
 
-	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
-											@PP_LOCACION_ORIGEN, 0, @VP_ORDERNO, 
-											@PP_USER, @PP_COMENTARIO, 1
+								TRX_TM, DOC_DT, DOC_TYPE, DOC_SOURCE, QUANTITY, 
+
+								DOC_ORD_NO, OLD_QUANTITY, USER_NAME, ID_NO, PROMISE_DT,
+
+								LEV_NO, SEQ_NO, CTL_NO, LINE_NO, FROM_CTL_NO, FROM_LINE_NO, 
+								
+								FROM_LEV_NO, FROM_SEQ_NO, UNIT_COST, OLD_UNIT_COST, NEW_UNIT_COST, 
+
+								PRICE, BUILD_QTY, BUILD_QTY_PER, AMT, LANDED_COST, RECEIPT_ORD_NO, 
+
+								TRX_QTY_BKORD, DEALL_AMT, batch_id, jnl, item_filler, comment	) 
+
+					VALUES	  ( 'I', @VP_TRANSACCION_DOC, @VP_COLOR_TBL, @PP_LOCACION_ORIGEN, @VP_F_TRANSACCION,
+
+								@VP_TIME, @VP_F_TRANSACCION, 'I', 'M', 0, 
+
+								@VP_ORDERNO, 0, @PP_USER, @VP_TRXIDNO, @VP_F_TRANSACCION,
+
+								0, 0, 0, 0, 0, 0,
+								
+								0, 0, 0, 0, 0, 
+								
+								0, 0, 0, 0, 0, '0', 
+								
+								00000000, 0, '' , '', '', @PP_COMENTARIO	)
+
+	IF @@ROWCOUNT = 0
+		RAISERROR ('ERROR SP: PG_PM_TRANSFER_ISSUE_COMPLEMENTO // INSERT INTO  IMINVTRX_SQL', 16, 1 ) --MENSAJE - Severity -State.	
 	-- ////////////////////////////////////////////////////////////////////
 
 

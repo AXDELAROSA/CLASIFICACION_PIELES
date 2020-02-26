@@ -293,7 +293,7 @@ AS
 															FROM RP_Folios
 															WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
 
-										IF @VP_ESTATUS <> 'B'
+										IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
 											BEGIN
 												EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_TAGNO_ORIGEN, 5
