@@ -31,8 +31,10 @@ CREATE PROCEDURE [dbo].[PG_RN_RP_SC_EXISTE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================	
-	@PP_LOTE					VARCHAR(15),
-	@PP_PIEL					VARCHAR(10),
+	@PP_COLOR					VARCHAR(10),
+	@PP_LOTE					VARCHAR(10),
+	@PP_PIEL					VARCHAR(5),
+	@PP_SQF						VARCHAR(5),
 	-- ===========================		
 	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
@@ -41,20 +43,27 @@ AS
 	
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_K_RP_SC		INT
+	DECLARE @VP_K_RP_SC		INT = 0
 			
-	SELECT	@VP_K_RP_SC	=	ID
+	SELECT	@VP_K_RP_SC	=	COUNT(ID)
 							FROM	RP_SC
-							WHERE	RTRIM(LTRIM(LOT))=@PP_LOTE
+							WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+							AND		RTRIM(LTRIM(LOT))=@PP_LOTE
 							AND		RTRIM(LTRIM(HIDE))=@PP_PIEL
+							AND		RTRIM(LTRIM(SQF))=@PP_SQF
 	-- ===========================
 
 	IF @VP_RESULTADO=''
-		IF ( @VP_K_RP_SC IS NULL )
+		IF ( @VP_K_RP_SC = 0 )
 			SET @VP_RESULTADO =  'No existe.' 
 
 	-- ===========================
 
+	IF @VP_RESULTADO=''
+		IF ( @VP_K_RP_SC > 1 )
+			SET @VP_RESULTADO =  'Piel duplicada.' 
+
+	-- ===========================
 	-- /////////////////////////////////////////////////////
 	
 	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
@@ -72,7 +81,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_
 	DROP PROCEDURE [dbo].[PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE]
 GO
  -- EXECUTE PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE 0,0,'FCPRDX9,104313-0215*37.50'
-
+  -- EXECUTE PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE 0,0,'FMCKTX7,33001-1203*37.80'
 CREATE PROCEDURE [dbo].[PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -80,12 +89,12 @@ CREATE PROCEDURE [dbo].[PG_RN_RP_SC_PIEL_CLASIFICADA_EXISTE]
 	@PP_ETIQUETA_PIEL		VARCHAR(100)
 	-- ===========================		
 AS
-
+ 
 	DECLARE @VP_MENSAJE		VARCHAR(300) = ''
 	DECLARE @VP_COLOR		VARCHAR(10) = ''
 	DECLARE @VP_LOTE		VARCHAR(10) = ''
-	DECLARE @VP_PIEL		VARCHAR(10) = ''
-	DECLARE @VP_SQF			VARCHAR(10) = ''
+	DECLARE @VP_PIEL		VARCHAR(5) = ''
+	DECLARE @VP_SQF			VARCHAR(5) = ''
 	-- /////////////////////////////////////////////////////////////////////
 
 	IF @VP_MENSAJE=''
@@ -93,11 +102,10 @@ AS
 			SET @VP_MENSAJE = 'El Numero de Piel no puede ser vacio'
 			
 	IF @VP_MENSAJE=''
-		IF NOT (@PP_ETIQUETA_PIEL LIKE '%_______,______-____*%')
+		IF NOT (@PP_ETIQUETA_PIEL LIKE '_______,%_____-____*%')
 			SET @VP_MENSAJE = 'Ingrese Numero de Piel Valido'
 
 	-- /////////////////////////OBTENER VALORES DE LA ETIQUETA PIEL////////////////////////////////////////////
-
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_ETIQUETA_PIEL_OBTENER_VALOR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@PP_ETIQUETA_PIEL,
@@ -106,9 +114,10 @@ AS
 															@OU_PIEL	 = @VP_PIEL		OUTPUT,
 															@OU_SQF		 = @VP_SQF		OUTPUT
 
-	SET @VP_LOTE = RTRIM(LTRIM(@VP_LOTE))
+	SET @VP_COLOR = RTRIM(LTRIM(@VP_COLOR))
 	SET @VP_PIEL = RTRIM(LTRIM(@VP_PIEL))
-
+	SET @VP_PIEL = RTRIM(LTRIM(@VP_PIEL))
+	SET @VP_SQF = RTRIM(LTRIM(@VP_SQF))
 	-- ///////////////////////////////////////////
 
 	IF @VP_MENSAJE='' 
@@ -118,8 +127,10 @@ AS
 
 		SELECT	@VP_PIEL_CLASIFICADA_EXISTE =	COUNT(ID)
 											FROM	RP_SC
-											WHERE	RTRIM(LTRIM(LOT))=@VP_LOTE
+											WHERE	RTRIM(LTRIM(COLOUR))=@VP_COLOR
+											AND		RTRIM(LTRIM(LOT))=@VP_LOTE
 											AND		RTRIM(LTRIM(HIDE))=@VP_PIEL
+											AND		RTRIM(LTRIM(SQF))=@VP_SQF
 											AND		K_CLASIFICACION <> 0
 										
 		IF @VP_PIEL_CLASIFICADA_EXISTE IS NULL
@@ -134,8 +145,10 @@ AS
 												FROM	PIEL_CLASIFICACION
 												WHERE K_PIEL_CLASIFICACION = (	SELECT TOP 1 K_CLASIFICACION
 																				FROM	RP_SC
-																				WHERE	RTRIM(LTRIM(LOT))=@VP_LOTE
-																				AND		RTRIM(LTRIM(HIDE))=@VP_PIEL )
+																				WHERE	RTRIM(LTRIM(COLOUR))=@VP_COLOR
+																				AND		RTRIM(LTRIM(LOT))=@VP_LOTE
+																				AND		RTRIM(LTRIM(HIDE))=@VP_PIEL
+																				AND		RTRIM(LTRIM(SQF))=@VP_SQF )
 
 				SET		@VP_MENSAJE = 'Piel clasificada como: ' 
 				SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
@@ -150,7 +163,7 @@ AS
 	END
 	-- ///////////////////////////////////////////
 		
-	SELECT	@VP_MENSAJE AS MENSAJE,  @VP_LOTE AS LOTE, @VP_PIEL AS PIEL
+	SELECT	@VP_MENSAJE AS MENSAJE,  @VP_COLOR AS COLOR, @VP_LOTE AS LOTE, @VP_PIEL AS PIEL,  @VP_SQF AS SQF
 
 	-- /////////////////////////////////////////////////////
 GO
@@ -280,9 +293,11 @@ GO
 CREATE PROCEDURE [dbo].[PG_RN_RP_SC_UPDATE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
-	-- ===========================		
-	@PP_LOTE					VARCHAR(15),
-	@PP_PIEL					VARCHAR(10),
+	-- ===========================	
+	@PP_COLOR					VARCHAR(10),	
+	@PP_LOTE					VARCHAR(10),
+	@PP_PIEL					VARCHAR(5),
+	@PP_SQF						VARCHAR(5),
 	-- ===========================		
 	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
@@ -294,7 +309,7 @@ AS
 	
 	IF @VP_RESULTADO=''
 		EXECUTE [dbo].[PG_RN_RP_SC_EXISTE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@PP_LOTE, @PP_PIEL,	 
+											@PP_COLOR, @PP_LOTE, @PP_PIEL, @PP_SQF,
 											@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
 
 	-- ///////////////////////////////////////////
@@ -325,8 +340,10 @@ CREATE PROCEDURE [dbo].[PG_RN_RP_SC_DELETE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================		
-	@PP_LOTE					VARCHAR(15),
-	@PP_PIEL					VARCHAR(10),
+	@PP_COLOR					VARCHAR(10),	
+	@PP_LOTE					VARCHAR(10),
+	@PP_PIEL					VARCHAR(5),
+	@PP_SQF						VARCHAR(5),
 	-- ===========================			
 	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
@@ -337,7 +354,7 @@ AS
 
 	IF @VP_RESULTADO=''
 		EXECUTE [dbo].[PG_RN_RP_SC_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-												@PP_LOTE, @PP_PIEL,
+												@PP_COLOR, @PP_LOTE, @PP_PIEL, @PP_SQF,
 												@OU_RESULTADO_VALIDACION = @VP_RESULTADO		OUTPUT
 	-- ///////////////////////////////////////////
 

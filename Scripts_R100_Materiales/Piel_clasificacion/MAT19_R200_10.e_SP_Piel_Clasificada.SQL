@@ -27,23 +27,20 @@ CREATE PROCEDURE [dbo].[PG_UP_RP_SC_K_CLASIFICACION]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_LOTE					VARCHAR(25),
-	@PP_PIEL					VARCHAR(100),
+	@PP_COLOR					VARCHAR(10),
+	@PP_LOTE					VARCHAR(10),
+	@PP_PIEL					VARCHAR(5),
+	@PP_SQF						VARCHAR(5),
 	@PP_D_CLASIFICACION			VARCHAR(25)
 	-- ===========================
 AS			
 	
 	DECLARE @VP_MENSAJE			VARCHAR(300) = ''
 	
-	--IF @PP_PIEL = '000A'
-	--	SET @VP_MENSAJE = ' MENSAJE 000A'
-
-	--IF @PP_PIEL = '000B'
-	--	SET @VP_MENSAJE = ' MENSAJE 000B'
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_RP_SC_UPDATE]  @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@PP_LOTE, @PP_PIEL,
+											@PP_COLOR, @PP_LOTE, @PP_PIEL, @PP_SQF,
 											@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
 	-- /////////////////////////////////////////////////////////////////////
@@ -66,15 +63,17 @@ AS
 			SET		
 					K_CLASIFICACION = @VP_K_PIEL_CLASIFICACION
 			-- ==================================
-			WHERE	RTRIM(LTRIM(LOT))=@PP_LOTE
+			WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+			AND		RTRIM(LTRIM(LOT))=@PP_LOTE
 			AND		RTRIM(LTRIM(HIDE))=@PP_PIEL
+			AND		RTRIM(LTRIM(SQF))=@PP_SQF 
 			-- ==================================
 
 			IF @@ROWCOUNT = 0
 				SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC // '
 			ELSE
 				EXECUTE	[PG_IN_UP_PIEL_CLASIFICADA_PORCENTAJE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																@PP_LOTE
+																@PP_COLOR, @PP_LOTE
 
 			COMMIT TRANSACTION 
 			END TRY
