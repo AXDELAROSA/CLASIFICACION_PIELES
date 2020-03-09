@@ -114,7 +114,7 @@ AS
 									N'</thead>' + 
 									N'<tbody>' + 
 									  N'<tr>' + 
-								CAST ( ( SELECT td = RTRIM(LTRIM(TAGNO)),'',  
+										CAST ( ( SELECT td = RTRIM(LTRIM(TAGNO)),'',  
 								                td = RTRIM(LTRIM(COLOUR)), '',  
 								                td = RTRIM(LTRIM(LOT)), '',  
 								                td = RTRIM(LTRIM(HIDE)), '',  

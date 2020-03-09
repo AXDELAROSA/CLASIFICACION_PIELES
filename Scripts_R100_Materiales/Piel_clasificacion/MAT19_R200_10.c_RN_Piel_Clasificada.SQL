@@ -60,7 +60,7 @@ AS
 	-- ===========================
 
 	IF @VP_RESULTADO=''
-		IF ( @VP_K_RP_SC > 1 )
+		IF ( @VP_K_RP_SC > 2 )
 			SET @VP_RESULTADO =  'Piel duplicada.' 
 
 	-- ===========================
@@ -150,12 +150,10 @@ AS
 																				AND		RTRIM(LTRIM(HIDE))=@VP_PIEL
 																				AND		RTRIM(LTRIM(SQF))=@VP_SQF )
 
-				SET		@VP_MENSAJE = 'Piel clasificada como: ' 
+				SET		@VP_MENSAJE = 'La Piel [' + @VP_PIEL + '] ' 
+				SET		@VP_MENSAJE = @VP_MENSAJE + 'ya fue clasificada anteriormente como: ' 
 				SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
 				SET		@VP_MENSAJE = @VP_MENSAJE + @VP_D_PIEL_CLASIFICACION +' '
-				--SET		@VP_MENSAJE = @VP_MENSAJE + '[#PIEL.' + @VP_PIEL +'] del '
-				--SET		@VP_MENSAJE = @VP_MENSAJE + '[#LOTE.' + @VP_LOTE +']'
-								
 				SET		@VP_MENSAJE = @VP_MENSAJE + ') '
 				SET		@VP_MENSAJE = @VP_MENSAJE + 'Desea Actualizarla?'
 

@@ -283,6 +283,8 @@ GO
 
 
 
+--USE [DATA_02] 
+--GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> INSERT / FICHA
 -- //////////////////////////////////////////////////////////////
@@ -322,34 +324,61 @@ AS
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN	
-			INSERT INTO RP_SC	
-						(	[CDATE], 
-							[COLOUR],						
-							[LOT],				
-							[HIDE],	
-							[SQF],		
-							[TAGNO],		
-							[YARDAS],			
-							[YLB],		
-							[PESO],	
-							[TYPE],
-							[MOVEMENT],
-							[K_CLASIFICACION]	
-							)		
-					VALUES	
-						(	@PP_F_INGRESO, 
-							@PP_COLOR,			
-							@PP_LOTE,			
-							@PP_PIEL,			
-							@PP_SQF,				
-							@PP_FOLIO,			
-							@PP_YARDAS,			
-							@PP_YLB,				
-							@PP_PESO,				
-							@PP_TIPO,						
-							@PP_MOVIMIENTO,		
-							@PP_K_CLASIFICACION	)	
-		
+			IF EXISTS (SELECT ID FROM RP_SC	WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+											AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+											AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+											AND		LTRIM(RTRIM(HIDE))=@PP_PIEL			)
+				BEGIN
+					DECLARE @VP_SQF_ACTUAL	VARCHAR(10) = ''
+					SELECT @VP_SQF_ACTUAL  = SQF
+											FROM RP_SC	
+											WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+											AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+											AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+											AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
+
+					SET @VP_SQF_ACTUAL = CONVERT(DECIMAL(13,2),@VP_SQF_ACTUAL) + 	CONVERT(DECIMAL(13,2),@PP_SQF)	
+
+					UPDATE RP_SC
+						SET SQF = @VP_SQF_ACTUAL
+					WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+					AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+					AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+					AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
+					
+					IF @@ROWCOUNT = 0
+					RAISERROR ('ERROR SP: PG_IN_RP_SC', 16, 1 ) --MENSAJE - Severity -State.
+				END
+			ELSE
+				BEGIN
+					INSERT INTO RP_SC	
+								(	[CDATE], 
+									[COLOUR],						
+									[LOT],				
+									[HIDE],	
+									[SQF],		
+									[TAGNO],		
+									[YARDAS],			
+									[YLB],		
+									[PESO],	
+									[TYPE],
+									[MOVEMENT],
+									[K_CLASIFICACION]	
+									)		
+							VALUES	
+								(	@PP_F_INGRESO, 
+									@PP_COLOR,			
+									@PP_LOTE,			
+									@PP_PIEL,			
+									@PP_SQF,				
+									@PP_FOLIO,			
+									@PP_YARDAS,			
+									@PP_YLB,				
+									@PP_PESO,				
+									@PP_TIPO,						
+									@PP_MOVIMIENTO,		
+									@PP_K_CLASIFICACION	)	
+				END
 		END
 
 	-- ///////////////////////////////////////////////////////////////

@@ -70,7 +70,7 @@ AS
 			-- ==================================
 
 			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR: // UPDATE RP_SC // '
+				SET @VP_MENSAJE = 'ERROR SP: // UPDATE RP_SC_K_CLASIFICACION// '
 			ELSE
 				EXECUTE	[PG_IN_UP_PIEL_CLASIFICADA_PORCENTAJE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@PP_COLOR, @PP_LOTE

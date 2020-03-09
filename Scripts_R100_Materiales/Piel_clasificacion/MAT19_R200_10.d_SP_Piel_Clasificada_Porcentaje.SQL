@@ -22,12 +22,13 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_PIEL_CLASIFICADA_PORCENTAJE_X_LOTE]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_PIEL_CLASIFICADA_PORCENTAJE_X_LOTE]
 GO
--- EXECUTE PG_SK_PIEL_CLASIFICADA_PORCENTAJE_X_LOTE 0,0,'33001/104313'
+-- EXECUTE PG_SK_PIEL_CLASIFICADA_PORCENTAJE_X_LOTE 0,0,'FMCKTX7/FCPRDX9','33001/104313'
 
 CREATE PROCEDURE [dbo].[PG_SK_PIEL_CLASIFICADA_PORCENTAJE_X_LOTE]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
+	@PP_COLOR_ARRAY				NVARCHAR(MAX),
 	@PP_LOTE_ARRAY				NVARCHAR(MAX)
 AS
 
@@ -36,48 +37,57 @@ AS
 	-- /////////////////////////OBTENER VALORES DE LA ETIQUETA PIEL////////////////////////////////////////////
 	
 	DECLARE @TBL_LOTE_CLASIFICADO TABLE (
-						K_LOTE_CLASIFICADO  INT IDENTITY(1,1),
-						LOTE_CLASIFICADO	VARCHAR(20)
-					)
-				SET NOCOUNT ON
+				K_LOTE_CLASIFICADO  INT IDENTITY(1,1),
+				COLOR_CLASIFICADO	VARCHAR(10),
+				LOTE_CLASIFICADO	VARCHAR(10)
+			)
+	SET NOCOUNT ON
 				
-				DECLARE @VP_POSICION_LOTE	INT
-				DECLARE @VP_LOTE_VALOR		VARCHAR(20)
-								
-				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
-				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'				
-			
-				--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
-				WHILE patindex('%/%' , @PP_LOTE_ARRAY) <> 0
-					BEGIN
-						SELECT @VP_POSICION_LOTE	=	patindex('%/%' , @PP_LOTE_ARRAY)
-						
-						--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
-						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
-						
-						
-						INSERT	INTO	@TBL_LOTE_CLASIFICADO
-								VALUES	(
-											@VP_LOTE_VALOR	)
-																								
-						--Reemplazamos lo procesado con nada con la funcion stuff
-						SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
-					END
-	-- =========================================
+	DECLARE @VP_POSICION_COLOR	INT
+	DECLARE @VP_POSICION_LOTE	INT
+	DECLARE @VP_COLOR_VALOR		VARCHAR(10)
+	DECLARE @VP_LOTE_VALOR		VARCHAR(10)
+					
+	--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
+	SET	@PP_LOTE_ARRAY	= @PP_LOTE_ARRAY	+ '/'	
+	SET	@PP_COLOR_ARRAY	= @PP_COLOR_ARRAY	+ '/'				
 	
-	--IF EXISTS( SELECT LOTE FROM PIEL_CLASIFICADA_PORCENTAJE WHERE LOTE=@PP_LOTE)
-	--	BEGIN
-			SELECT		PIEL_CLASIFICADA_PORCENTAJE.*,
-						CAST(PIEL_PORCENTAJE_BUENO AS DECIMAL(13,2))	AS PORCENTAJE_BUENO,
-						CAST(PIEL_PORCENTAJE_REGULAR AS DECIMAL(13,2))	AS PORCENTAJE_REGULAR,
-						CAST(PIEL_PORCENTAJE_MALO AS DECIMAL(13,2))		AS PORCENTAJE_MALO,
-						(PIEL_TOTAL - PIEL_TOTAL_CLASIFICADA)			AS PIEL_X_CLASIFICAR
-					-- =====================
-			FROM		PIEL_CLASIFICADA_PORCENTAJE
-					-- =====================
-			WHERE		LOTE IN (SELECT LOTE_CLASIFICADO FROM @TBL_LOTE_CLASIFICADO)
-					-- =====================
-		--END
+	--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
+	WHILE patindex('%/%' , @PP_LOTE_ARRAY) <> 0
+		BEGIN
+			SELECT @VP_POSICION_LOTE	=	patindex('%/%' , @PP_LOTE_ARRAY)
+			SELECT @VP_POSICION_COLOR	=	patindex('%/%' , @PP_COLOR_ARRAY)
+
+			--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
+			SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
+			SELECT @VP_COLOR_VALOR		= LEFT(@PP_COLOR_ARRAY, @VP_POSICION_COLOR - 1)
+
+			IF NOT EXISTS	(	SELECT	K_LOTE_CLASIFICADO 
+								FROM	@TBL_LOTE_CLASIFICADO	
+								WHERE	COLOR_CLASIFICADO=@VP_COLOR_VALOR	AND LOTE_CLASIFICADO = @VP_LOTE_VALOR	)
+				BEGIN
+					INSERT	INTO	@TBL_LOTE_CLASIFICADO
+							VALUES(
+									@VP_COLOR_VALOR,
+									@VP_LOTE_VALOR		)
+				END
+																				
+			--Reemplazamos lo procesado con nada con la funcion stuff
+			SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
+			SELECT @PP_COLOR_ARRAY			= STUFF(@PP_COLOR_ARRAY, 1, @VP_POSICION_COLOR, '')
+		END
+	-- =========================================
+
+		SELECT	PIEL_CLASIFICADA_PORCENTAJE.*,
+				CAST(PIEL_PORCENTAJE_BUENO AS DECIMAL(13,2))	AS PORCENTAJE_BUENO,
+				CAST(PIEL_PORCENTAJE_REGULAR AS DECIMAL(13,2))	AS PORCENTAJE_REGULAR,
+				CAST(PIEL_PORCENTAJE_MALO AS DECIMAL(13,2))		AS PORCENTAJE_MALO,
+				(PIEL_TOTAL - PIEL_TOTAL_CLASIFICADA)			AS PIEL_X_CLASIFICAR
+		-- =====================
+		FROM	PIEL_CLASIFICADA_PORCENTAJE
+		INNER JOIN	@TBL_LOTE_CLASIFICADO AS TBL_CLASIFICADO ON PIEL_CLASIFICADA_PORCENTAJE.COLOR = TBL_CLASIFICADO.COLOR_CLASIFICADO
+					AND	PIEL_CLASIFICADA_PORCENTAJE.LOTE = TBL_CLASIFICADO.LOTE_CLASIFICADO
+		-- =====================
 	
 
 	-- ////////////////////////////////////////////////////////////////
@@ -232,6 +242,10 @@ AS
 						
 					WHERE RTRIM(LTRIM(COLOR))=@PP_COLOR 
 					AND	RTRIM(LTRIM(LOTE))=@PP_LOTE
+
+					IF @@ROWCOUNT = 0
+						RAISERROR ('ERROR SP: PG_IN_UP_PIEL_CLASIFICADA_PORCENTAJE', 16, 1 ) --MENSAJE - Severity -State.
+
 				END
 
 		END

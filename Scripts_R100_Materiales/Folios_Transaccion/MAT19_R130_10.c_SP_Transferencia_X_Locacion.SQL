@@ -13,7 +13,7 @@ USE [DATA_02Pruebas]
 GO
 
 
--- EXECUTE [dbo].[PG_SK_FOLIO_X_COLOUR] 0,0,  'FCK2DX9' 
+-- EXECUTE [dbo].[PG_SK_FOLIO_X_COLOUR] 0,0,  'FMCKTX7' 
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / FICHA
@@ -34,17 +34,18 @@ AS
 	-- ///////////////////////////////////////////
 	-- select distinct tag,status,machine,jobno,colour from rp_folios inner join rp_sc on RP_Folios.TAG=RP_SC.TAGNO and colour= 'FMCKTX7' ORDER BY TAG
 	SELECT	DISTINCT
-			TAG,
-			STATUS,
-			MACHINE,
-			JOBNO,
-			COLOUR
+			TAG
+			--STATUS,
+			--MACHINE,
+			--JOBNO,
+			--COLOUR
 	-- =====================
 	FROM RP_Folios 
 	INNER JOIN RP_SC ON RP_Folios.TAG=RP_SC.TAGNO 
 						AND COLOUR = @PP_D_COLOR 
-	WHERE  STATUS  <> 'XX'
-	ORDER BY TAG
+	WHERE	STATUS  <> 'XX'
+	AND		[TYPE]	<> '2'
+	ORDER BY TAG DESC
 	-- =====================
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
