@@ -210,29 +210,29 @@ SELECT * FROM RP_Folios
 WHERE LTRIM(RTRIM(TAG))  IN (3787682,3787795)
 
 
---select * from HIDESHDR_SQL   
--- inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
---where LTRIM(RTRIM(plot)) = '32681'
---and  LTRIM(RTRIM(hide))  IN ('0016')
+select * from HIDESHDR_SQL   
+ inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
+AND	LTRIM(RTRIM(PLOT)) = '32681' 
+ AND LTRIM(RTRIM(HIDE)) IN   ('0613')
 
 SELECT * FROM CCJOBHDR_SQL WHERE  LTRIM(RTRIM(jobno)) IN ('11111' ,'11002' )
 
 SELECT  * FROM cccuthst_sql 
 WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'  
-AND	LTRIM(RTRIM(lotno)) = '032681' 
- AND LTRIM(RTRIM(hideno))   IN ('0016')
+AND	LTRIM(RTRIM(lotno)) = '059071' 
+ AND LTRIM(RTRIM(hideno))   IN ('0613')
 ORDER BY HIDENO ASC
  --================================================================
  
-  SELECT  * FROM RP_SC_FOLIO_STATUS_XX
- WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
-AND	LTRIM(RTRIM(LOT)) = '32681' 
- AND LTRIM(RTRIM(HIDE)) IN   ('0016')
+--  SELECT  * FROM RP_SC_FOLIO_TYPE_2
+-- WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
+--AND	LTRIM(RTRIM(LOT)) = '32681' 
+-- AND LTRIM(RTRIM(HIDE)) IN   ('0613')
 
-  SELECT  * FROM RP_SC
- WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
-AND	LTRIM(RTRIM(LOT)) = '32681' 
- AND LTRIM(RTRIM(HIDE)) IN   ('0016')
+SELECT  * FROM RP_SC
+WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
+AND	LTRIM(RTRIM(LOT)) = '33002' 
+AND LTRIM(RTRIM(HIDE)) IN   ('1033')
 
  
 
@@ -242,66 +242,28 @@ AND	LTRIM(RTRIM(LOT)) = '32681'
 -- SELECT [CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION]
 -- FROM RP_SC
 -- WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
---AND	LTRIM(RTRIM(LOT)) = '32911' 
--- AND LTRIM(RTRIM(HIDE)) IN   ('0363')
--- AND ID = 4494065
+--AND	LTRIM(RTRIM(LOT)) = '59071' 
+--AND LTRIM(RTRIM(HIDE)) IN   ('0061')
 
 
  --================================================================
 
  SELECT * FROM	RP_SC_HIDE_DELETE
  WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
-AND	LTRIM(RTRIM(LOT)) = '32911' 
- AND LTRIM(RTRIM(HIDE)) IN   ('0363')
+AND	LTRIM(RTRIM(LOT)) = '33002' 
+AND LTRIM(RTRIM(HIDE)) IN   ('0133')
 
   
  --================================================================
 
 -- DELETE  FROM RP_SC
 -- WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
---AND	LTRIM(RTRIM(LOT)) = '32911' 
--- AND LTRIM(RTRIM(HIDE)) IN   ('0363')
--- AND ID = 4494065
-
+--AND	LTRIM(RTRIM(LOT)) = '59071' 
+--AND LTRIM(RTRIM(HIDE)) IN   ('0061')
 
   --///////////////////////////////////////////////////////////////// 
 
---  SELECT DISTINCT LTRIM(RTRIM(LOT)) AS LOTE FROM RP_SC
---  WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' AND  (CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	IMINVTRX_SQL.Loc
---																-- ===================== 
---														FROM	IMLSTRX_SQL, IMINVTRX_SQL 
---																-- =====================
---														WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
---														AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
---														AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
---														AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
---														AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
---														AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
---														AND		IMINVTRX_SQL.ord_no	= MOVEMENT
---														-- =====================
---														AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
---																OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
---														)
---				ELSE	MOVEMENT END ) = 'MHI'
---AND CONVERT(INT,LTRIM(RTRIM(LOT))) NOT IN (SELECT CONVERT(INT,LTRIM(RTRIM(SER_LOT_NO))) FROM	IMLSMST_SQL 
---WHERE	LTRIM(RTRIM(LOC))='MHI' AND	LTRIM(RTRIM(ITEM_NO))='FMCKTX7' AND	qty_on_hand > 0)
+  --SELECT DISTINCT LTRIM(RTRIM(TAGNO)) FROM RP_SC
 
-  SELECT COUNT(HIDE) AS PIELES, SUM(CONVERT(DECIMAL(13,2), SQF)) AS SQF 
-  FROM RP_SC 
-  WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' AND LTRIM(RTRIM(LOT)) = '32292'
-  AND (CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	IMINVTRX_SQL.Loc
-																-- ===================== 
-														FROM	IMLSTRX_SQL, IMINVTRX_SQL 
-																-- =====================
-														WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
-														AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
-														AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
-														AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
-														AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
-														AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
-														AND		IMINVTRX_SQL.ord_no	= MOVEMENT
-														-- =====================
-														AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
-																OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
-														)
-				ELSE	MOVEMENT END ) = 'MHI'
+  --SELECT * FROM RP_FOLIOS WHERE STATUS = 'A' AND LTRIM(RTRIM(TAG))  NOT IN (SELECT LTRIM(RTRIM(TAGNO)) FROM RP_SC WHERE TAGNO <> 0)
+
