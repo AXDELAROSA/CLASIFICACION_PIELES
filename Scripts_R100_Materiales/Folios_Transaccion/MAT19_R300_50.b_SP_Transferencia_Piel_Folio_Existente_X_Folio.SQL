@@ -253,6 +253,13 @@ AS
 							BEGIN
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 
+								--IF NOT EXISTS (	SELECT JOBNO 
+								--				FROM cccuthst_sql 
+								--				WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL   
+								--				AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_TBL)), 6) 
+								--				AND LTRIM(RTRIM(hideno))   IN ('0613') 
+)
+								
 								DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE_TBL AS INT)
 								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(19,4))
