@@ -174,21 +174,16 @@ AS
 						COLOR		VARCHAR(20),
 						LOTE		VARCHAR(20),
 						PIEL		VARCHAR(20),
-						SQF			VARCHAR(20),
-						MOVIMIENTO	VARCHAR(20)
+						SQF			VARCHAR(20)
 					)
 				SET NOCOUNT ON
 				
 				DECLARE @VP_POSICION_PIEL			INT
-				DECLARE @VP_POSICION_COLOR			INT
 				DECLARE @VP_POSICION_LOTE			INT
-				DECLARE @VP_POSICION_SQF			INT
-				DECLARE @VP_POSICION_MOVIMIENTO		INT
 
 				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
 				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
 				DECLARE @VP_SQF_VALOR				VARCHAR(20)
-				DECLARE @VP_MOVIMIENTO_VALOR		VARCHAR(20)
 								
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
 				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
@@ -204,21 +199,19 @@ AS
 						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
 						
-						SELECT	TOP 1 @VP_SQF_VALOR = LTRIM(RTRIM(SQF)),
-								@VP_MOVIMIENTO_VALOR = LTRIM(RTRIM(MOVEMENT))
+						SELECT	TOP 1 @VP_SQF_VALOR = LTRIM(RTRIM(SQF))
 												FROM	RP_SC 
 												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
 												AND		LTRIM(RTRIM(TAGNO)) = @PP_TAGNO_ORIGEN
 												AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_VALOR
 												AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_VALOR
-
+						
 						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
 								VALUES	(
 											@PP_CB_COLOR,
 											@VP_LOTE_VALOR,
 											@VP_PIEL_VALOR,
-											@VP_SQF_VALOR,
-											@VP_MOVIMIENTO_VALOR	)
+											@VP_SQF_VALOR	)
 																								
 						--Reemplazamos lo procesado con nada con la funcion stuff
 						SELECT @PP_PIEL_ARRAY	= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
@@ -251,19 +244,12 @@ AS
 						
 						WHILE @@FETCH_STATUS = 0
 							BEGIN
-								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
-
-								--IF NOT EXISTS (	SELECT JOBNO 
-								--				FROM cccuthst_sql 
-								--				WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL   
-								--				AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_TBL)), 6) 
-								--				AND LTRIM(RTRIM(hideno))   IN ('0613') 
-)
 								
 								DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE_TBL AS INT)
 								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(19,4))
 
+								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
 																	@VP_LOTE_INT, @VP_PIEL_INT, @VP_SQF_DEC, 

@@ -180,33 +180,6 @@ AS
 						-- ///////////////////////////////////////////
 						DECLARE @VP_LOCACION AS VARCHAR(5) = @PP_LOCACION_ORIGEN
 
-						--IF ISNUMERIC(@VP_MOVIMIENTO) = 1 
-						--	BEGIN
-						--		SELECT	@VP_LOCACION = LTRIM(RTRIM(IMINVTRX_SQL.Loc))
-						--				-- ===================== 
-						--		FROM	IMLSTRX_SQL, IMINVTRX_SQL 
-						--				-- =====================
-						--		WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
-						--		AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
-						--		AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
-						--		AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
-						--		AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
-						--		AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
-						--		AND		IMINVTRX_SQL.ord_no	= @VP_MOVIMIENTO
-						--		-- =====================
-						--		AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
-						--				OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
-						--		-- =====================
-
-						--		IF @VP_LOCACION IS NULL
-						--			SET @VP_LOCACION = ''
-						--		-- =====================
-						--	END
-						--ELSE
-						--	BEGIN
-						--		SET @VP_LOCACION = @VP_MOVIMIENTO
-						--	END
-
 						-- ///////////////////////////////////////////
 						DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE AS INT)
 						DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL AS INT)

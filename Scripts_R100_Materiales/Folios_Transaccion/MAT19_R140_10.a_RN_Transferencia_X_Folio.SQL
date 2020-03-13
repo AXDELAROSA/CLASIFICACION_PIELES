@@ -16,8 +16,6 @@ GO
 
 
 
-
-
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> RN_EXISTE
 -- //////////////////////////////////////////////////////////////
@@ -46,7 +44,7 @@ AS
 					WHERE	K_USUARIO = @PP_CODIGO_USUARIO	
 					AND		D_GRUPO_APROBADOR = 'AUTORIZAR SALIDA MQU'
 					AND		K_ESTATUS_GRUPO_APROBADOR = 1 -- ACTIVO
-					AND		K_TIPO_GRUPO_APROBADOR = 4 --  MQU SALIDA
+					AND		K_TIPO_GRUPO_APROBADOR = 21 --  MQU SALIDA
 				)
 			BEGIN
 				SET @VP_RESULTADO =  'No es posible transferir: Usuario  <NO AUTORIZADO>...' 

@@ -15,10 +15,10 @@ SELECT TOP 1000 * FROM RP_SC  order by tagno desc
 --3785649	
 
  --prd
---3786763
-use DATA_02
+----3786763
+--use DATA_02
 select * from users_pearl WHERE USUARIO = 'VIVIANAC'
-
+select * from users_pearl WHERE USUARIO = 'MANUELG'
 --	DELETE FROM pearl_log WHERE screen_opt = 'Transactions' AND user_name = 'franciscoe'
 
 --ORIGINAL
@@ -83,8 +83,8 @@ SELECT  * FROM HIDESLIN_SQL WHERE FILENO = '200213113255T1000001'
 
 
 --==================PARA TRANSACCIONES SIN ORDEN=================================================
-USE DATA_02
-GO
+--USE DATA_02
+--GO
 select * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
 where trx_dt>='20200226'   and doc_type='T' AND DOC_ORD_NO='10675   '
@@ -107,7 +107,7 @@ WHERE  LOTE=32641 AND LOCACION_DESTINO = 'T03' AND ORDEN_DESTIDO=10771
 
 select * from RP_SC where TAGNO=3786904
 
-select * from CCJOBHDR_SQL where jobno = 10658
+select * from CCJOBHDR_SQL where jobno = 11358
 
 SELECT * FROM IMINVTRX_SQL WHERE ord_no IN (04376600) 
  --and lev_no = 0

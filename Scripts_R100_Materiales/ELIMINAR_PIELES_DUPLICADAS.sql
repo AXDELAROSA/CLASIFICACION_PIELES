@@ -22,6 +22,14 @@ USE DATA_02Pruebas
 --ON [dbo].[RP_FOLIOS] ([TAG])
 --INCLUDE (ID,STATUS,JOBNO, MACHINE)
 --GO
+
+
+-- DROP INDEX [UN_RP_FOLIOS_01_TAG] ON [RP_FOLIOS] 
+--GO
+-- CREATE NONCLUSTERED INDEX [UN_RP_FOLIOS_TAG]
+--ON [dbo].[RP_FOLIOS] ([TAG])
+--INCLUDE (ID,STATUS,JOBNO, MACHINE)
+--GO
  --/////////////////////////////////////////////////////////////////
 
 ---- PIELES CON TYPO 2
@@ -219,8 +227,8 @@ SELECT * FROM CCJOBHDR_SQL WHERE  LTRIM(RTRIM(jobno)) IN ('11111' ,'11002' )
 
 SELECT  * FROM cccuthst_sql 
 WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'  
-AND	LTRIM(RTRIM(lotno)) = '032681' 
- AND LTRIM(RTRIM(hideno))   IN ('0016')
+AND	LTRIM(RTRIM(lotno)) = '033011' 
+ AND LTRIM(RTRIM(hideno))   IN ('0886')
 ORDER BY HIDENO ASC
  --================================================================
  
