@@ -35,16 +35,18 @@ SELECT D_TIPO_PIEL_LOG,usuario,PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE  LOTE = 33002 AND PIEL IN ( 1033)
+WHERE  --ORDEN_ORIGEN = 11247
+LOTE = 104751 AND PIEL IN ( 630)
 
 ----SELECT * FROM RP_SC WHERE TAGNO IN (3787754) AND HIDE = '0483'
 --SELECT * FROM RP_SC WHERE TAGNO IN (3787754,3787769,2137674) AND HIDE IN ( '0481', '0483') AND LOT= '33002'
 --SELECT DISTINCT * FROM  RP_Folios WHERE TAG IN (3787754,3787769)
 
 -- SI SON MAS DE UNA PIEL Y QUIERE IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS
-SELECT * FROM  RP_SC WHERE TAGNO  IN (3787880,3787854)
+SELECT * FROM  RP_SC WHERE TAGNO  IN (3777872)
 
-SELECT * FROM	RP_FOLIOS WHERE TAG IN (3787880,3787854)
+SELECT * FROM	RP_FOLIOS WHERE TAG IN (3777872)
+
 
 	select * from IMINVLOC_SQL
 --	ID		TAG			STATUS	MACHINE		JOBNO		JOBNO2
@@ -87,17 +89,18 @@ SELECT  * FROM HIDESLIN_SQL WHERE FILENO = '200213113255T1000001'
 --GO
 select * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where trx_dt>='20200226'   and doc_type='T' AND DOC_ORD_NO='10675   '
+where trx_dt>='20200309'   and doc_type='T' AND DOC_ORD_NO='11247   '
 order by ord_no asc
 
-SELECT top 300 IMINVTRX_SQL.lev_no,IMINVTRX_SQL.trx_dt,IMINVTRX_SQL.trx_tm, IMINVTRX_SQL.ord_no, IMINVTRX_SQL.item_no,ser_lot_no,loc, doc_ord_no, doc_type ,IMLSTRX_SQL.trx_qty,user_name
+SELECT DISTINCT  IMINVTRX_SQL.lev_no,IMINVTRX_SQL.trx_dt,IMINVTRX_SQL.trx_tm, IMINVTRX_SQL.ord_no, IMINVTRX_SQL.item_no,ser_lot_no,loc, doc_ord_no, doc_type ,IMLSTRX_SQL.trx_qty,user_name
 from IMINVTRX_SQL 
 inner join IMLSTRX_SQL on IMLSTRX_SQL.ord_no = IMINVTRX_SQL.ord_no
-where IMINVTRX_SQL.trx_dt>='20200302' /*and IMINVTRX_SQL.lev_no='0' and loc = 'T38'*/  and doc_type='T' --AND LOC='T38'
-  and IMLSTRX_SQL.trx_dt>='20200302'  and IMLSTRX_SQL.lev_no='0' 
+where IMINVTRX_SQL.trx_dt>='20200309' /*and IMINVTRX_SQL.lev_no='0' and loc = 'T38'*/  and doc_type='T' AND LOC='T16'
+  and IMLSTRX_SQL.trx_dt>='20200309' -- and IMLSTRX_SQL.lev_no='0' 
   --AND IMLSTRX_SQL.trx_qty = 21.5000
-  --AND    ser_lot_no='         032941'      
-  order by IMINVTRX_SQL.trx_dt asc
+  AND    ser_lot_no='         033002' 
+  AND DOC_ORD_NO='11247   '     
+  order by IMINVTRX_SQL.trx_dt, trx_tm asc
 
   SELECT D_TIPO_PIEL_LOG,usuario,PIEL_LOG.*  
 FROM PIEL_LOG 
