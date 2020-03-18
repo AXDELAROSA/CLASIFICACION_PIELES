@@ -18,16 +18,16 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDAR_PIEL_CORTADA]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE]	0,0,   'FOLIO_EXISTENTE' , 'B' , 'FMCKTX7' , 3785644 , 2137674 , 'T17' , 'MHI' , 
+EXECUTE  [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO]	0,0,   'FOLIO_EXISTENTE' , 'B' , 'FMCKTX7' , 3785644 , 2137674 , 'T17' , 'MHI' , 
 														'09404' , '' , 0 , 1 , '32641/32641/32641/59071/59071/59071' , 
 														'0371/0333/0295/0258/0120/0152' , 0 , 0 , 0 , '' , 'franciscoe' , 'ITX-002' 
 
 */
-CREATE PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA]
+CREATE PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
@@ -89,6 +89,7 @@ AS
 				DECLARE @VP_POSICION_LOTE			INT
 				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
 				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
+				DECLARE @VP_SQF_ORIGINAL			VARCHAR(20)
 				DECLARE @VP_SQF_ENVIAR				VARCHAR(20)
 				DECLARE @VP_SQF_RECIBIR				VARCHAR(20)	
 				DECLARE @VP_SQF_CORTADO				DECIMAL(13,2)	= 0.00		
@@ -106,6 +107,12 @@ AS
 						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
 						
+						SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00') 
+						FROM HIDESHDR_SQL   
+						INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
+						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_VALOR
+						AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL_VALOR
+
 						SELECT	TOP 1 @VP_SQF_ENVIAR = LTRIM(RTRIM(SQF))
 												FROM	RP_SC 
 												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
@@ -129,7 +136,7 @@ AS
 												AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_VALOR)), 6) 
 												AND LTRIM(RTRIM(hideno))   = @VP_PIEL_VALOR
 
-										SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) - @VP_SQF_CORTADO
+										SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_ORIGINAL) - @VP_SQF_CORTADO
 
 										IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
 											BEGIN
@@ -211,7 +218,226 @@ AS
 			AND		[LOCACION_DESTINO]	=		@PP_LOCACION_DESTINO
 			AND		[ORDEN_ORIGEN]		=		@PP_ORDEN_ORIGEN
 			AND		[ORDEN_DESTINO]		=		@PP_ORDEN_DESTINO
-			AND		[LOTE]				=		@VP_LOTE_VALOR
+			AND		[COLOR]				=		@PP_CB_COLOR
+			AND		[K_USUARIO_ALTA]    =		@PP_K_USUARIO_ACCION
+			AND		[K_PIEL_A_TRANSFERIR_TRANSACCION] = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION
+		END
+	
+	
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'PROCESO',
+													'',
+													-- ===========================================
+													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TAGNO_ORIGEN, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]
+GO
+/*
+EXECUTE  [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]	0,0,   'FOLIO_EXISTENTE' , 'B' , 'FMCKTX7' , 3785644 , 2137674 , 'T17' , 'MHI' , 
+														'09404' , '' , 0 , 1 , '32641/32641/32641/59071/59071/59071' , 
+														'0371/0333/0295/0258/0120/0152' , 0 , 0 , 0 , '' , 'franciscoe' , 'ITX-002' 
+
+*/
+CREATE PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_TIPO_TRANSFERENCIA		VARCHAR(50),
+	@PP_CB_COLOR				VARCHAR(20),
+	-- ===========================
+	@PP_TAGNO_ORIGEN			INT,
+	@PP_TAGNO_DESTINO			INT,
+	-- ===========================
+	@PP_LOCACION_ORIGEN			VARCHAR(10),
+	@PP_LOCACION_DESTINO		VARCHAR(10),
+	-- ===========================
+	@PP_ORDEN_ORIGEN			VARCHAR(10),
+	@PP_ORDEN_DESTINO			VARCHAR(10)
+	-- ===========================
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+	-- /////////////////////////////////////////////////////////////////////
+	
+	IF @VP_MENSAJE=''
+		BEGIN
+			BEGIN TRANSACTION 
+			BEGIN TRY
+
+				DECLARE @VP_K_PIEL_A_TRANSFERIR_TRANSACCION		INT = 0
+				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
+																	'DATA_02Pruebas', 'PIEL_A_TRANSFERIR_TRANSACCION', 'K_PIEL_A_TRANSFERIR_TRANSACCION',
+																	@OU_K_TABLA_DISPONIBLE = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION	OUTPUT
+
+				INSERT	INTO	[PIEL_A_TRANSFERIR_TRANSACCION] (
+										[K_PIEL_A_TRANSFERIR_TRANSACCION],
+										[TIPO_TRANSFERENCIA],
+										-- ===========================	
+										[FOLIO_ORIGEN],	[FOLIO_DESTINO],	
+										-- ===========================	
+										[LOCACION_ORIGEN], [LOCACION_DESTINO],	
+										-- ===========================	
+										[ORDEN_ORIGEN],	[ORDEN_DESTINO],		
+										-- ===========================	
+										[COLOR]	)
+								VALUES	(
+										@VP_K_PIEL_A_TRANSFERIR_TRANSACCION,
+										@PP_TIPO_TRANSFERENCIA,
+										-- ===========================	
+										@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
+										-- ===========================	
+										@PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO,
+										-- ===========================	
+										@PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
+										-- ===========================	
+										@PP_CB_COLOR)
+				-- ==========================================
+
+				DECLARE @VP_SQF_ORIGINAL			VARCHAR(20)
+				DECLARE @VP_SQF_ENVIAR				VARCHAR(20)
+				DECLARE @VP_SQF_RECIBIR				VARCHAR(20)	
+				DECLARE @VP_SQF_CORTADO				DECIMAL(13,2)	= 0.00		
+				
+				DECLARE @VP_COLOR_TBL	VARCHAR(10)
+				DECLARE @VP_LOTE_TBL	VARCHAR(10)
+				DECLARE @VP_PIEL_TBL	VARCHAR(10)
+
+				DECLARE CU_PIEL_SELECCIONADA CURSOR 
+				FOR SELECT	LTRIM(RTRIM(COLOUR)), LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)), ISNULL(LTRIM(RTRIM(SQF)),'0.00')
+					FROM	RP_SC
+					WHERE	LTRIM(RTRIM(COLOUR))	= @PP_CB_COLOR
+					AND		LTRIM(RTRIM(TAGNO))		= @PP_TAGNO_ORIGEN
+						
+				OPEN CU_PIEL_SELECCIONADA
+				FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_ENVIAR
+				
+				WHILE @@FETCH_STATUS = 0
+					BEGIN
+						SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00') 
+						FROM HIDESHDR_SQL   
+						INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
+						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_TBL
+						AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL_TBL
+						
+						SET @VP_SQF_RECIBIR = @VP_SQF_ENVIAR
+						IF  EXISTS (	SELECT JOBNO 
+										FROM cccuthst_sql 
+										WHERE LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR   
+										AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_TBL)), 6) 
+										AND LTRIM(RTRIM(hideno))   = @VP_PIEL_TBL
+										)
+							BEGIN
+								SELECT @VP_SQF_CORTADO = SUM(HIDESQM)
+										FROM cccuthst_sql 
+										WHERE LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR   
+										AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_TBL)), 6) 
+										AND LTRIM(RTRIM(hideno))   = @VP_PIEL_TBL
+
+								SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_ORIGINAL) - @VP_SQF_CORTADO
+
+								IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
+									BEGIN
+										DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_TBL + ' CORTADA COMPLETA.'
+										RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
+									END
+							END
+
+						INSERT	INTO	[PIEL_A_TRANSFERIR] (
+										[K_PIEL_A_TRANSFERIR_TRANSACCION],
+										[TIPO_TRANSFERENCIA],
+										-- ===========================	
+										[FOLIO_ORIGEN],	[FOLIO_DESTINO],	
+										-- ===========================	
+										[LOCACION_ORIGEN], [LOCACION_DESTINO],	
+										-- ===========================	
+										[ORDEN_ORIGEN],	[ORDEN_DESTINO],		
+										-- ===========================	
+										[COLOR], [LOTE], [PIEL],
+										[SQF_ENVIAR], [SQF_CORTADO], [SQF_RECIBIR],
+										-- ===========================	
+										[K_USUARIO_ALTA], [F_ALTA],	
+										[K_USUARIO_CAMBIO],	[F_CAMBIO],
+										[L_BORRADO], [K_USUARIO_BAJA], [F_BAJA]	)	
+								VALUES	(
+										@VP_K_PIEL_A_TRANSFERIR_TRANSACCION,
+										@PP_TIPO_TRANSFERENCIA,
+										-- ===========================	
+										@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
+										-- ===========================	
+										@PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO,
+										-- ===========================	
+										@PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
+										-- ===========================	
+										@PP_CB_COLOR, @VP_LOTE_TBL, @VP_PIEL_TBL, 
+										@VP_SQF_ENVIAR, CONVERT(VARCHAR(10),@VP_SQF_CORTADO), @VP_SQF_RECIBIR,
+										-- ===========================				
+										@PP_K_USUARIO_ACCION, GETDATE(), 
+										@PP_K_USUARIO_ACCION, GETDATE(),
+										0, NULL, NULL	)
+																								
+					FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_ENVIAR
+	
+				END
+	
+			CLOSE CU_PIEL_SELECCIONADA
+			DEALLOCATE CU_PIEL_SELECCIONADA
+					-- /////////////////////////////////////////////////////////////////////
+								
+			COMMIT TRANSACTION 
+			END TRY
+	
+			BEGIN CATCH
+				/* Ocurrió un error, deshacemos los cambios*/ 
+				ROLLBACK TRANSACTION
+				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
+				--SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
+				SET @VP_MENSAJE =  ERROR_MESSAGE() 
+			END CATCH
+			
+		END
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible Transferir el [FOLIO]: ' + CONVERT(VARCHAR(15),@PP_TAGNO_ORIGEN) + ' Piel:' + @VP_MENSAJE 
+		SELECT	@VP_MENSAJE AS MENSAJE, @PP_TAGNO_ORIGEN AS CLAVE
+		END
+	ELSE
+		BEGIN
+			SELECT [PIEL_A_TRANSFERIR].* , usuario
+			FROM [PIEL_A_TRANSFERIR]
+			INNER JOIN	users_pearl ON [PIEL_A_TRANSFERIR].K_USUARIO_ALTA = users_pearl.codigo
+			WHERE	[TIPO_TRANSFERENCIA] =		@PP_TIPO_TRANSFERENCIA
+			AND		[FOLIO_ORIGEN]		=		@PP_TAGNO_ORIGEN
+			AND		[FOLIO_DESTINO]		= 		@PP_TAGNO_DESTINO
+			AND		[LOCACION_ORIGEN]	=		@PP_LOCACION_ORIGEN
+			AND		[LOCACION_DESTINO]	=		@PP_LOCACION_DESTINO
+			AND		[ORDEN_ORIGEN]		=		@PP_ORDEN_ORIGEN
+			AND		[ORDEN_DESTINO]		=		@PP_ORDEN_DESTINO
 			AND		[COLOR]				=		@PP_CB_COLOR
 			AND		[K_USUARIO_ALTA]    =		@PP_K_USUARIO_ACCION
 			AND		[K_PIEL_A_TRANSFERIR_TRANSACCION] = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION
