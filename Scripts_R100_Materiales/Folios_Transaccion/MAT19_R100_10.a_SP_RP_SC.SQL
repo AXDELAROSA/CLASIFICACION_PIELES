@@ -324,32 +324,24 @@ AS
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN	
-			IF EXISTS (SELECT ID FROM RP_SC	WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
-											AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
-											AND		LTRIM(RTRIM(LOT))=@PP_LOTE
-											AND		LTRIM(RTRIM(HIDE))=@PP_PIEL			)
-				BEGIN
-					DECLARE @VP_SQF_ACTUAL	VARCHAR(10) = ''
-					SELECT @VP_SQF_ACTUAL  = SQF
-											FROM RP_SC	
-											WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
-											AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
-											AND		LTRIM(RTRIM(LOT))=@PP_LOTE
-											AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
+			--IF EXISTS (SELECT ID FROM RP_SC	WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+			--								AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+			--								AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+			--								AND		LTRIM(RTRIM(HIDE))=@PP_PIEL			)
+			--	BEGIN
+		
+			DECLARE @VP_SQF_ACTUAL	VARCHAR(10) 
+			SELECT @VP_SQF_ACTUAL  = SQF
+									FROM RP_SC	
+									WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+									AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+									AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+									AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
+			
+			IF @VP_SQF_ACTUAL IS NULL
+				SET @VP_SQF_ACTUAL = ''
 
-					SET @VP_SQF_ACTUAL = CONVERT(DECIMAL(13,2),@VP_SQF_ACTUAL) + 	CONVERT(DECIMAL(13,2),@PP_SQF)	
-
-					UPDATE RP_SC
-						SET SQF = @VP_SQF_ACTUAL
-					WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
-					AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
-					AND		LTRIM(RTRIM(LOT))=@PP_LOTE
-					AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
-					
-					IF @@ROWCOUNT = 0
-					RAISERROR ('ERROR SP: PG_IN_RP_SC', 16, 1 ) --MENSAJE - Severity -State.
-				END
-			ELSE
+			IF @VP_SQF_ACTUAL = ''
 				BEGIN
 					INSERT INTO RP_SC	
 								(	[CDATE], 
@@ -379,23 +371,37 @@ AS
 									@PP_MOVIMIENTO,		
 									@PP_K_CLASIFICACION	)	
 				END
+			ELSE
+				BEGIN
+					SET @VP_SQF_ACTUAL = CONVERT(DECIMAL(13,2),@VP_SQF_ACTUAL) + 	CONVERT(DECIMAL(13,2),@PP_SQF)	
+
+					UPDATE RP_SC
+						SET SQF = @VP_SQF_ACTUAL
+					WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+					AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+					AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+					AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
+					
+					IF @@ROWCOUNT = 0
+					RAISERROR ('ERROR SP: PG_IN_RP_SC', 16, 1 ) --MENSAJE - Severity -State.
+				END
 		END
 
 	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'UPDATE',
-													'',
-													-- ===========================================
-													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_LOTE, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', 'UP', '', '', ''
+	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'UPDATE',
+	--												'',
+	--												-- ===========================================
+	--												'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_LOTE, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', 'UP', '', '', ''
 
 	-- //////////////////////////////////////////////////////////////
 GO

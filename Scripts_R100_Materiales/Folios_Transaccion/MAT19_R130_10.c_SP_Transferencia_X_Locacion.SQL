@@ -330,7 +330,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+--USE DATA_02
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_RP_SC_Y_RP_FOLIO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_LI_RP_SC_Y_RP_FOLIO]
 GO
@@ -363,8 +363,8 @@ AS
 	FROM	RP_SC 
 	-- =======================
 	INNER JOIN	RP_Folios ON RP_Folios.TAG=RP_SC.TAGNO 
-				AND	LOT=@PP_LOTE
-				AND	HIDE=@PP_PIEL	
+				AND	LTRIM(RTRIM(LOT))=@PP_LOTE
+				AND	LTRIM(RTRIM(HIDE))=@PP_PIEL	
 	-- =======================
 	--ORDER BY CDATE
           

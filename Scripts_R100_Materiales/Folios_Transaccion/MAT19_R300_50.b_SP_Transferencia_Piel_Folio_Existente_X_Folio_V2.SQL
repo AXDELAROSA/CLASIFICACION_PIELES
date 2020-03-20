@@ -170,6 +170,7 @@ AS
 			
 				DECLARE @VP_N_PIEL INT = 0
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_A_TRANSFERIR) FROM [PIEL_A_TRANSFERIR]
+				WHERE K_PIEL_A_TRANSFERIR_TRANSACCION = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 
 				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
 				IF @VP_N_PIEL IS NULL
@@ -185,32 +186,33 @@ AS
 				-- /////////////////////////SI LAS PIELES A TRANSFERIR SON MAS DE UNA////////////////////////////////////////////
 				IF @VP_N_PIEL > 1
 					BEGIN
-						--DECLARE CU_PIEL_SELECCIONADA CURSOR 
-						--FOR SELECT	COLOR, LOTE, PIEL, SQF_RECIBIR 
-						--	FROM	[PIEL_A_TRANSFERIR]
-						--	WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+						DECLARE CU_PIEL_SELECCIONADA CURSOR 
+						FOR SELECT	COLOR, LOTE, PIEL, SQF_RECIBIR 
+							FROM	[PIEL_A_TRANSFERIR]
+							WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 						
-						--OPEN CU_PIEL_SELECCIONADA
-						--FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_TBL
+						OPEN CU_PIEL_SELECCIONADA
+						FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_TBL
 						
-						--WHILE @@FETCH_STATUS = 0
-						--	BEGIN
-						SET ROWCOUNT 0
-						SELECT * INTO #PIELES_X_TRANSFERIR 
-						FROM	[PIEL_A_TRANSFERIR]
-						WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
-						SET ROWCOUNT 1
-						SELECT	@VP_PIEL_TBL	= LTRIM(RTRIM(PIEL)),
-								@VP_LOTE_TBL	= LTRIM(RTRIM(LOTE)),
-								@VP_COLOR_TBL	= LTRIM(RTRIM(COLOR)),
-								@VP_SQF_TBL		= LTRIM(RTRIM(SQF_RECIBIR))
-						FROM #PIELES_X_TRANSFERIR
-						WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
-						WHILE @@ROWCOUNT <> 0
+						WHILE @@FETCH_STATUS = 0
 							BEGIN
-								SET ROWCOUNT 0
+						--SET ROWCOUNT 0
+						--SELECT * INTO #PIELES 
+						--FROM	[PIEL_A_TRANSFERIR]
+						--WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+
+						--SET ROWCOUNT 1
+						--SELECT	@VP_PIEL_TBL	= LTRIM(RTRIM(PIEL)),
+						--		@VP_LOTE_TBL	= LTRIM(RTRIM(LOTE)),
+						--		@VP_COLOR_TBL	= LTRIM(RTRIM(COLOR)),
+						--		@VP_SQF_TBL		= LTRIM(RTRIM(SQF_RECIBIR))
+						--FROM #PIELES
+						--WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+
+						--WHILE @@ROWCOUNT <> 0
+						--	BEGIN
+						--		SET ROWCOUNT 0
+
 								DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE_TBL AS INT)
 								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(13,2))
@@ -242,87 +244,86 @@ AS
 																	@PP_TAGNO_ORIGEN, 'Transfer',
 																	@VP_DETAIL, @VP_PIEL_TBL
 
-								-- /////////////////////////SI DESEA IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS////////////////////////////////////////////
-								IF @PP_PRT_FORM_DEV_EXT = 1 -- SI
+								FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_TBL
+	
+								--DELETE	#PIELES 
+								--WHERE	LTRIM(RTRIM(PIEL))	= @VP_PIEL_TBL
+								--AND		LTRIM(RTRIM(LOTE))	= @VP_LOTE_TBL
+								--AND		LTRIM(RTRIM(COLOR)) = @VP_COLOR_TBL
+								--AND		[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+
+								--SET ROWCOUNT 1
+								--SELECT	@VP_PIEL_TBL	= LTRIM(RTRIM(PIEL)),
+								--		@VP_LOTE_TBL	= LTRIM(RTRIM(LOTE)),
+								--		@VP_COLOR_TBL	= LTRIM(RTRIM(COLOR)),
+								--		@VP_SQF_TBL		= LTRIM(RTRIM(SQF_RECIBIR))
+								--FROM #PIELES
+								--WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+
+							END
+							--SET ROWCOUNT 0
+						CLOSE CU_PIEL_SELECCIONADA
+						DEALLOCATE CU_PIEL_SELECCIONADA
+					-- ////////////////////////////////////////////////////////////////////	
+
+					-- /////////////////////////SI DESEA IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS////////////////////////////////////////////
+						IF @PP_PRT_FORM_DEV_EXT = 1 -- SI
+							BEGIN
+								DECLARE	@VP_ESTATUS	VARCHAR(5)
+
+								-- /////////////////VALIDA ESTATUS FOLIO ORIGEN////////////////////////////////////////////////////
+								SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
+													FROM RP_Folios
+													WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
+
+								IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
 									BEGIN
-										DECLARE	@VP_ESTATUS	VARCHAR(5)
-
-										-- /////////////////VALIDA ESTATUS FOLIO ORIGEN////////////////////////////////////////////////////
-										SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
-															FROM RP_Folios
-															WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
-
-										IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
-											BEGIN
-												EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_TAGNO_ORIGEN, 5
-											END
-										ELSE
-											BEGIN
-												EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																							@PP_TAGNO_ORIGEN, 'D'
-											END
-
-										-- /////////////////VALIDA ESTATUS FOLIO DESTINO////////////////////////////////////////////////////
-										SET	@VP_ESTATUS = ''
-										SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
-															FROM RP_Folios
-															WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_DESTINO
-
-										IF @VP_ESTATUS <> 'B'
-											BEGIN
-												EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_TAGNO_DESTINO, 4
-											END
-										ELSE
-											BEGIN
-												EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																									@PP_TAGNO_DESTINO, 'E', 'C'
-											END
-									END	
+										EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@PP_TAGNO_ORIGEN, 5
+									END
 								ELSE
 									BEGIN
-										-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
 										EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_TAGNO_ORIGEN, 'D'
+									END
 
-										-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
-										
-										SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
-										EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																			@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
-																			@PP_TAGNO_ORIGEN, 'Delete hides',
-																			@VP_DETAIL, @VP_PIEL_TBL
+								-- /////////////////VALIDA ESTATUS FOLIO DESTINO////////////////////////////////////////////////////
+								SET	@VP_ESTATUS = ''
+								SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
+													FROM RP_Folios
+													WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_DESTINO
 
-										-- //////////////////////////////ACTUALIZA EL FOLIO DESTINO A TIPO C ///////////////////////////////////////
+								IF @VP_ESTATUS <> 'B'
+									BEGIN
+										EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@PP_TAGNO_DESTINO, 4
+									END
+								ELSE
+									BEGIN
 										EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																							@PP_TAGNO_DESTINO, 'E', 'C'
-									
 									END
-									-- ///////////////////////////////////////////
+							END	
+						ELSE
+							BEGIN
+								-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
+								EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@PP_TAGNO_ORIGEN, 'D'
 
-								--FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_TBL
-	
-								DELETE	#PIELES_X_TRANSFERIR 
-								WHERE	LTRIM(RTRIM(PIEL))	= @VP_PIEL_TBL
-								AND		LTRIM(RTRIM(LOTE))	= @VP_LOTE_TBL
-								AND		LTRIM(RTRIM(COLOR)) = @VP_COLOR_TBL
-								AND		[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+								-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
+								
+								SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
+								EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
+																	@PP_TAGNO_ORIGEN, 'Delete hides',
+																	@VP_DETAIL, @VP_PIEL_TBL
 
-								SET ROWCOUNT 1
-								SELECT	@VP_PIEL_TBL	= LTRIM(RTRIM(PIEL)),
-										@VP_LOTE_TBL	= LTRIM(RTRIM(LOTE)),
-										@VP_COLOR_TBL	= LTRIM(RTRIM(COLOR)),
-										@VP_SQF_TBL		= LTRIM(RTRIM(SQF_RECIBIR))
-								FROM #PIELES_X_TRANSFERIR
-								WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
-					END
-
-					SET ROWCOUNT 0
-						--CLOSE CU_PIEL_SELECCIONADA
-						--DEALLOCATE CU_PIEL_SELECCIONADA
-					-- ////////////////////////////////////////////////////////////////////	
+								-- //////////////////////////////ACTUALIZA EL FOLIO DESTINO A TIPO C ///////////////////////////////////////
+								EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																					@PP_TAGNO_DESTINO, 'E', 'C'
+							
+							END
+							-- ///////////////////////////////////////////
 					END
 				ELSE IF @VP_N_PIEL = 1
 					BEGIN

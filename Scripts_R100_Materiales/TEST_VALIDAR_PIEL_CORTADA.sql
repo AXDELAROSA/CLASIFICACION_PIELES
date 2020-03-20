@@ -1,5 +1,5 @@
 
-USE DATA_02Pruebas
+USE DATA_02 --Pruebas
 SELECT * FROM [PIEL_A_TRANSFERIR]
 SELECT * FROM PIEL_A_TRANSFERIR_TRANSACCION
 
@@ -11,6 +11,7 @@ INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_L
 USE DATA_02Pruebas
 TRUNCATE TABLE [PIEL_A_TRANSFERIR]
 
+
 DELETE	PIEL_A_TRANSFERIR_TRANSACCION
 WHERE	K_PIEL_A_TRANSFERIR_TRANSACCION = 2
 
@@ -20,33 +21,44 @@ WHERE	K_PIEL_A_TRANSFERIR_TRANSACCION = 2
 select * from HIDESHDR_SQL   
  inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
 AND	LTRIM(RTRIM(PLOT)) = '33012' 
- AND LTRIM(RTRIM(HIDE)) IN   ('0002')
+ AND LTRIM(RTRIM(HIDE))   IN (SELECT HIDE FROM RP_SC WHERE TAGNO = 3788343)
 
 --SELECT * FROM CCJOBHDR_SQL WHERE  LTRIM(RTRIM(jobno)) IN ('11111' ,'11002' )
-
+USE DATA_02 --Pruebas
 SELECT  * FROM cccuthst_sql 
+WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKVT9'  
+AND	LTRIM(RTRIM(lotno)) = '033051' 
+ AND LTRIM(RTRIM(hideno))   IN ('0410')
+ORDER BY HIDENO ASC
+
+SELECT DISTINCT  * FROM cccuthst_sql 
 WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'  
 AND	LTRIM(RTRIM(lotno)) = '033012' 
- AND LTRIM(RTRIM(hideno))   IN ('0600','0601','0602','0603','0604','0605','0606')
+ AND LTRIM(RTRIM(hideno))   IN (SELECT HIDE FROM RP_SC WHERE TAGNO = 3788360)
 ORDER BY HIDENO ASC
+
+SELECT * FROM RP_SC WHERE TAGNO = 3788349
 
 SELECT  * FROM RP_SC
 WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
-AND	LTRIM(RTRIM(LOT)) = '32782' 
-AND LTRIM(RTRIM(HIDE)) IN   ('0631')
+AND	LTRIM(RTRIM(LOT)) = '33021' 
+AND LTRIM(RTRIM(HIDE)) IN   ('0223')
 
-
-
+--UPDATE RP_SC
+--SET TAGNO = 3788514
+--WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
+--AND	LTRIM(RTRIM(LOT)) = '33021' 
+--AND LTRIM(RTRIM(HIDE)) IN   ('0223')
+--AND TAGNO = 3788491
 
 /*
 USE DATA_02Pruebas
 UPDATE cccuthst_sql 
-	SET hidesqm = '15.10'
+	SET hidesqm = '15.00'
 WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'  
 AND	LTRIM(RTRIM(lotno)) = '033012' 
-AND LTRIM(RTRIM(hideno))   IN ('0599')
+AND LTRIM(RTRIM(hideno))   IN ('0227')
 */
-
 
 
  --USE DATA_02Pruebas
@@ -56,25 +68,39 @@ AND LTRIM(RTRIM(hideno))   IN ('0599')
 	--															LOTE		VARCHAR(20),
 	--															SQF			VARCHAR(20)	)
 				
-select * from test
+
  USE DATA_02Pruebas
+
+declare @result int
+
+execute [dbo].[PG_PM_TEST_TABLA] 0,0,@result out
+
+select @result
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TEST_TABLA]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PM_TEST_TABLA]
 GO
 -- EXECUTE   [dbo].[PG_PM_TEST_TABLA] 0,0, 'B' , 'FCMKDX9' 
+
 CREATE PROCEDURE [dbo].[PG_PM_TEST_TABLA]
-	--@PP_K_SISTEMA_EXE			INT,
-	--@PP_K_USUARIO_ACCION		INT,
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@TBL_TOTAL_SQF_X_LOTE		TVPParamtest READONLY
+	--@TBL_TOTAL_SQF_X_LOTE		TVPParamtest READONLY,
 	-- ===========================
+	@OU_RESULTADO				INT OUTPUT
 AS
 	-- ///////////////////////////////////////////
+	--DROP TABLE test
 
-	select * into test
-	from @TBL_TOTAL_SQF_X_LOTE
-	-- ////////////////////////////////////////////////////////////////////
+	
+	--select COLOR,LOTE,SQF into test
+	--from @TBL_TOTAL_SQF_X_LOTE
+	
+	--DECLARE @SQF VARCHAR(10)
+	--SELECT @SQF = SQF  FROM test
 
+	SET @OU_RESULTADO = 1
 
 	-- ////////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
