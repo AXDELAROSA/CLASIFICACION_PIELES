@@ -196,23 +196,7 @@ AS
 						
 						WHILE @@FETCH_STATUS = 0
 							BEGIN
-						--SET ROWCOUNT 0
-						--SELECT * INTO #PIELES 
-						--FROM	[PIEL_A_TRANSFERIR]
-						--WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
-						--SET ROWCOUNT 1
-						--SELECT	@VP_PIEL_TBL	= LTRIM(RTRIM(PIEL)),
-						--		@VP_LOTE_TBL	= LTRIM(RTRIM(LOTE)),
-						--		@VP_COLOR_TBL	= LTRIM(RTRIM(COLOR)),
-						--		@VP_SQF_TBL		= LTRIM(RTRIM(SQF_RECIBIR))
-						--FROM #PIELES
-						--WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
-						--WHILE @@ROWCOUNT <> 0
-						--	BEGIN
-						--		SET ROWCOUNT 0
-
+						
 								DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE_TBL AS INT)
 								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(13,2))
@@ -245,23 +229,9 @@ AS
 																	@VP_DETAIL, @VP_PIEL_TBL
 
 								FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_TBL
-	
-								--DELETE	#PIELES 
-								--WHERE	LTRIM(RTRIM(PIEL))	= @VP_PIEL_TBL
-								--AND		LTRIM(RTRIM(LOTE))	= @VP_LOTE_TBL
-								--AND		LTRIM(RTRIM(COLOR)) = @VP_COLOR_TBL
-								--AND		[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
-								--SET ROWCOUNT 1
-								--SELECT	@VP_PIEL_TBL	= LTRIM(RTRIM(PIEL)),
-								--		@VP_LOTE_TBL	= LTRIM(RTRIM(LOTE)),
-								--		@VP_COLOR_TBL	= LTRIM(RTRIM(COLOR)),
-								--		@VP_SQF_TBL		= LTRIM(RTRIM(SQF_RECIBIR))
-								--FROM #PIELES
-								--WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-
+									
 							END
-							--SET ROWCOUNT 0
+
 						CLOSE CU_PIEL_SELECCIONADA
 						DEALLOCATE CU_PIEL_SELECCIONADA
 					-- ////////////////////////////////////////////////////////////////////	
@@ -327,12 +297,12 @@ AS
 					END
 				ELSE IF @VP_N_PIEL = 1
 					BEGIN
-						
 						SELECT	TOP 1
 								@VP_COLOR_TBL	= COLOR,
 								@VP_LOTE_TBL	= LOTE,
 								@VP_PIEL_TBL	= PIEL,
-								@VP_SQF_TBL		= SQF_RECIBIR
+								@VP_SQF_TBL		= SQF_ENVIAR,
+								@PP_TB_SQF		= CONVERT(DECIMAL(13,2),SQF_RECIBIR)
 								-- =======================
 						FROM	[PIEL_A_TRANSFERIR]
 						WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
@@ -345,9 +315,8 @@ AS
 											AND		LTRIM(RTRIM(COLOUR))=@PP_CB_COLOR
 											AND		LTRIM(RTRIM(HIDE))=@VP_PIEL_TBL
 											AND		LTRIM(RTRIM(LOT))=@VP_LOTE_TBL
+						-- /////////////////////////////////////////////////////////////////////
 
-						-- /////////////////////////////////////////////////////////////////////
-						-- /////////////////////////////////////////////////////////////////////
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
@@ -462,21 +431,21 @@ AS
 				
 					DECLARE @TBL_TOTAL_SQF_X_LOTE	TVPParam
 					 
-					IF @VP_N_PIEL = 1 AND (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) <> @PP_TB_SQF)
-						BEGIN
-							INSERT INTO  @TBL_TOTAL_SQF_X_LOTE 
-							SELECT COLOR, LOTE, @PP_TB_SQF AS SQF 
-							FROM	[PIEL_A_TRANSFERIR]
-							WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-						END
-					ELSE
-						BEGIN
+					--IF @VP_N_PIEL = 1 AND (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) <> @PP_TB_SQF)
+					--	BEGIN
+					--		INSERT INTO  @TBL_TOTAL_SQF_X_LOTE 
+					--		SELECT COLOR, LOTE, @PP_TB_SQF AS SQF 
+					--		FROM	[PIEL_A_TRANSFERIR]
+					--		WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+					--	END
+					--ELSE
+					--	BEGIN
 							INSERT INTO  @TBL_TOTAL_SQF_X_LOTE 
 							SELECT COLOR, LOTE, SUM(CONVERT(DECIMAL(13,4),SQF_RECIBIR)) AS SQF 
 							FROM	[PIEL_A_TRANSFERIR]
 							WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 							GROUP BY COLOR, LOTE
-						END
+						--END
 					
 									
 					-- /////////////////////////////////////////////////////////////////////

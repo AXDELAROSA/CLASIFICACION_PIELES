@@ -90,112 +90,7 @@ AS
 										-- ===========================	
 										@PP_CB_COLOR)
 				-- ==========================================
-
-				--DECLARE @VP_LOTE_VALOR				VARCHAR(20)
-				--DECLARE @VP_PIEL_VALOR				VARCHAR(20)
-				--DECLARE @VP_SQF_ORIGINAL			VARCHAR(20)
-				--DECLARE @VP_SQF_ENVIAR				VARCHAR(20)
-				--DECLARE @VP_SQF_RECIBIR				VARCHAR(20)	
-				--DECLARE @VP_SQF_CORTADO				DECIMAL(13,2)	= 0.00		
-
-				--SET ROWCOUNT 0
-				--SELECT * INTO #PIELES_X_FOLIO 
-				--FROM	@TBL_PIEL_A_TRANFERIR
-				--WHERE	LTRIM(RTRIM(COLOR))	= @PP_CB_COLOR
-				--AND		LTRIM(RTRIM(FOLIO))	= @PP_TAGNO_ORIGEN
-
-				--SET ROWCOUNT 1
-				--SELECT	@VP_PIEL_VALOR = LTRIM(RTRIM(PIEL)),
-				--		@VP_LOTE_VALOR = LTRIM(RTRIM(LOTE)),
-				--		@VP_SQF_ENVIAR = LTRIM(RTRIM(SQF))
-				--FROM #PIELES_X_FOLIO
-				--WHERE	LTRIM(RTRIM(COLOR))	= @PP_CB_COLOR
-				--AND		LTRIM(RTRIM(FOLIO))		= @PP_TAGNO_ORIGEN
-
-				--WHILE @@ROWCOUNT <> 0
-				--	BEGIN
-				--		SET	@VP_SQF_CORTADO	= 0.00		
-
-				--		SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00') 
-				--		FROM HIDESHDR_SQL   
-				--		INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-				--		AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_VALOR
-				--		AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL_VALOR
-
-				--		SET @VP_SQF_RECIBIR = @VP_SQF_ENVIAR
-
-				--		SELECT @VP_SQF_CORTADO = SUM(HIDESQM)
-				--				FROM cccuthst_sql 
-				--				WHERE LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR   
-				--				AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_VALOR)), 6) 
-				--				AND LTRIM(RTRIM(hideno))   = @VP_PIEL_VALOR
-
-				--		IF @VP_SQF_CORTADO IS NULL
-				--			SET @VP_SQF_CORTADO = 0.00
-
-				--		IF @VP_SQF_CORTADO > 0
-				--			BEGIN
-				--				SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_ORIGINAL) - @VP_SQF_CORTADO
-
-				--				IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
-				--					BEGIN
-				--						DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_VALOR + ' CORTADA COMPLETA.'
-				--						RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
-				--					END
-				--			END
-
-				--		INSERT	INTO	[PIEL_A_TRANSFERIR] (
-				--						[K_PIEL_A_TRANSFERIR_TRANSACCION],
-				--						[TIPO_TRANSFERENCIA],
-				--						-- ===========================	
-				--						[FOLIO_ORIGEN],	[FOLIO_DESTINO],	
-				--						-- ===========================	
-				--						[LOCACION_ORIGEN], [LOCACION_DESTINO],	
-				--						-- ===========================	
-				--						[ORDEN_ORIGEN],	[ORDEN_DESTINO],		
-				--						-- ===========================	
-				--						[COLOR], [LOTE], [PIEL],
-				--						[SQF_ENVIAR], [SQF_CORTADO], [SQF_RECIBIR],
-				--						-- ===========================	
-				--						[K_USUARIO_ALTA], [F_ALTA],	
-				--						[K_USUARIO_CAMBIO],	[F_CAMBIO],
-				--						[L_BORRADO], [K_USUARIO_BAJA], [F_BAJA]	)	
-				--				VALUES	(
-				--						@VP_K_PIEL_A_TRANSFERIR_TRANSACCION,
-				--						@PP_TIPO_TRANSFERENCIA,
-				--						-- ===========================	
-				--						@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
-				--						-- ===========================	
-				--						@PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO,
-				--						-- ===========================	
-				--						@PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
-				--						-- ===========================	
-				--						@PP_CB_COLOR, @VP_LOTE_VALOR, @VP_PIEL_VALOR, 
-				--						@VP_SQF_ENVIAR, CONVERT(VARCHAR(10),@VP_SQF_CORTADO), @VP_SQF_RECIBIR,
-				--						-- ===========================				
-				--						@PP_K_USUARIO_ACCION, GETDATE(), 
-				--						@PP_K_USUARIO_ACCION, GETDATE(),
-				--						0, NULL, NULL	)
-
-				--		SET ROWCOUNT 0
-				--		DELETE	#PIELES_X_FOLIO 
-				--		WHERE	LTRIM(RTRIM(PIEL))	= @VP_PIEL_VALOR
-				--		AND		LTRIM(RTRIM(LOTE))	= @VP_LOTE_VALOR
-				--		AND		LTRIM(RTRIM(COLOR)) = @PP_CB_COLOR
-				--		AND		LTRIM(RTRIM(FOLIO)) = @PP_TAGNO_ORIGEN
-
-						
-				--		SET ROWCOUNT 1
-				--		SELECT	@VP_PIEL_VALOR = LTRIM(RTRIM(PIEL)),
-				--				@VP_LOTE_VALOR = LTRIM(RTRIM(LOTE)),
-				--				@VP_SQF_ENVIAR = LTRIM(RTRIM(SQF))
-				--		FROM #PIELES_X_FOLIO
-				--		WHERE	LTRIM(RTRIM(COLOR))	= @PP_CB_COLOR
-				--		AND		LTRIM(RTRIM(FOLIO))	= @PP_TAGNO_ORIGEN
-
-				--	END
-				--SET ROWCOUNT 0
-
+							
 				DECLARE @VP_POSICION_PIEL			INT
 				DECLARE @VP_POSICION_LOTE			INT
 				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
@@ -247,11 +142,11 @@ AS
 								
 								SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_ORIGINAL) - @VP_SQF_CORTADO
 
-								IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
-									BEGIN
-										DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_VALOR + ' CORTADA COMPLETA.'
-										RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
-									END
+								--IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
+								--	BEGIN
+								--		DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_VALOR + ' CORTADA COMPLETA.'
+								--		RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
+								--	END
 							END
 
 						INSERT	INTO	[PIEL_A_TRANSFERIR] (
@@ -264,7 +159,7 @@ AS
 										-- ===========================	
 										[ORDEN_ORIGEN],	[ORDEN_DESTINO],		
 										-- ===========================	
-										[COLOR], [LOTE], [PIEL],
+										[COLOR], [LOTE], [PIEL], [SQF_ORIGINAL],
 										[SQF_ENVIAR], [SQF_CORTADO], [SQF_RECIBIR],
 										-- ===========================	
 										[K_USUARIO_ALTA], [F_ALTA],	
@@ -280,7 +175,7 @@ AS
 										-- ===========================	
 										@PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
 										-- ===========================	
-										@PP_CB_COLOR, @VP_LOTE_VALOR, @VP_PIEL_VALOR, 
+										@PP_CB_COLOR, @VP_LOTE_VALOR, @VP_PIEL_VALOR, @VP_SQF_ORIGINAL,
 										@VP_SQF_ENVIAR, CONVERT(VARCHAR(10),@VP_SQF_CORTADO), @VP_SQF_RECIBIR,
 										-- ===========================				
 										@PP_K_USUARIO_ACCION, GETDATE(), 
@@ -428,110 +323,7 @@ AS
 				DECLARE @VP_LOTE_TBL	VARCHAR(10)
 				DECLARE @VP_PIEL_TBL	VARCHAR(10)
 
-				--SET ROWCOUNT 0
-				--SELECT * INTO #PIELES_X_LOCACION 
-				--FROM	RP_SC
-				--WHERE	LTRIM(RTRIM(COLOUR))	= @PP_CB_COLOR
-				--AND		LTRIM(RTRIM(TAGNO))		= @PP_TAGNO_ORIGEN
-
-				--SET ROWCOUNT 1
-				--SELECT	@VP_PIEL_TBL = LTRIM(RTRIM(HIDE)),
-				--		@VP_LOTE_TBL = LTRIM(RTRIM(LOT)),
-				--		@VP_COLOR_TBL = LTRIM(RTRIM(COLOUR)),
-				--		@VP_SQF_ENVIAR = LTRIM(RTRIM(SQF))
-				--FROM #PIELES_X_LOCACION
-				--WHERE	LTRIM(RTRIM(COLOUR))	= @PP_CB_COLOR
-				--AND		LTRIM(RTRIM(TAGNO))		= @PP_TAGNO_ORIGEN
-
-				--WHILE @@ROWCOUNT <> 0
-				--	BEGIN
-				--		SET ROWCOUNT 0
-
-				--		SET	@VP_SQF_CORTADO	= 0.00	
-
-				--		SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00') 
-				--		FROM HIDESHDR_SQL   
-				--		INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-				--		AND	LTRIM(RTRIM(PCOLOR)) = @VP_COLOR_TBL
-				--		AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_TBL
-				--		AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL_TBL
 						
-				--		SET @VP_SQF_RECIBIR = @VP_SQF_ENVIAR
-
-						
-				--		SELECT @VP_SQF_CORTADO = SUM(HIDESQM)
-				--				FROM cccuthst_sql 
-				--				WHERE LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR   
-				--				AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE_TBL)), 6) 
-				--				AND LTRIM(RTRIM(hideno))   = @VP_PIEL_TBL
-
-				--		IF @VP_SQF_CORTADO IS NULL
-				--			SET @VP_SQF_CORTADO = 0.00
-
-				--		IF @VP_SQF_CORTADO > 0
-				--			BEGIN
-				--				SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_ORIGINAL) - @VP_SQF_CORTADO
-
-				--				IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
-				--					BEGIN
-				--						DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_TBL + ' CORTADA COMPLETA.'
-				--						RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
-				--					END
-				--			END
-
-				--		INSERT	INTO	[PIEL_A_TRANSFERIR] (
-				--						[K_PIEL_A_TRANSFERIR_TRANSACCION],
-				--						[TIPO_TRANSFERENCIA],
-				--						-- ===========================	
-				--						[FOLIO_ORIGEN],	[FOLIO_DESTINO],	
-				--						-- ===========================	
-				--						[LOCACION_ORIGEN], [LOCACION_DESTINO],	
-				--						-- ===========================	
-				--						[ORDEN_ORIGEN],	[ORDEN_DESTINO],		
-				--						-- ===========================	
-				--						[COLOR], [LOTE], [PIEL],
-				--						[SQF_ENVIAR], [SQF_CORTADO], [SQF_RECIBIR],
-				--						-- ===========================	
-				--						[K_USUARIO_ALTA], [F_ALTA],	
-				--						[K_USUARIO_CAMBIO],	[F_CAMBIO],
-				--						[L_BORRADO], [K_USUARIO_BAJA], [F_BAJA]	)	
-				--				VALUES	(
-				--						@VP_K_PIEL_A_TRANSFERIR_TRANSACCION,
-				--						@PP_TIPO_TRANSFERENCIA,
-				--						-- ===========================	
-				--						@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
-				--						-- ===========================	
-				--						@PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO,
-				--						-- ===========================	
-				--						@PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
-				--						-- ===========================	
-				--						@PP_CB_COLOR, @VP_LOTE_TBL, @VP_PIEL_TBL, 
-				--						@VP_SQF_ENVIAR, CONVERT(VARCHAR(10),@VP_SQF_CORTADO), @VP_SQF_RECIBIR,
-				--						-- ===========================				
-				--						@PP_K_USUARIO_ACCION, GETDATE(), 
-				--						@PP_K_USUARIO_ACCION, GETDATE(),
-				--						0, NULL, NULL	)
-
-
-				--		DELETE	#PIELES_X_LOCACION 
-				--		WHERE	LTRIM(RTRIM(HIDE))	= @VP_PIEL_TBL
-				--		AND		LTRIM(RTRIM(LOT))	= @VP_LOTE_TBL
-				--		AND		LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
-				--		AND		TAGNO = @PP_TAGNO_ORIGEN
-
-				--		SET ROWCOUNT 1
-				--		SELECT	@VP_PIEL_TBL = LTRIM(RTRIM(HIDE)),
-				--				@VP_LOTE_TBL = LTRIM(RTRIM(LOT)),
-				--				@VP_COLOR_TBL = LTRIM(RTRIM(COLOUR)),
-				--				@VP_SQF_ENVIAR = LTRIM(RTRIM(SQF))
-				--		FROM #PIELES_X_LOCACION
-				--		WHERE	LTRIM(RTRIM(COLOUR))	= @PP_CB_COLOR
-				--		AND		LTRIM(RTRIM(TAGNO))		= @PP_TAGNO_ORIGEN
-
-				--	END
-
-				--SET ROWCOUNT 0
-
 				DECLARE CU_PIEL_SELECCIONADA CURSOR 
 				FOR SELECT	LTRIM(RTRIM(COLOUR)), LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)), ISNULL(LTRIM(RTRIM(SQF)),'0.00')
 					FROM	RP_SC
@@ -565,11 +357,11 @@ AS
 							BEGIN
 								SET @VP_SQF_RECIBIR = CONVERT(DECIMAL(13,2),@VP_SQF_ORIGINAL) - @VP_SQF_CORTADO
 
-								IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
-									BEGIN
-										DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_TBL + ' CORTADA COMPLETA.'
-										RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
-									END
+								--IF CONVERT(DECIMAL(13,2),@VP_SQF_RECIBIR) <= 0 
+								--	BEGIN
+								--		DECLARE @VP_MENSAJE_PIEL_CORTADA VARCHAR(255)= @VP_PIEL_TBL + ' CORTADA COMPLETA.'
+								--		RAISERROR (@VP_MENSAJE_PIEL_CORTADA, 16, 1 ) --MENSAJE - Severity -State.
+								--	END
 							END
 
 						INSERT	INTO	[PIEL_A_TRANSFERIR] (
@@ -582,7 +374,7 @@ AS
 										-- ===========================	
 										[ORDEN_ORIGEN],	[ORDEN_DESTINO],		
 										-- ===========================	
-										[COLOR], [LOTE], [PIEL],
+										[COLOR], [LOTE], [PIEL], [SQF_ORIGINAL],
 										[SQF_ENVIAR], [SQF_CORTADO], [SQF_RECIBIR],
 										-- ===========================	
 										[K_USUARIO_ALTA], [F_ALTA],	
@@ -598,7 +390,7 @@ AS
 										-- ===========================	
 										@PP_ORDEN_ORIGEN, @PP_ORDEN_DESTINO,
 										-- ===========================	
-										@PP_CB_COLOR, @VP_LOTE_TBL, @VP_PIEL_TBL, 
+										@PP_CB_COLOR, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_ORIGINAL,
 										@VP_SQF_ENVIAR, CONVERT(VARCHAR(10),@VP_SQF_CORTADO), @VP_SQF_RECIBIR,
 										-- ===========================				
 										@PP_K_USUARIO_ACCION, GETDATE(), 
