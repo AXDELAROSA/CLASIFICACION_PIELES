@@ -1,5 +1,5 @@
 
-USE DATA_02 --Pruebas
+USE DATA_02Pruebas
 SELECT * FROM [PIEL_A_TRANSFERIR]
 SELECT * FROM PIEL_A_TRANSFERIR_TRANSACCION
 
@@ -7,6 +7,7 @@ SELECT D_TIPO_PIEL_LOG,usuario,PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
+WHERE PIEL = 0354 AND LOTE = 33021
 
 /*
 USE DATA_02 --Pruebas
@@ -25,11 +26,13 @@ AND	LTRIM(RTRIM(PLOT)) = '33012'
  AND LTRIM(RTRIM(HIDE))   IN ('0438')
 
 --SELECT * FROM CCJOBHDR_SQL WHERE  LTRIM(RTRIM(jobno)) IN ('11111' ,'11002' )
-USE DATA_02Pruebas
+
+USE DATA_02--Pruebas
 SELECT  * FROM cccuthst_sql 
-WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'  
-AND	LTRIM(RTRIM(lotno)) = '033012' 
- AND LTRIM(RTRIM(hideno))   IN ('0438')
+WHERE-- jobno = 11800 
+LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'  
+AND	LTRIM(RTRIM(lotno)) = '033071' 
+ AND LTRIM(RTRIM(hideno))   IN ('0836')
 ORDER BY HIDENO ASC
 
 SELECT DISTINCT  * FROM cccuthst_sql 
@@ -38,12 +41,13 @@ AND	LTRIM(RTRIM(lotno)) = '033012'
  AND LTRIM(RTRIM(hideno))   IN (SELECT HIDE FROM RP_SC WHERE TAGNO = 3788360)
 ORDER BY HIDENO ASC
 
-SELECT * FROM RP_SC WHERE TAGNO = 3788349
-
+SELECT * FROM RP_SC 
+WHERE  (SQF = '0' OR SQF = '0.00')
+ 
 SELECT  * FROM RP_SC
 WHERE	LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
-AND	LTRIM(RTRIM(LOT)) = '33021' 
-AND LTRIM(RTRIM(HIDE)) IN   ('0223')
+AND	LTRIM(RTRIM(LOT)) = '33071' 
+AND LTRIM(RTRIM(HIDE)) IN   ('0907')
 
 --UPDATE RP_SC
 --SET TAGNO = 3788514
@@ -70,41 +74,41 @@ AND LTRIM(RTRIM(hideno))   IN ('0227')
 	--															SQF			VARCHAR(20)	)
 				
 
- USE DATA_02Pruebas
+-- USE DATA_02Pruebas
 
-declare @result int
+--declare @result int
 
-execute [dbo].[PG_PM_TEST_TABLA] 0,0,@result out
+--execute [dbo].[PG_PM_TEST_TABLA] 0,0,@result out
 
-select @result
+--select @result
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TEST_TABLA]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_PM_TEST_TABLA]
-GO
--- EXECUTE   [dbo].[PG_PM_TEST_TABLA] 0,0, 'B' , 'FCMKDX9' 
+--IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TEST_TABLA]') AND type in (N'P', N'PC'))
+--	DROP PROCEDURE [dbo].[PG_PM_TEST_TABLA]
+--GO
+---- EXECUTE   [dbo].[PG_PM_TEST_TABLA] 0,0, 'B' , 'FCMKDX9' 
 
-CREATE PROCEDURE [dbo].[PG_PM_TEST_TABLA]
-	@PP_K_SISTEMA_EXE			INT,
-	@PP_K_USUARIO_ACCION		INT,
-	-- ===========================
-	--@TBL_TOTAL_SQF_X_LOTE		TVPParamtest READONLY,
-	-- ===========================
-	@OU_RESULTADO				INT OUTPUT
-AS
-	-- ///////////////////////////////////////////
-	--DROP TABLE test
+--CREATE PROCEDURE [dbo].[PG_PM_TEST_TABLA]
+--	@PP_K_SISTEMA_EXE			INT,
+--	@PP_K_USUARIO_ACCION		INT,
+--	-- ===========================
+--	--@TBL_TOTAL_SQF_X_LOTE		TVPParamtest READONLY,
+--	-- ===========================
+--	@OU_RESULTADO				INT OUTPUT
+--AS
+--	-- ///////////////////////////////////////////
+--	--DROP TABLE test
 
 	
-	--select COLOR,LOTE,SQF into test
-	--from @TBL_TOTAL_SQF_X_LOTE
+--	--select COLOR,LOTE,SQF into test
+--	--from @TBL_TOTAL_SQF_X_LOTE
 	
-	--DECLARE @SQF VARCHAR(10)
-	--SELECT @SQF = SQF  FROM test
+--	--DECLARE @SQF VARCHAR(10)
+--	--SELECT @SQF = SQF  FROM test
 
-	SET @OU_RESULTADO = 1
+--	SET @OU_RESULTADO = 1
 
-	-- ////////////////////////////////////////////////////////////////////
-	-- ////////////////////////////////////////////////////////////////////
+--	-- ////////////////////////////////////////////////////////////////////
+--	-- ////////////////////////////////////////////////////////////////////
 
-GO
+--GO
 

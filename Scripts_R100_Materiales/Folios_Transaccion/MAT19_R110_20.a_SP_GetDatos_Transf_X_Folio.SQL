@@ -14,6 +14,41 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT /								
+-- //////////////////////////////////////////////////////////////
+-- EXEC [PG_GET_ORDEN_X_FOLIO] 0, 0, 3788350
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_ORDEN_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_ORDEN_X_FOLIO]
+GO
+
+CREATE PROCEDURE [dbo].[PG_GET_ORDEN_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_ORDEN		VARCHAR(10)
+	-- ///////////////////////////////////////////
+		
+	SELECT TOP 1 @VP_ORDEN = LTRIM(RTRIM(JOBNO))
+	FROM	RP_Folios 
+	WHERE	TAG = @PP_FOLIO
+
+	IF @VP_ORDEN IS NULL
+		SET @VP_ORDEN = ''
+		
+	SELECT @VP_ORDEN AS ORDEN
+      
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+-- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 

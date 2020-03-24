@@ -1,13 +1,13 @@
 Imports System
 Imports System.Collections.Generic
-Imports System.Linq
-Imports System.Text
+'Imports System.Linq
+'Imports System.Text
 Imports System.Threading
-Imports System.Data
-Imports System.Data.SqlClient
-Imports System.Configuration
-Imports Pearl
-Imports System.Data.Entity
+'Imports System.Data
+'Imports System.Data.SqlClient
+'Imports System.Configuration
+'Imports Pearl
+'Imports System.Data.Entity
 Imports Microsoft.Office.Interop            'Importar librerias de office para usar Excel
 'Imports System.Data.OleDb
 Public Class FoliosV2
@@ -70,8 +70,11 @@ Public Class FoliosV2
     Private Sub Foliosvb_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
         Try
             txt_TransSQF.Enabled = False
-            Btn_TransLoc.Enabled = False
+            Btn_TransFolio.Enabled = False
             Btn_Reimpr.Enabled = False
+            LBL_ORDEN_D.Visible = True
+            TB_FOL_ORDEN_DESTINO.Enabled = False
+            TB_FOL_ORDEN_DESTINO.Visible = True
 
             If user.ToLower = "vivianac" Or user.ToLower = "franciscoe" Then
                 BT_ISSUE_OUT.Visible = True
@@ -135,39 +138,15 @@ Public Class FoliosV2
         Btn_Dvn.Enabled = True
         Btn_Sel.Enabled = True
         Btn_Reimpr.Enabled = True
-        Btn_TransLoc.Enabled = True
-        Btn_TransFolio.Enabled = True
+        Btn_TransFolio.Enabled = False
         DataGridView2.Rows.Clear()
-        TB_FOL_ORDEN_DESTINO.Visible = False
+        'TB_FOL_ORDEN_DESTINO.Enabled = False
+        'TB_FOL_ORDEN_DESTINO.Visible = False
         TB_FOL_ORDEN_DESTINO.Text = ""
-        LBL_ORDEN_D.Visible = False
+        'LBL_ORDEN_D.Visible = False
         CB_LOCACION_DESTINO.Visible = False
         LBL_LOC_DEST.Visible = False
         ' --------------------------------------------------------------------
-    End Sub
-
-    Private Sub PM_CARGAR_FOLIOS()
-        Try
-            Dim VP_CB_COLOR As String = Codigo_PEARL.FG_COMBOBOX_ITEM_TEXT(CB_COLOR)
-            Dim VP_tabla As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_FOLIO_X_COLOUR", VP_CB_COLOR, True)
-
-            Lst_Folios.Items.Clear()
-
-            Dim row As DataRow
-            For Each row In VP_tabla.Rows
-                Lst_Folios.Items.Add(row.Item(0))
-            Next
-        Catch ex As Exception
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "PM_CARGAR_FOLIOS")
-        End Try
-    End Sub
-
-    Private Sub CB_COLOR_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles CB_COLOR.SelectionChangeCommitted
-        PM_CARGAR_FOLIOS()
-    End Sub
-
-    Private Sub ListBox2_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles Lst_Folios.SelectedIndexChanged
-        PM_Cargar()
     End Sub
 
     '#Region "LISTADOS"
@@ -264,9 +243,26 @@ Public Class FoliosV2
     End Sub
     '#End Region
 
+#Region "RUTINAS"
     Public Sub PM_BT_CARGAR_LISTADO(ByRef PP_FORMA As Object, ByVal PP_LISTADO As DataGridView, PP_SP As String)
         PP_LISTADO.Rows.Clear()
         Codigo_PEARL.PG_BUTTON_SEARCH_CLICK(VG_BD_DATA_02, PP_FORMA, PP_LISTADO, PP_SP)
+    End Sub
+
+    Private Sub PM_CARGAR_FOLIOS()
+        Try
+            Dim VP_CB_COLOR As String = Codigo_PEARL.FG_COMBOBOX_ITEM_TEXT(CB_COLOR)
+            Dim VP_tabla As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_FOLIO_X_COLOUR", VP_CB_COLOR, True)
+
+            Lst_Folios.Items.Clear()
+
+            Dim row As DataRow
+            For Each row In VP_tabla.Rows
+                Lst_Folios.Items.Add(row.Item(0))
+            Next
+        Catch ex As Exception
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "PM_CARGAR_FOLIOS")
+        End Try
     End Sub
 
     Private Sub PM_Cargar()
@@ -295,17 +291,23 @@ Public Class FoliosV2
                 If VP_MOVEMENT = "" Then
                     txt_Loc.Text = "/"
                     Btn_Dvn.Enabled = False
+                Else ' nuevo para abilitar groupbox 3
+                    GroupBox3.Enabled = True
+                    Btn_TransFolio.Enabled = False
+                    'TB_FOL_ORDEN_DESTINO.Visible = True
+                    'TB_FOL_ORDEN_DESTINO.Text = ""
+                    'LBL_ORDEN_D.Visible = True
                 End If
             End If
 
-            If Microsoft.VisualBasic.Left(txt_Loc.Text, 1) = "T" Then
-                GroupBox3.Enabled = False
-            Else
-                GroupBox3.Enabled = True
-                TB_FOL_ORDEN_DESTINO.Visible = True
-                TB_FOL_ORDEN_DESTINO.Text = ""
-                LBL_ORDEN_D.Visible = True
-            End If
+            'If Microsoft.VisualBasic.Left(txt_Loc.Text, 1) = "T" Then
+            '    GroupBox3.Enabled = False
+            'Else
+            '    GroupBox3.Enabled = True
+            '    TB_FOL_ORDEN_DESTINO.Visible = True
+            '    TB_FOL_ORDEN_DESTINO.Text = ""
+            '    LBL_ORDEN_D.Visible = True
+            'End If
 
             VP_tabla.Clear()
             VP_tabla = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_RP_FOLIO_X_TAG", VP_FOLIO, True)
@@ -328,110 +330,6 @@ Public Class FoliosV2
             End If
         Catch ex As Exception
             Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "PM_Cargar")
-        End Try
-    End Sub
-
-    Private Sub DGFolio_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGFolio.CellClick
-        If e.RowIndex <> -1 Then
-            txt_TransSQF.Text = ""
-            txt_TransSQF.Enabled = False
-
-            If DGFolio.SelectedRows.Count = 1 Then
-                txt_TransSQF.Text = FM_OBTIENE_SQF(DGFolio)
-                'txt_TransSQF.Enabled = True
-
-                'Else
-                '    txt_TransSQF.Enabled = False
-            End If
-        End If
-    End Sub
-
-    Private Sub Button1_Click(sender As System.Object, e As System.EventArgs) Handles Btn_TransFolio.Click
-
-        If DGFolio.SelectedRows.Count = 0 Then  'Compruebo si no hay ninguna piel seleccionada
-            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Favor de seleccionar la Piel a transferir...")
-            Exit Sub
-        End If
-
-        If txt_folio.Text = "" And Rb_exist.Checked = True And from_btn <> "Devolucion" Then ' Compruebo que tenga folio destino la transferencia
-            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Favor de capturar el Folio destino...")
-            txt_folio.Text = ""
-            txt_folio.Focus()
-            Exit Sub
-        End If
-
-        Try
-            PM_LLENAR_DG2_CON_DGFolio_Seleccionado()
-
-            If Rb_nuevo.Checked = True Then  'Transferir a un folio nuevo!
-                If Trim(txt_tipo.Text) = "B" Then
-                    If Not FM_Comprobar_CompEnFolio("FOLIO_NUEVO") Then  'Si el folio esta en MHI comprobar compatilidad, debido a que se encuentran todos los lotes mezclados
-                        from_form = "Foliosvb"
-                        Act.Show()
-                        'Me.Close()
-                        Exit Sub
-                    End If
-                End If
-                '************************Transferir_nuevo**********************************
-                Call PM_Transferir_nuevo()
-                '**********************************************************
-            Else
-                Dim VP_TB_LOCACION As String = Trim(txt_Loc.Text)
-                If VP_TB_LOCACION = "MQU" Then
-                    Dim VP_MENSAJE As String = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_RN_VALIDA_USUARIO_MQU", cod_user, "MENSAJE")
-                    If VP_MENSAJE <> "" Then
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, VP_MENSAJE)
-                        Exit Sub
-                    End If
-                End If
-
-                If DGFolio.SelectedRows.Count = 1 And txt_TransSQF.Text = "" Then
-                    txt_TransSQF.Text = DGFolio.SelectedRows(0).Cells("SQF").Value
-                End If
-
-                If from_btn = "Devolucion" Then  'Si estamos realizando una devolucion de pieles a MHI (folio base)
-
-                    Call PM_transferir_piel("DEVOLUCION")
-                Else  'Si se trata de una transferencia a otro folio existente
-                    Dim VP_FOLIO_DESTINO As String = Trim(txt_folio.Text)
-                    Dim VP_FOLIO_ORIGEN As String = FM_SQL_PARAMETER_FOR_SEARCH()
-
-                    If VP_FOLIO_DESTINO = VP_FOLIO_ORIGEN Then
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "No es posible transferir dentro del mismo folio...")
-                        txt_folio.SelectAll()
-                        txt_folio.Focus()
-                        Exit Sub
-                    End If
-
-                    Dim VP_tabla As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_RP_FOLIO_X_TAG", VP_FOLIO_DESTINO, True)
-
-                    Dim VP_N_REGISTROS As Integer = VP_tabla.Rows.Count()
-                    If VP_N_REGISTROS > 0 Then
-                        Dim VP_STATUS As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_tabla.Rows(0), "STATUS"))
-                        'comentado para pruebas feg
-                        If Trim(VP_STATUS) <> "B" Then
-                            If Not FM_Comprobar_CompEnFolio("FOLIO_EXISTENTE") Then  'Si el folio esta o va para  MHI No comprobar compatilidad, debido a que se encuentran todos los lotes mezclados
-                                from_form = "Foliosvb"
-                                Exit Sub
-                            End If
-                        End If
-
-                        from_btn = "Button1"
-                        Call PM_transferir_piel("FOLIO_EXISTENTE")
-                    Else
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Folio: <" + VP_FOLIO_DESTINO + " destino no encontrado...")
-                        Exit Sub
-                    End If
-                End If
-            End If
-
-            from_btn = "Button1"
-            from_form = "Foliosvb"
-            Act.Show()
-
-        Catch ex As Exception
-            from_btn = "Button1"
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_TransFolio.Click")
         End Try
     End Sub
 
@@ -476,21 +374,31 @@ sig:
         Dim VP_LOTE_PIEL_EXISTE As Integer = 0
         Dim VP_LOTE_PIEL_EXISTE_AGREGAR As Integer = 0
         Dim VP_LOCACION_DESTINO As String = ""
-
-        Dim VP_TBL_PIEL_A_TRANSFERIR As New DataTable
-        VP_TBL_PIEL_A_TRANSFERIR.Columns.Add("FOLIO")
-        VP_TBL_PIEL_A_TRANSFERIR.Columns.Add("COLOR")
-        VP_TBL_PIEL_A_TRANSFERIR.Columns.Add("LOTE")
-        VP_TBL_PIEL_A_TRANSFERIR.Columns.Add("PIEL")
-        VP_TBL_PIEL_A_TRANSFERIR.Columns.Add("SQF")
+        Dim VP_ORDEN_DESTINO As String = ""
+        ''------------------------------------
+        Dim VP_ORDEN_ORIGEN As String = ""
+        If txt_orden.Text = "-" Then
+            typef = "A"
+        ElseIf txt_orden.Text <> "-" Then
+            VP_ORDEN_ORIGEN = Trim(txt_orden.Text)
+            myValue = txt_orden.Text
+            typef = "C1"
+        End If
+        pos = 1
+        ''------------------------------------
 
         If PP_TIPO_TRANSFERENCIA = "DEVOLUCION" Then
             PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
             Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
             Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
             VP_FOLIO_DESTINO = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_GET_FOLIO_DESTINO", VM_PARAMETROS, "FOLIO_DESTINO")
+
+
+            VP_ORDEN_DESTINO = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_GET_ORDEN_X_FOLIO", VP_FOLIO_DESTINO, "ORDEN")
+            TB_FOL_ORDEN_DESTINO.Text = Trim(VP_ORDEN_DESTINO)
         Else
             VP_FOLIO_DESTINO = Trim(txt_folio.Text)
+            VP_ORDEN_DESTINO = Trim(TB_FOL_ORDEN_DESTINO.Text)
         End If
 
         If VM_FOLIO_VALIDADO = VP_FOLIO_DESTINO Then
@@ -532,21 +440,29 @@ sig:
         End If
 
         If Not (PP_TIPO_TRANSFERENCIA = "DEVOLUCION" And VP_LOCACION_DESTINO = "MHI" And VP_TB_LOCACION = "MHI") Then
-            If VP_LOCACION_DESTINO = VP_TB_LOCACION Then
+            If PP_TIPO_TRANSFERENCIA = "DEVOLUCION" And VP_LOCACION_DESTINO = VP_TB_LOCACION Then
                 Codigo_PEARL.PG_MESSAGE_NOTICE(0, "La Locacion origen no puede ser igual a la Locacion destino: " + VP_LOCACION_DESTINO + "...")
                 VM_FOLIO_VALIDADO = 0
                 Exit Sub
             End If
+
+            If Not (PP_TIPO_TRANSFERENCIA <> "DEVOLUCION" And VP_LOCACION_DESTINO = VP_TB_LOCACION And VP_ORDEN_DESTINO <> VP_ORDEN_ORIGEN) Then
+                If PP_TIPO_TRANSFERENCIA <> "DEVOLUCION" And VP_LOCACION_DESTINO = VP_TB_LOCACION Then
+                    Codigo_PEARL.PG_MESSAGE_NOTICE(0, "La Locacion origen no puede ser igual a la Locacion destino: " + VP_LOCACION_DESTINO + "...")
+                    VM_FOLIO_VALIDADO = 0
+                    Exit Sub
+                End If
+            End If
         End If
 
         If PP_TIPO_TRANSFERENCIA = "DEVOLUCION" Then
-            If VP_LOCACION_DESTINO <> "MHI" And TB_FOL_ORDEN_DESTINO.Text = "" Then
+            If (Mid(VP_LOCACION_DESTINO, 1, 1) = "T" And TB_FOL_ORDEN_DESTINO.Text = "") Then
                 Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Proporcione el numero de <ORDEN> a la que desea cargar los pies cuadrados...")
-                LBL_ORDEN_D.Visible = True
-                TB_FOL_ORDEN_DESTINO.Text = ""
-                TB_FOL_ORDEN_DESTINO.Enabled = True
-                TB_FOL_ORDEN_DESTINO.Visible = True
-                TB_FOL_ORDEN_DESTINO.Focus()
+                'LBL_ORDEN_D.Visible = True
+                'TB_FOL_ORDEN_DESTINO.Text = ""
+                'TB_FOL_ORDEN_DESTINO.Enabled = True
+                'TB_FOL_ORDEN_DESTINO.Visible = True
+                'TB_FOL_ORDEN_DESTINO.Focus()
                 Exit Sub
             End If
         Else
@@ -574,22 +490,22 @@ sig:
 
                 If VP_FORMA.Tag = "CANCEL" Then
                     Codigo_PEARL.PG_MESSAGE_NOTICE(0, "No fue posible comprobar autorizacion...Transferencia Cancelada")
-                    LBL_ORDEN_D.Visible = True
-                    TB_FOL_ORDEN_DESTINO.Text = ""
-                    TB_FOL_ORDEN_DESTINO.Enabled = True
-                    TB_FOL_ORDEN_DESTINO.Visible = True
-                    TB_FOL_ORDEN_DESTINO.Focus()
+                    'LBL_ORDEN_D.Visible = True
+                    'TB_FOL_ORDEN_DESTINO.Text = ""
+                    'TB_FOL_ORDEN_DESTINO.Enabled = True
+                    'TB_FOL_ORDEN_DESTINO.Visible = True
+                    'TB_FOL_ORDEN_DESTINO.Focus()
                     Exit Sub
                 End If
             End If
 
-            If (Trim(CB_LOCACION_DESTINO.Text) <> "MHI" Or Trim(CB_LOCACION_DESTINO.Text) <> "MQU" Or Trim(CB_LOCACION_DESTINO.Text) <> "MRD") And TB_FOL_ORDEN_DESTINO.Text = "" Then
+            If (Mid(VP_LOCACION_DESTINO, 1, 1) = "T" And TB_FOL_ORDEN_DESTINO.Text = "") Then
                 Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Proporcione el numero de <ORDEN> a la que desea cargar los pies cuadrados...")
-                LBL_ORDEN_D.Visible = True
-                TB_FOL_ORDEN_DESTINO.Text = ""
-                TB_FOL_ORDEN_DESTINO.Enabled = True
-                TB_FOL_ORDEN_DESTINO.Visible = True
-                TB_FOL_ORDEN_DESTINO.Focus()
+                'LBL_ORDEN_D.Visible = True
+                'TB_FOL_ORDEN_DESTINO.Text = ""
+                'TB_FOL_ORDEN_DESTINO.Enabled = True
+                'TB_FOL_ORDEN_DESTINO.Visible = True
+                'TB_FOL_ORDEN_DESTINO.Focus()
                 Exit Sub
             End If
         End If
@@ -687,13 +603,6 @@ sig:
             Else
                 VP_PIEL_ARRAY = VP_PIEL_ARRAY + "/" + Trim(Codigo_PEARL.FG_DG_CELLS_READ(DGFolio, VP_INDEX, "Piel"))
             End If
-
-            'VP_LOTE_ARRAY = Trim(Codigo_PEARL.FG_DG_CELLS_READ(DGFolio, VP_INDEX, "Lote"))
-            'VP_PIEL_ARRAY = Trim(Codigo_PEARL.FG_DG_CELLS_READ(DGFolio, VP_INDEX, "Piel"))
-            'VP_SQF_ARRAY = Trim(Codigo_PEARL.FG_DG_CELLS_READ(DGFolio, VP_INDEX, "SQF"))
-
-            'VP_TBL_PIEL_A_TRANSFERIR.Rows.Add(VP_FOLIO_ORIGEN, VP_CB_COLOR, VP_LOTE_ARRAY, VP_PIEL_ARRAY, VP_SQF_ARRAY)
-
         Next
         '------------------------------------
 
@@ -708,160 +617,149 @@ sig:
         End If
         '------------------------------------
 
-        Dim VP_ORDEN_DESTINO As String = Trim(TB_FOL_ORDEN_DESTINO.Text)
-        Dim VP_ORDEN_ORIGEN As String = ""
+        If PP_TIPO_TRANSFERENCIA <> "DEVOLUCION" And Mid(VP_TB_LOCACION, 1, 1) = "T" And Mid(VP_LOCACION_DESTINO, 1, 1) = "T" Then
+            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PRT_FORM_DEV_EXT)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_SELECT_TODOS)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_ARRAY, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PIEL_ARRAY, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TransSQF)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE_AGREGAR)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
 
-        If txt_orden.Text = "-" Then
-            typef = "A"
-        ElseIf txt_orden.Text <> "-" Then
-            VP_ORDEN_ORIGEN = Trim(txt_orden.Text)
-            myValue = txt_orden.Text
-            typef = "C1"
-        End If
-        pos = 1
-        ''------------------------------------
+            VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
 
-        'Dim VP_TBL_TEST As New DataTable
-        'VP_TBL_TEST.Columns.Add("COLOR")
-        'VP_TBL_TEST.Columns.Add("LOTE")
-        'VP_TBL_TEST.Columns.Add("SQF")
+            If VM_EXITO Then
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
+                txt_folio.Text = ""
+                txt_search.Text = VP_FOLIO_DESTINO
+                txt_search.Focus()
+                SendKeys.Send("{ENTER}")
+            Else
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
+                txt_folio.Text = ""
+                txt_search.Text = VP_FOLIO_ORIGEN
+                txt_search.Focus()
+                SendKeys.Send("{ENTER}")
+            End If
+        Else
+            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
+            '------------------------------------
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_ARRAY, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PIEL_ARRAY, True)
+            ''------------------------------------
 
-        'VP_TBL_TEST.Rows.Add("COLOR", "LOTE", "SQF")
+            Dim VP_Tabla_Piel As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO]", VM_PARAMETROS, True)
+            Dim VP_N_PIELES As Integer = VP_Tabla_Piel.Rows.Count()
+            Dim VP_N_COLUMNAS As Integer = VP_Tabla_Piel.Columns.Count()
 
-        'Dim VP_PARAMETRO_SQLADAPTER = New SqlParameter("@TBL_TOTAL_SQF_X_LOTE", SqlDbType.Structured)
-        'VP_PARAMETRO_SQLADAPTER.Value = VP_TBL_TEST
-        'VP_PARAMETRO_SQLADAPTER.TypeName = "dbo.TVPParamtest"
-
-        'Dim VP_SISTEMA = New SqlParameter("@PP_K_SISTEMA_EXE", SqlDbType.Int)
-        'VP_SISTEMA.Value = 0
-
-        'Dim VP_USUARIO = New SqlParameter("@PP_K_USUARIO_ACCION", SqlDbType.Int)
-        'VP_USUARIO.Value = cod_user
-
-        'Dim VP_RESULTADO = New SqlParameter("@OU_RESULTADO", SqlDbType.Int)
-        'VP_RESULTADO.Value = 0
-        'VP_RESULTADO.Direction = ParameterDirection.Output
-
-        'Using db = New Pearl.DATA_02PruebasEntities1()
-        '    db.Database.ExecuteSqlCommand("EXECUTE [dbo].[PG_PM_TEST_TABLA] @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, @OU_RESULTADO ", VP_SISTEMA, VP_USUARIO, VP_RESULTADO)
-
-        'End Using
-
-        'Dim returnCodeValue As String = VP_RESULTADO.value.ToString
-
-
-        'Dim VPSQL_SISTEMA = New SqlParameter("@PP_K_SISTEMA_EXE", SqlDbType.Int)
-        'VPSQL_SISTEMA.Value = 0
-
-        'Dim VPSQL_USUARIO = New SqlParameter("@PP_K_USUARIO_ACCION", SqlDbType.Int)
-        'VPSQL_USUARIO.Value = cod_user
-
-        'Dim VPSQL_TIPOTRANSFERENCIA = New SqlParameter("@PP_TIPO_TRANSFERENCIA", SqlDbType.VarChar)
-        'VPSQL_TIPOTRANSFERENCIA.Value = PP_TIPO_TRANSFERENCIA
-
-        'Dim VPSQL_COLOR = New SqlParameter("@PP_CB_COLOR", SqlDbType.VarChar)
-        'VPSQL_COLOR.Value = VP_CB_COLOR
-
-        'Dim VPSQL_FOLIO_ORIGEN = New SqlParameter("@PP_TAGNO_ORIGEN", SqlDbType.Int)
-        'VPSQL_FOLIO_ORIGEN.Value = VP_FOLIO_ORIGEN
-
-        'Dim VPSQL_FOLIO_DESTINO = New SqlParameter("@PP_TAGNO_DESTINO", SqlDbType.Int)
-        'VPSQL_FOLIO_DESTINO.Value = VP_FOLIO_DESTINO
-
-        'Dim VPSQL_LOCACION_ORIGEN = New SqlParameter("@PP_LOCACION_ORIGEN", SqlDbType.VarChar)
-        'VPSQL_LOCACION_ORIGEN.Value = VP_TB_LOCACION
-
-        'Dim VPSQL_LOCACION_DESTINO = New SqlParameter("@PP_LOCACION_DESTINO", SqlDbType.VarChar)
-        'VPSQL_LOCACION_DESTINO.Value = VP_LOCACION_DESTINO
-
-        'Dim VPSQL_ORDEN_ORIGEN = New SqlParameter("@PP_ORDEN_ORIGEN", SqlDbType.VarChar)
-        'VPSQL_ORDEN_ORIGEN.Value = VP_ORDEN_ORIGEN
-
-        'Dim VPSQL_ORDEN_DESTINO = New SqlParameter("@PP_ORDEN_DESTINO", SqlDbType.VarChar)
-        'VPSQL_ORDEN_DESTINO.Value = VP_ORDEN_DESTINO
-
-        'Dim VPSQL_TBL_PIEL_A_TRANFERIR = New SqlParameter("@TBL_PIEL_A_TRANFERIR", SqlDbType.Structured)
-        'VPSQL_TBL_PIEL_A_TRANFERIR.Value = VP_TBL_PIEL_A_TRANSFERIR
-        'VPSQL_TBL_PIEL_A_TRANFERIR.TypeName = "dbo.TBL_PIEL_A_TRANSFERIR"
-
-        'Using db = New Pearl.DATA_02PruebasEntities1()
-        '    db.Database.ExecuteSqlCommand("EXECUTE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO] @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, @PP_TIPO_TRANSFERENCIA, @PP_CB_COLOR, @PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,@PP_LOCACION_ORIGEN,@PP_LOCACION_DESTINO,@PP_ORDEN_ORIGEN,@PP_ORDEN_DESTINO, @TBL_PIEL_A_TRANFERIR ",
-        '                                   VPSQL_SISTEMA, VPSQL_USUARIO, VPSQL_TIPOTRANSFERENCIA, VPSQL_COLOR, VPSQL_FOLIO_ORIGEN, VPSQL_FOLIO_DESTINO, VPSQL_LOCACION_ORIGEN, VPSQL_LOCACION_DESTINO, VPSQL_ORDEN_ORIGEN, VPSQL_ORDEN_DESTINO, VPSQL_TBL_PIEL_A_TRANFERIR)
-        'End Using
-
-
-        PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
-        '------------------------------------
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
-        '------------------------------------
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
-        '------------------------------------
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
-        '------------------------------------
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_ARRAY, True)
-        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PIEL_ARRAY, True)
-        ''------------------------------------
-
-        'Dim VP_Tabla_Piel As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "[PG_GET_PIEL_A_TRANSFERIR]", VM_PARAMETROS, True)
-        Dim VP_Tabla_Piel As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "[PG_RN_VALIDAR_PIEL_CORTADA_X_FOLIO]", VM_PARAMETROS, True)
-        Dim VP_N_PIELES As Integer = VP_Tabla_Piel.Rows.Count()
-        Dim VP_N_COLUMNAS As Integer = VP_Tabla_Piel.Columns.Count()
-
-        If VP_N_PIELES > 0 Then
-            If VP_N_COLUMNAS > 2 Then
-                Dim VP_FORMA As New FO_PIELES_A_TRANSFERIR()
-                VP_FORMA.PM_FO_SHOW(VP_Tabla_Piel, "Transferencia")
-                VP_FORMA.ShowDialog()
-
-                If VP_FORMA.Tag = "OK" Then
-
+            If VP_N_PIELES > 0 Then
+                If VP_N_COLUMNAS > 2 Then
                     Dim VP_TRANSACCION As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_Tabla_Piel.Rows(0), "K_PIEL_A_TRANSFERIR_TRANSACCION", 0))
 
-                    PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TRANSACCION)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PRT_FORM_DEV_EXT)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_SELECT_TODOS)
-                    ''------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TransSQF)
-                    ''------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE_AGREGAR)
-                    ''------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
+                    Dim VP_FORMA As New FO_PIELES_A_TRANSFERIR()
+                    VP_FORMA.PM_FO_SHOW(VP_Tabla_Piel, "Transferencia")
+                    VP_FORMA.ShowDialog()
 
-                    VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE_V2", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
+                    If VP_FORMA.Tag = "OK" Then
 
-                    If VM_EXITO Then
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
-                        txt_folio.Text = ""
-                        txt_search.Text = VP_FOLIO_DESTINO
-                        txt_search.Focus()
-                        SendKeys.Send("{ENTER}")
-                    Else
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
+                        PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TRANSACCION)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
                         '------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
+                        '------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
+                        '------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
+                        '------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PRT_FORM_DEV_EXT)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_SELECT_TODOS)
+                        ''------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TransSQF)
+                        ''------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE_AGREGAR)
+                        ''------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
+                        '------------------------------------
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
+                        Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
 
+                        VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE_V2", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
+
+                        If VM_EXITO Then
+                            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
+                            txt_folio.Text = ""
+                            txt_search.Text = VP_FOLIO_DESTINO
+                            txt_search.Focus()
+                            SendKeys.Send("{ENTER}")
+                        Else
+                            Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
+                            '------------------------------------
+
+                            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TRANSACCION)
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
+                            '------------------------------------
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
+                            '------------------------------------
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
+                            '------------------------------------
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
+                            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
+                            '------------------------------------
+
+                            VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_DL_PIEL_A_TRANSFERIR", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
+                            '------------------------------------
+
+                            txt_folio.Text = ""
+                            txt_search.Text = VP_FOLIO_ORIGEN
+                            txt_search.Focus()
+                            SendKeys.Send("{ENTER}")
+                        End If
+                    Else
                         PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
                         Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TRANSACCION)
                         Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
@@ -877,113 +775,41 @@ sig:
                         Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
                         Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
                         '------------------------------------
-
                         VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_DL_PIEL_A_TRANSFERIR", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
-                        '------------------------------------
 
-                        txt_folio.Text = ""
-                        txt_search.Text = VP_FOLIO_ORIGEN
-                        txt_search.Focus()
-                        SendKeys.Send("{ENTER}")
+                        If VM_EXITO Then
+                            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion Cancelada...")
+                            txt_folio.Text = ""
+                            txt_search.Text = VP_FOLIO_ORIGEN
+                            txt_search.Focus()
+                            SendKeys.Send("{ENTER}")
+                        Else
+                            Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
+                            txt_folio.Text = ""
+                            txt_search.Text = VP_FOLIO_ORIGEN
+                            txt_search.Focus()
+                            SendKeys.Send("{ENTER}")
+                            Exit Sub
+                        End If
                     End If
                 Else
-                    Dim VP_TRANSACCION As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_Tabla_Piel.Rows(0), "K_PIEL_A_TRANSFERIR_TRANSACCION", 0))
-
-                    PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TRANSACCION)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
-                    '------------------------------------
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
-                    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
-                    '------------------------------------
-                    VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_DL_PIEL_A_TRANSFERIR", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
-
-                    If VM_EXITO Then
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion Cancelada...")
-                        txt_folio.Text = ""
-                        txt_search.Text = VP_FOLIO_ORIGEN
-                        txt_search.Focus()
-                        SendKeys.Send("{ENTER}")
-                    Else
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
-                        txt_folio.Text = ""
-                        txt_search.Text = VP_FOLIO_ORIGEN
-                        txt_search.Focus()
-                        SendKeys.Send("{ENTER}")
-                        Exit Sub
-                    End If
+                    Dim VP_MENSAJE As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_Tabla_Piel.Rows(0), "MENSAJE", 0))
+                    Codigo_PEARL.PG_MESSAGE_NOTICE(0, VP_MENSAJE)
+                    txt_folio.Text = ""
+                    txt_search.Text = VP_FOLIO_ORIGEN
+                    txt_search.Focus()
+                    SendKeys.Send("{ENTER}")
+                    Exit Sub
                 End If
             Else
-                Dim VP_MENSAJE As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_Tabla_Piel.Rows(0), "MENSAJE", 0))
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, VP_MENSAJE)
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Folio no encontrado...")
                 txt_folio.Text = ""
                 txt_search.Text = VP_FOLIO_ORIGEN
                 txt_search.Focus()
                 SendKeys.Send("{ENTER}")
                 Exit Sub
             End If
-        Else
-            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Lote no encontrado...")
-            txt_folio.Text = ""
-            txt_search.Text = VP_FOLIO_ORIGEN
-            txt_search.Focus()
-            SendKeys.Send("{ENTER}")
-            Exit Sub
         End If
-
-        'PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, PP_TIPO_TRANSFERENCIA, True) ' TIPO TRANFERENCIA
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR, True)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_DESTINO)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOCACION_DESTINO, True)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PRT_FORM_DEV_EXT)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_SELECT_TODOS)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_ARRAY, True)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_PIEL_ARRAY, True)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TransSQF)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_LOTE_PIEL_EXISTE_AGREGAR)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
-        ''------------------------------------
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
-        'Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
-
-        'VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_PIEL_A_FOLIO_EXISTENTE", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
-
-        'If VM_EXITO Then
-        '    Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
-        '    txt_folio.Text = ""
-        '    txt_search.Text = VP_FOLIO_DESTINO
-        '    txt_search.Focus()
-        '    SendKeys.Send("{ENTER}")
-        'Else
-        '    Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
-        '    txt_folio.Text = ""
-        '    txt_search.Text = VP_FOLIO_ORIGEN
-        '    txt_search.Focus()
-        '    SendKeys.Send("{ENTER}")
-        'End If
     End Sub
 
     Private Sub PM_Transferir_nuevo()
@@ -1016,7 +842,6 @@ sig:
         End If
 
         '--------------------------------------
-
         Dim VP_SELECT_TODOS As Integer = 0
         If DGFolio.SelectedRows.Count = DGFolio.Rows.Count Then
             VP_SELECT_TODOS = 1
@@ -1056,7 +881,6 @@ sig:
         Dim VP_TB_ORDEN As String = Trim(txt_orden.Text)
         Dim VP_MAQUINA As String = Trim(txt_Mesa.Text)
 
-
         PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
         Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_COLOR)
         Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_LST)
@@ -1084,174 +908,6 @@ sig:
             SendKeys.Send("{ENTER}")
         Else
             Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
-        End If
-    End Sub
-
-    Public Sub TextBox7_KeyPress(sender As Object, e As System.Windows.Forms.KeyPressEventArgs) Handles txt_search.KeyPress
-        If Char.IsDigit(e.KeyChar) Then
-            e.Handled = False
-        ElseIf Char.IsControl(e.KeyChar) Then
-            e.Handled = False
-        Else
-            e.Handled = True
-        End If
-
-        Try
-            If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
-                Dim VP_FOLIO As String = Trim(txt_search.Text)
-
-                If VP_FOLIO <> "" Then
-                    txt_sqf.Text = ""
-                    txt_pieles.Text = ""
-
-                    Dim VP_tabla As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_RP_SC_COLOUR_X_TAG_NO", VP_FOLIO, True)
-
-                    If VP_tabla.Rows.Count > 0 Then
-                        Dim VP_CB_COLOR As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_tabla.Rows(0), "COLOR"))
-                        CB_COLOR.SelectedIndex = CB_COLOR.FindString(Trim(VP_CB_COLOR))
-
-                        VP_tabla.Clear()
-                        VP_tabla = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_FOLIO_X_COLOUR", Trim(VP_CB_COLOR), True)
-
-                        Lst_Folios.Items.Clear()
-
-                        Dim row As DataRow
-                        For Each row In VP_tabla.Rows
-                            Lst_Folios.Items.Add(row.Item(0))
-                        Next
-
-                        Lst_Folios.SelectedIndex = Lst_Folios.FindString(VP_FOLIO)
-                        txt_search.Text = ""
-                        txt_search.Focus()
-
-                        If (Mid(txt_Loc.Text, 1, 1) = "T" Or Mid(txt_Mesa.Text, 1, 1) = "T") Then
-                            GroupBox3.Enabled = False
-                        Else
-                            GroupBox3.Enabled = True
-                        End If
-                    Else
-                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, " Folio: < " + VP_FOLIO + " > NO encontrado o sin pieles asignadas...")
-                        txt_search.Text = ""
-                        txt_search.Focus()
-                    End If
-                Else
-                    Codigo_PEARL.PG_MESSAGE_NOTICE(0, "El campo no puede ser vacio...")
-                    txt_search.Text = ""
-                    txt_search.Focus()
-                End If
-            End If
-        Catch ex As Exception
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "txt_search.KeyPress")
-        End Try
-    End Sub
-
-    Private Sub Button5_Click(sender As System.Object, e As System.EventArgs) Handles Btn_Reimpr.Click
-        Try
-            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-            Dim VP_FOLIO As String = FM_SQL_PARAMETER_FOR_SEARCH()
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO)
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, 1)
-
-            VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_GENERAL, Me, "PG_IN_RP_SC_PRT", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
-
-            If VM_EXITO Then
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Imprimiendo Folio: <" + VM_PARAMETROS + ">...")
-            Else
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
-            End If
-        Catch ex As Exception
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_Reimpr.Click")
-        End Try
-    End Sub
-
-    Private Sub RadioButton2_CheckedChanged(sender As System.Object, e As System.EventArgs) Handles Rb_nuevo.CheckedChanged
-        If Rb_nuevo.Checked = True Then
-            txt_TransSQF.Text = ""
-            txt_TransSQF.Enabled = False
-            txt_folio.Text = ""
-            txt_folio.Enabled = False
-        End If
-    End Sub
-
-    Private Sub RadioButton1_CheckedChanged(sender As System.Object, e As System.EventArgs) Handles Rb_exist.CheckedChanged
-        Try
-            If Rb_exist.Checked = True Then
-                txt_TransSQF.Text = ""
-                'txt_TransSQF.Enabled = True
-                txt_TransSQF.Enabled = False
-                txt_folio.Text = ""
-                txt_folio.Enabled = True
-
-                'If DGFolio.SelectedRows.Count > 1 Then
-                '    txt_TransSQF.Enabled = False
-                'Else
-                If DGFolio.SelectedRows.Count = 1 Then
-                    txt_TransSQF.Text = FM_OBTIENE_SQF(DGFolio)
-                    'txt_TransSQF.Enabled = True
-                End If
-
-                total = 0
-                total = Codigo_PEARL.FG_DG_COLUMN_SUM_SELECTED(VG_BD_DATA_02, DGFolio, "SQF")
-            End If
-        Catch ex As Exception
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Rb_exist.CheckedChanged")
-        End Try
-    End Sub
-
-    Private Sub Button9_Click(sender As System.Object, e As System.EventArgs) Handles Btn_buscar_salir.Click
-        Panel1.Visible = False
-        txt_Buscar_lote.Text = ""
-        txt_Buscar_Piel.Text = ""
-        DGSearch.Rows.Clear()
-    End Sub
-
-    Private Sub Button7_Click(sender As System.Object, e As System.EventArgs) Handles Btn_buscar.Click
-        Panel1.Visible = True
-        txt_Buscar_lote.Focus()
-    End Sub
-
-    Private Sub Button8_Click(sender As System.Object, e As System.EventArgs) Handles Btn_Buscar_ok.Click
-        Try
-            If Trim(txt_Buscar_lote.Text) <> "" And Trim(txt_Buscar_Piel.Text) <> "" Then
-                Folio_Transaccion.PG_CARGAR_DG(VG_BD_DATA_02, Me, DGSearch, "PG_LI_RP_SC_Y_RP_FOLIO")
-
-                If DGSearch.Rows.Count = 0 Then
-                    Codigo_PEARL.PG_MESSAGE_NOTICE(0, "NO se encontraron <PIELES> para la busqueda: LOTE: <" + txt_Buscar_lote.Text + "> PIEL: <" + txt_Buscar_Piel.Text + ">")
-                End If
-
-                txt_Buscar_Piel.SelectAll()
-                txt_Buscar_Piel.Focus()
-            Else
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Por favor ingrese el NUMERO de <LOTE> y <PIEL> que desea buscar!")
-                txt_Buscar_lote.Focus()
-            End If
-        Catch ex As Exception
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_Buscar_ok.Click")
-        End Try
-    End Sub
-
-    Private Sub TextBox14_KeyPress(sender As Object, e As System.Windows.Forms.KeyPressEventArgs) Handles txt_Buscar_lote.KeyPress
-        If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
-            txt_Buscar_Piel.Focus()
-        End If
-    End Sub
-
-    Private Sub TextBox14_LostFocus(sender As Object, e As System.EventArgs) Handles txt_Buscar_lote.LostFocus
-        If txt_Buscar_lote.Text <> "" Then
-            txt_Buscar_lote.Text = txt_Buscar_lote.Text.PadLeft(5, "0")
-        End If
-    End Sub
-
-    Private Sub TextBox15_KeyPress(sender As Object, e As System.Windows.Forms.KeyPressEventArgs) Handles txt_Buscar_Piel.KeyPress
-        If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
-            Btn_Buscar_ok.Focus()
-            Btn_Buscar_ok.PerformClick()
-        End If
-    End Sub
-
-    Private Sub TextBox15_LostFocus(sender As Object, e As System.EventArgs) Handles txt_Buscar_Piel.LostFocus
-        If txt_Buscar_Piel.Text <> "" Then
-            txt_Buscar_Piel.Text = txt_Buscar_Piel.Text.PadLeft(4, "0")
         End If
     End Sub
 
@@ -1491,6 +1147,333 @@ sig:
             Return True
         End If
     End Function
+
+    Private Sub PM_BT_ISSUE()
+        Try
+            Dim VP_FOLIO_ORIGEN As String = FM_SQL_PARAMETER_FOR_SEARCH()
+            Dim VP_TB_LOCACION As String = Trim(txt_Loc.Text)
+
+            '--------VALIDACIONES-------------------------
+            If DGFolio.Rows.Count = 0 Then
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "El Folio no tiene pieles cargadas...")
+                Exit Sub
+            End If
+
+            If VP_TB_LOCACION = "" Or VP_TB_LOCACION = "/" Then
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Proporcione Locacion MQU para la transferencia...")
+                txt_Loc.Enabled = True
+                txt_Loc.Focus()
+                Exit Sub
+            End If
+
+            If VP_TB_LOCACION <> "MQU" Then
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Solo los Folios en MQU pueden ser borrados...")
+                Exit Sub
+            End If
+            '-------------------------------------------------------------
+
+            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
+
+            VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_ISSUE", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
+
+            If VM_EXITO Then
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
+                PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+                Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
+                Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, Trim(CB_COLOR.Text), True)
+                Dim VP_FOLIO_DESTINO As String = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_GET_FOLIO_DESTINO", VM_PARAMETROS, "FOLIO_DESTINO")
+
+                txt_search.Text = VP_FOLIO_DESTINO
+                txt_search.Focus()
+                SendKeys.Send("{ENTER}")
+            Else
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
+            End If
+        Catch ex As Exception
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "PM_BT_ISSUE")
+        End Try
+    End Sub
+#End Region
+
+#Region "ACCIONES"
+
+    Private Sub CB_COLOR_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles CB_COLOR.SelectionChangeCommitted
+        PM_CARGAR_FOLIOS()
+    End Sub
+
+    Private Sub ListBox2_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles Lst_Folios.SelectedIndexChanged
+        PM_Cargar()
+    End Sub
+
+    Private Sub DGFolio_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGFolio.CellClick
+        If e.RowIndex <> -1 Then
+            txt_TransSQF.Text = ""
+            txt_TransSQF.Enabled = False
+
+            If DGFolio.SelectedRows.Count = 1 Then
+                txt_TransSQF.Text = FM_OBTIENE_SQF(DGFolio)
+            End If
+        End If
+    End Sub
+
+    Private Sub Button1_Click(sender As System.Object, e As System.EventArgs) Handles Btn_TransFolio.Click
+
+        If DGFolio.SelectedRows.Count = 0 Then  'Compruebo si no hay ninguna piel seleccionada
+            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Favor de seleccionar la Piel a transferir...")
+            Exit Sub
+        End If
+
+        If txt_folio.Text = "" And Rb_exist.Checked = True And from_btn <> "Devolucion" Then ' Compruebo que tenga folio destino la transferencia
+            Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Favor de capturar el Folio destino...")
+            txt_folio.Text = ""
+            txt_folio.Focus()
+            Exit Sub
+        End If
+
+        Try
+            PM_LLENAR_DG2_CON_DGFolio_Seleccionado()
+
+            If Rb_nuevo.Checked = True Then  'Transferir a un folio nuevo!
+                If Trim(txt_tipo.Text) = "B" Then
+                    If Not FM_Comprobar_CompEnFolio("FOLIO_NUEVO") Then  'Si el folio esta en MHI comprobar compatilidad, debido a que se encuentran todos los lotes mezclados
+                        from_form = "Foliosvb"
+                        Act.Show()
+                        'Me.Close()
+                        Exit Sub
+                    End If
+                End If
+                '************************Transferir_nuevo**********************************
+                Call PM_Transferir_nuevo()
+                '**********************************************************
+            Else
+                Dim VP_TB_LOCACION As String = Trim(txt_Loc.Text)
+                If VP_TB_LOCACION = "MQU" Then
+                    Dim VP_MENSAJE As String = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_RN_VALIDA_USUARIO_MQU", cod_user, "MENSAJE")
+                    If VP_MENSAJE <> "" Then
+                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, VP_MENSAJE)
+                        Exit Sub
+                    End If
+                End If
+
+                If DGFolio.SelectedRows.Count = 1 And txt_TransSQF.Text = "" Then
+                    txt_TransSQF.Text = DGFolio.SelectedRows(0).Cells("SQF").Value
+                End If
+
+                If from_btn = "Devolucion" Then  'Si estamos realizando una devolucion de pieles a MHI (folio base)
+
+                    Call PM_transferir_piel("DEVOLUCION")
+                Else  'Si se trata de una transferencia a otro folio existente
+                    Dim VP_FOLIO_DESTINO As String = Trim(txt_folio.Text)
+                    Dim VP_FOLIO_ORIGEN As String = FM_SQL_PARAMETER_FOR_SEARCH()
+
+                    If VP_FOLIO_DESTINO = VP_FOLIO_ORIGEN Then
+                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "No es posible transferir dentro del mismo folio...")
+                        txt_folio.SelectAll()
+                        txt_folio.Focus()
+                        Exit Sub
+                    End If
+
+                    Dim VP_tabla As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_RP_FOLIO_X_TAG", VP_FOLIO_DESTINO, True)
+
+                    Dim VP_N_REGISTROS As Integer = VP_tabla.Rows.Count()
+                    If VP_N_REGISTROS > 0 Then
+                        Dim VP_STATUS As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_tabla.Rows(0), "STATUS"))
+                        'comentado para pruebas feg
+                        If Trim(VP_STATUS) <> "B" Then
+                            If Not FM_Comprobar_CompEnFolio("FOLIO_EXISTENTE") Then  'Si el folio esta o va para  MHI No comprobar compatilidad, debido a que se encuentran todos los lotes mezclados
+                                from_form = "Foliosvb"
+                                Exit Sub
+                            End If
+                        End If
+
+                        from_btn = "Button1"
+                        Call PM_transferir_piel("FOLIO_EXISTENTE")
+                    Else
+                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Folio: <" + VP_FOLIO_DESTINO + " destino no encontrado...")
+                        Exit Sub
+                    End If
+                End If
+            End If
+
+            from_btn = "Button1"
+            from_form = "Foliosvb"
+            Act.Show()
+
+        Catch ex As Exception
+            from_btn = "Button1"
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_TransFolio.Click")
+        End Try
+    End Sub
+
+    Public Sub TextBox7_KeyPress(sender As Object, e As System.Windows.Forms.KeyPressEventArgs) Handles txt_search.KeyPress
+        If Char.IsDigit(e.KeyChar) Then
+            e.Handled = False
+        ElseIf Char.IsControl(e.KeyChar) Then
+            e.Handled = False
+        Else
+            e.Handled = True
+        End If
+
+        Try
+            If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
+                Dim VP_FOLIO As String = Trim(txt_search.Text)
+
+                If VP_FOLIO <> "" Then
+                    txt_sqf.Text = ""
+                    txt_pieles.Text = ""
+
+                    Dim VP_tabla As DataTable = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_RP_SC_COLOUR_X_TAG_NO", VP_FOLIO, True)
+
+                    If VP_tabla.Rows.Count > 0 Then
+                        Dim VP_CB_COLOR As String = (Codigo_PEARL.FG_DG_DATAROW_READ_STRING(VP_tabla.Rows(0), "COLOR"))
+                        CB_COLOR.SelectedIndex = CB_COLOR.FindString(Trim(VP_CB_COLOR))
+
+                        VP_tabla.Clear()
+                        VP_tabla = Codigo_PEARL.FG_ACTION_EXECUTE_DATATABLE(VG_BD_DATA_02, "PG_SK_FOLIO_X_COLOUR", Trim(VP_CB_COLOR), True)
+
+                        Lst_Folios.Items.Clear()
+
+                        Dim row As DataRow
+                        For Each row In VP_tabla.Rows
+                            Lst_Folios.Items.Add(row.Item(0))
+                        Next
+
+                        Lst_Folios.SelectedIndex = Lst_Folios.FindString(VP_FOLIO)
+                        txt_search.Text = ""
+                        txt_search.Focus()
+
+                        'If (Mid(txt_Loc.Text, 1, 1) = "T" Or Mid(txt_Mesa.Text, 1, 1) = "T") Then
+                        '    GroupBox3.Enabled = False
+                        'Else
+                        '    GroupBox3.Enabled = True
+                        'End If
+                    Else
+                        Codigo_PEARL.PG_MESSAGE_NOTICE(0, " Folio: < " + VP_FOLIO + " > NO encontrado o sin pieles asignadas...")
+                        txt_search.Text = ""
+                        txt_search.Focus()
+                    End If
+                Else
+                    Codigo_PEARL.PG_MESSAGE_NOTICE(0, "El campo no puede ser vacio...")
+                    txt_search.Text = ""
+                    txt_search.Focus()
+                End If
+            End If
+        Catch ex As Exception
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "txt_search.KeyPress")
+        End Try
+    End Sub
+
+    Private Sub Button5_Click(sender As System.Object, e As System.EventArgs) Handles Btn_Reimpr.Click
+        Try
+            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
+            Dim VP_FOLIO As String = FM_SQL_PARAMETER_FOR_SEARCH()
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO)
+            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, 1)
+
+            VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_GENERAL, Me, "PG_IN_RP_SC_PRT", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
+
+            If VM_EXITO Then
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Imprimiendo Folio: <" + VM_PARAMETROS + ">...")
+            Else
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
+            End If
+        Catch ex As Exception
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_Reimpr.Click")
+        End Try
+    End Sub
+
+    Private Sub RadioButton2_CheckedChanged(sender As System.Object, e As System.EventArgs) Handles Rb_nuevo.CheckedChanged
+        If Rb_nuevo.Checked = True Then
+            Btn_TransFolio.Enabled = True
+            txt_TransSQF.Text = ""
+            txt_TransSQF.Enabled = False
+            txt_folio.Text = ""
+            txt_folio.Enabled = False
+        End If
+    End Sub
+
+    Private Sub RadioButton1_CheckedChanged(sender As System.Object, e As System.EventArgs) Handles Rb_exist.CheckedChanged
+        Try
+            If Rb_exist.Checked = True Then
+                'txt_TransSQF.Text = ""
+                'txt_TransSQF.Enabled = False
+                txt_folio.Text = ""
+                txt_folio.Enabled = True
+
+                'If DGFolio.SelectedRows.Count = 1 Then
+                '    txt_TransSQF.Text = FM_OBTIENE_SQF(DGFolio)
+                '    'txt_TransSQF.Enabled = True
+                'End If
+
+                total = 0
+                total = Codigo_PEARL.FG_DG_COLUMN_SUM_SELECTED(VG_BD_DATA_02, DGFolio, "SQF")
+            End If
+        Catch ex As Exception
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Rb_exist.CheckedChanged")
+        End Try
+    End Sub
+
+    Private Sub Button9_Click(sender As System.Object, e As System.EventArgs) Handles Btn_buscar_salir.Click
+        Panel1.Visible = False
+        txt_Buscar_lote.Text = ""
+        txt_Buscar_Piel.Text = ""
+        DGSearch.Rows.Clear()
+    End Sub
+
+    Private Sub Button7_Click(sender As System.Object, e As System.EventArgs) Handles Btn_buscar.Click
+        Panel1.Visible = True
+        txt_Buscar_lote.Focus()
+    End Sub
+
+    Private Sub Button8_Click(sender As System.Object, e As System.EventArgs) Handles Btn_Buscar_ok.Click
+        Try
+            If Trim(txt_Buscar_lote.Text) <> "" And Trim(txt_Buscar_Piel.Text) <> "" Then
+                Folio_Transaccion.PG_CARGAR_DG(VG_BD_DATA_02, Me, DGSearch, "PG_LI_RP_SC_Y_RP_FOLIO")
+
+                If DGSearch.Rows.Count = 0 Then
+                    Codigo_PEARL.PG_MESSAGE_NOTICE(0, "NO se encontraron <PIELES> para la busqueda: LOTE: <" + txt_Buscar_lote.Text + "> PIEL: <" + txt_Buscar_Piel.Text + ">")
+                End If
+
+                txt_Buscar_Piel.SelectAll()
+                txt_Buscar_Piel.Focus()
+            Else
+                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Por favor ingrese el NUMERO de <LOTE> y <PIEL> que desea buscar!")
+                txt_Buscar_lote.Focus()
+            End If
+        Catch ex As Exception
+            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_Buscar_ok.Click")
+        End Try
+    End Sub
+
+    Private Sub TextBox14_KeyPress(sender As Object, e As System.Windows.Forms.KeyPressEventArgs) Handles txt_Buscar_lote.KeyPress
+        If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
+            txt_Buscar_Piel.Focus()
+        End If
+    End Sub
+
+    Private Sub TextBox14_LostFocus(sender As Object, e As System.EventArgs) Handles txt_Buscar_lote.LostFocus
+        If txt_Buscar_lote.Text <> "" Then
+            txt_Buscar_lote.Text = txt_Buscar_lote.Text.PadLeft(5, "0")
+        End If
+    End Sub
+
+    Private Sub TextBox15_KeyPress(sender As Object, e As System.Windows.Forms.KeyPressEventArgs) Handles txt_Buscar_Piel.KeyPress
+        If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
+            Btn_Buscar_ok.Focus()
+            Btn_Buscar_ok.PerformClick()
+        End If
+    End Sub
+
+    Private Sub TextBox15_LostFocus(sender As Object, e As System.EventArgs) Handles txt_Buscar_Piel.LostFocus
+        If txt_Buscar_Piel.Text <> "" Then
+            txt_Buscar_Piel.Text = txt_Buscar_Piel.Text.PadLeft(4, "0")
+        End If
+    End Sub
 
     Private Sub ComboBox4_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles CB_LOC.SelectedIndexChanged
         Try
@@ -1782,90 +1765,9 @@ sig:
                     Exit Sub
                 End If
             End If
-            '    PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_ORIGEN, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_ORDEN_DESTINO, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_CB_LOCACION, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VM_CARGAR_ORDENES)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_COLOR_PIEL, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TransSQF, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
-            '    Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
-
-            '    VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_PIEL_X_LOCACION", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
-
-            '    If VM_EXITO Then
-            '        Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
-            '        DataGridView2.Rows.Clear()
-            '        txt_TransSQF.Text = ""
-            '        PM_Cargar()
-            '        CB_LOC.SelectedIndex = CB_LOC.FindString(Trim("MHI"))
-            '        TB_LOC_ORDEN_DESTINO.Text = ""
-            '        VM_CARGAR_ORDENES = 1
-            '        from_form = "Foliosvb"
-            '    Else
-            '        Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
-            '        CB_LOC.SelectedIndex = CB_LOC.FindString(Trim("MHI"))
-            '        VM_CARGAR_ORDENES = 1
-            '    End If
-            'End If
         Catch ex As Exception
             VM_CARGAR_ORDENES = 1
             Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "Btn_TransLoc.Click")
-        End Try
-    End Sub
-
-    Private Sub PM_BT_ISSUE()
-        Try
-            Dim VP_FOLIO_ORIGEN As String = FM_SQL_PARAMETER_FOR_SEARCH()
-            Dim VP_TB_LOCACION As String = Trim(txt_Loc.Text)
-
-            '--------VALIDACIONES-------------------------
-            If DGFolio.Rows.Count = 0 Then
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "El Folio no tiene pieles cargadas...")
-                Exit Sub
-            End If
-
-            If VP_TB_LOCACION = "" Or VP_TB_LOCACION = "/" Then
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Proporcione Locacion MQU para la transferencia...")
-                txt_Loc.Enabled = True
-                txt_Loc.Focus()
-                Exit Sub
-            End If
-
-            If VP_TB_LOCACION <> "MQU" Then
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Solo los Folios en MQU pueden ser borrados...")
-                Exit Sub
-            End If
-            '-------------------------------------------------------------
-
-            PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_FOLIO_ORIGEN)
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, VP_TB_LOCACION, True)
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, txt_comentarios, True)
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, user, True)
-            Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, My.Computer.Name, True)
-
-            VM_EXITO = Codigo_PEARL.FG_ACTION_EXECUTE_NO_DATATABLE(VG_BD_DATA_02, Me, "PG_PM_TRANSFER_ISSUE", VM_PARAMETROS, True, VM_CLAVE, VM_MENSAJE, False)
-
-            If VM_EXITO Then
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, "Operacion exitosa...")
-                PM_LIMPIAR_VARIABLES_SQL_EJECUTAR()
-                Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, "B", True) ' ESTATUS
-                Codigo_PEARL.PG_CONTROL_PARAMETRO(VM_PARAMETROS, Trim(CB_COLOR.Text), True)
-                Dim VP_FOLIO_DESTINO As String = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_GET_FOLIO_DESTINO", VM_PARAMETROS, "FOLIO_DESTINO")
-
-                txt_search.Text = VP_FOLIO_DESTINO
-                txt_search.Focus()
-                SendKeys.Send("{ENTER}")
-            Else
-                Codigo_PEARL.PG_MESSAGE_NOTICE(0, VM_MENSAJE)
-            End If
-        Catch ex As Exception
-            Codigo_PEARL.PG_MESSAGE_ERROR_VS(0, "PM_BT_ISSUE")
         End Try
     End Sub
 
@@ -1943,6 +1845,15 @@ sig:
         Else
             e.Handled = True
         End If
+
+        If e.KeyChar = Microsoft.VisualBasic.ChrW(13) Then
+
+            Dim VP_ORDEN_DESTINO As String = Codigo_PEARL.FG_ACTION_GetDato_OF_StoreProcedure(VG_BD_DATA_02, "PG_GET_ORDEN_X_FOLIO", Trim(txt_folio.Text), "ORDEN")
+            TB_FOL_ORDEN_DESTINO.Text = Trim(VP_ORDEN_DESTINO)
+
+            Btn_TransFolio.Enabled = True
+        End If
+
     End Sub
 
     Private Sub Button17_Click(sender As System.Object, e As System.EventArgs) Handles Btn_Fcerrar.Click
@@ -1969,15 +1880,11 @@ sig:
 
     Private Sub Button20_Click(sender As System.Object, e As System.EventArgs) Handles Btn_Dvn.Click
         GroupBox3.Enabled = True
+        Btn_TransFolio.Enabled = True
         Rb_exist.Checked = True
         from_btn = "Devolucion"
         Btn_TransFolio.PerformClick()
     End Sub
-
-    'Private Sub Label3_Click(sender As System.Object, e As System.EventArgs) Handles Label3.Click
-    '    'txt_Loc.Enabled = True
-    '    'Btn_Dvn.Enabled = True
-    'End Sub
 
     Private Sub DataGridView1_CellContentClick(sender As System.Object, e As System.Windows.Forms.DataGridViewCellEventArgs) Handles DGSearch.CellContentClick
         txt_search.Text = Codigo_PEARL.FG_DG_GET_COLUM_VALUE_ROW_SELECTED(DGSearch, "TAGNO")
@@ -1991,16 +1898,15 @@ sig:
 
     End Sub
 
-    Private Sub UltraButton1_Click(sender As Object, e As EventArgs)
-        GroupBox3.Enabled = True
-    End Sub
+    'Private Sub UltraButton1_Click(sender As Object, e As EventArgs)
+    '    GroupBox3.Enabled = True
+    'End Sub
 
     Private Sub RB_ORDEN_CheckedChanged(sender As Object, e As EventArgs) Handles RB_ORDEN.CheckedChanged
         If RB_ORDEN.Checked = True Then
             CB_LOC.Enabled = False
             TB_LOC_ORDEN_DESTINO.Enabled = True
         End If
-
     End Sub
 
     Private Sub RB_LOCACION_CheckedChanged(sender As Object, e As EventArgs) Handles RB_LOCACION.CheckedChanged
@@ -2018,4 +1924,5 @@ sig:
     Private Sub BT_ISSUE_OUT_Click(sender As Object, e As EventArgs) Handles BT_ISSUE_OUT.Click
         PM_BT_ISSUE()
     End Sub
+#End Region
 End Class
