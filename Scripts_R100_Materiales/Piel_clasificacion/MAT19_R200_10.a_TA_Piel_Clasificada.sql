@@ -132,9 +132,9 @@ SET NOCOUNT ON
 -- ===============================================
 
 EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 0, '(PENDIENTE)',			'PDT', 1, '', 1
-EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 1, 'BUENA',					'BUENA', 1, '', 1
-EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 2, 'REGULAR',				'REGUL', 1, '', 1
-EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 3, 'MALA',					'MALA', 1, '', 1
+EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 1, 'BUENA',					'BUE', 1, '', 1
+EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 2, 'REGULAR',				'REG', 1, '', 1
+EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 3, 'MALA',					'MAL', 1, '', 1
 GO
 -- ===============================================
 SET NOCOUNT OFF

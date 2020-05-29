@@ -150,7 +150,7 @@ GO
 
 
 
--- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  3777539
+-- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  2137674
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO]
 GO
@@ -175,7 +175,7 @@ AS
 			HIDE	AS PIEL,
 			SQF,
 			--ISNULL(MOVEMENT, '') AS MOVEMENT
-			(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	IMINVTRX_SQL.Loc
+			(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
 																-- ===================== 
 														FROM	IMLSTRX_SQL, IMINVTRX_SQL 
 																-- =====================
@@ -190,9 +190,12 @@ AS
 														AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
 																OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
 														)
-				ELSE	MOVEMENT END ) AS MOVEMENT
+				ELSE	LTRIM(RTRIM(MOVEMENT)) END ) AS MOVEMENT,
+				PIEL_CLASIFICACION.K_PIEL_CLASIFICACION,
+				S_PIEL_CLASIFICACION
 	-- =====================
 	FROM	RP_SC
+	INNER	JOIN PIEL_CLASIFICACION ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
 	WHERE	TAGNO=@PP_TAG_NO 
 	AND		type<>'D'
 	ORDER BY HIDE ASC
