@@ -18,6 +18,45 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT /								
+-- //////////////////////////////////////////////////////////////
+-- EXEC [PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO] 0, 0, 3788882
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO]
+GO
+
+CREATE PROCEDURE [dbo].[PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_MENSAJE						VARCHAR(255) = ''
+	DECLARE @VP_N_PIEL_SIN_CLASIFICAR		INT = 0
+	-- ///////////////////////////////////////////
+		-- SELECT * FROM RP_SC WHERE TAGNO = 3788350
+
+	SELECT TOP 1 @VP_N_PIEL_SIN_CLASIFICAR = COUNT(ID)
+	FROM	RP_SC 
+	WHERE	TAGNO = @PP_FOLIO
+	AND		K_CLASIFICACION = 0
+
+	IF @VP_N_PIEL_SIN_CLASIFICAR > 0
+		SET @VP_MENSAJE = 'No se han clasificado todas las pieles de este [FOLIO]: ' + CONVERT(VARCHAR(10), @PP_FOLIO)
+		
+
+	SELECT @VP_MENSAJE AS MENSAJE
+      
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+-- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> RN_EXISTE
 -- //////////////////////////////////////////////////////////////
 

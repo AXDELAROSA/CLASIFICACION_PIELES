@@ -9,7 +9,7 @@
 -- // Fecha creación:	13/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 -- //////////////////////////////////////////////////////////////
@@ -28,6 +28,7 @@ CREATE PROCEDURE [dbo].[PG_UP_RP_SC_K_CLASIFICACION]
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
 	@PP_COLOR					VARCHAR(10),
+	@PP_FOLIO					INT,
 	@PP_LOTE					VARCHAR(10),
 	@PP_PIEL					VARCHAR(5),
 	@PP_SQF						VARCHAR(5),
@@ -40,7 +41,7 @@ AS
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_RP_SC_UPDATE]  @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@PP_COLOR, @PP_LOTE, @PP_PIEL, @PP_SQF,
+											@PP_COLOR, @PP_FOLIO, @PP_LOTE, @PP_PIEL, @PP_SQF,
 											@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
 	-- /////////////////////////////////////////////////////////////////////
@@ -54,7 +55,7 @@ AS
 
 			SELECT	@VP_K_PIEL_CLASIFICACION = K_PIEL_CLASIFICACION
 			FROM	PIEL_CLASIFICACION
-			WHERE	D_PIEL_CLASIFICACION=@PP_D_CLASIFICACION
+			WHERE	SUBSTRING(D_PIEL_CLASIFICACION, 1, 3) = @PP_D_CLASIFICACION
 
 			IF @VP_K_PIEL_CLASIFICACION IS NULL
 				SET @VP_K_PIEL_CLASIFICACION = 0
@@ -63,14 +64,16 @@ AS
 			SET		
 					K_CLASIFICACION = @VP_K_PIEL_CLASIFICACION
 			-- ==================================
-			WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
-			AND		RTRIM(LTRIM(LOT))=@PP_LOTE
-			AND		RTRIM(LTRIM(HIDE))=@PP_PIEL
-			AND		RTRIM(LTRIM(SQF))=@PP_SQF 
+			WHERE	RTRIM(LTRIM(COLOUR))= @PP_COLOR
+			AND		TAGNO	= @PP_FOLIO
+			AND		RTRIM(LTRIM(LOT))	= @PP_LOTE
+			AND		RTRIM(LTRIM(HIDE))	= @PP_PIEL
+			AND		RTRIM(LTRIM(SQF))	= @PP_SQF 
 			-- ==================================
 
 			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR SP: // UPDATE RP_SC_K_CLASIFICACION// '
+				RAISERROR ('ERROR: AL actualizar la tabla [RP_SC]', 16, 1 ) --MENSAJE - Severity -State.
+				--SET @VP_MENSAJE = 'ERROR SP: // UPDATE RP_SC_K_CLASIFICACION// '
 			ELSE
 				EXECUTE	[PG_IN_UP_PIEL_CLASIFICADA_PORCENTAJE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@PP_COLOR, @PP_LOTE
@@ -108,13 +111,13 @@ AS
 
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'PROCESO',
+													'UPDATE',
 													'',
 													-- ===========================================
-													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
 													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
 													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
 													0, 0, @PP_PIEL, '' , 0.00, 0.00,

@@ -9,7 +9,7 @@
 -- // Fecha creación:	10/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE DATA_02Pruebas 
+USE DATA_02
 GO
 
 -- //////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ GO
 SET NOCOUNT ON
 -- ===============================================
 
-EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 0, '(SIN CLASIFICAR)',		'?????', 1, '', 1
+EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 0, '(PENDIENTE)',			'PDT', 1, '', 1
 EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 1, 'BUENA',					'BUENA', 1, '', 1
 EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 2, 'REGULAR',				'REGUL', 1, '', 1
 EXECUTE [dbo].[PG_CI_PIEL_CLASIFICACION] 0, 0, 3, 'MALA',					'MALA', 1, '', 1
