@@ -26,18 +26,24 @@ SELECT NEXT_DOC_NO FROM 	IMCTLFIL_SQL
 --NEXT_DOC_NO
 --4246762
 --1715937
+SELECT * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4563817   ', '4465517 ', '4465389 ')
 
-SELECT * FROM TIPO_PIEL_LOG
+select * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
+from IMINVTRX_SQL 
+where doc_type = 'T' and item_no = 'FMCKTX7        '    and loc = 'T16' and trx_dt>='20200325'
+--and doc_ord_no = '12063   '
+and ord_no in ( '4563817   ', '4465517 ', '4465389 ')
+order by ord_no asc
 
-SELECT * FROM PIEL_LOG WHERE K_TIPO_PIEL_LOG=7
 
-SELECT D_TIPO_PIEL_LOG,usuario,
+SELECT D_TIPO_PIEL_LOG, --,usuario,
 PIEL_LOG.*  
 FROM PIEL_LOG 
-INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
+--INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE  --ORDEN_ORIGEN = 11247
-LOTE = 32691 AND PIEL IN ( 0161)
+WHERE  --ORDEN_DESTIDO = 12063 AND
+LOTE = 33101 AND PIEL IN ( 128)
+order by piel
 
 ----SELECT * FROM RP_SC WHERE TAGNO IN (3787754) AND HIDE = '0483'
 --SELECT * FROM RP_SC WHERE TAGNO IN (3787754,3787769,2137674) AND HIDE IN ( '0481', '0483') AND LOT= '33002'
@@ -80,8 +86,8 @@ SELECT * FROM IMINVLOC_SQL WHERE LTRIM(RTRIM(LOC)) = 'MHI' AND	LTRIM(RTRIM(ITEM_
 
 
 --INSERTA LA TRAnSACCION 
-SELECT  * FROM IMINVTRX_SQL WHERE LTRIM(RTRIM(ord_no))= '10559'
-SELECT * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4346850')
+
+SELECT * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4465517  ')
 
 
 SELECT * FROM IMINVTRX_SQL WHERE LTRIM(RTRIM(Id_no)) IN ( 'I043468420000000000000000000')
@@ -95,19 +101,15 @@ SELECT  * FROM HIDESLIN_SQL WHERE FILENO = '200213113255T1000001'
 --==================PARA TRANSACCIONES SIN ORDEN=================================================
 --USE DATA_02
 --GO
-select * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
-from IMINVTRX_SQL 
-where trx_dt>='20200309'   and doc_type='T' AND DOC_ORD_NO='11247   '
-order by ord_no asc
 
 SELECT DISTINCT  IMINVTRX_SQL.lev_no,IMINVTRX_SQL.trx_dt,IMINVTRX_SQL.trx_tm, IMINVTRX_SQL.ord_no, IMINVTRX_SQL.item_no,ser_lot_no,loc, doc_ord_no, doc_type ,IMLSTRX_SQL.trx_qty,user_name
 from IMINVTRX_SQL 
 inner join IMLSTRX_SQL on IMLSTRX_SQL.ord_no = IMINVTRX_SQL.ord_no
-where IMINVTRX_SQL.trx_dt>='20200309' /*and IMINVTRX_SQL.lev_no='0' and loc = 'T38'*/  and doc_type='T' AND LOC='T16'
-  and IMLSTRX_SQL.trx_dt>='20200309' -- and IMLSTRX_SQL.lev_no='0' 
+where IMINVTRX_SQL.trx_dt>='20200301' /*and IMINVTRX_SQL.lev_no='0' and loc = 'T38'*/  and doc_type='T' --AND LOC='T16'
+  and IMLSTRX_SQL.trx_dt>='20200526' -- and IMLSTRX_SQL.lev_no='0' 
   --AND IMLSTRX_SQL.trx_qty = 21.5000
-  AND    ser_lot_no='         033002' 
-  AND DOC_ORD_NO='11247   '     
+  AND    ser_lot_no='         033101' 
+  AND DOC_ORD_NO='12063   '     
   order by IMINVTRX_SQL.trx_dt, trx_tm asc
 
   SELECT D_TIPO_PIEL_LOG,usuario,PIEL_LOG.*  

@@ -330,7 +330,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
---USE DATA_02
+--	USE DATA_02	--Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_RP_SC_Y_RP_FOLIO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_LI_RP_SC_Y_RP_FOLIO]
 GO
@@ -357,6 +357,7 @@ AS
 			ISNULL(HIDE, '')	AS HIDE,
 			ISNULL(SQF, '')		AS SQF,
 			ISNULL(TAGNO, 0)	AS TAGNO,
+			ISNULL(D_PIEL_CLASIFICACION,'') AS CLASIFICACION,
 			ISNULL(STATUS, '')	AS STATUS,
 			ISNULL(MACHINE, '') AS MACHINE,
 			ISNULL(JOBNO, '')	AS JOBNO 
@@ -365,6 +366,7 @@ AS
 	INNER JOIN	RP_Folios ON RP_Folios.TAG=RP_SC.TAGNO 
 				AND	LTRIM(RTRIM(LOT))=@PP_LOTE
 				AND	LTRIM(RTRIM(HIDE))=@PP_PIEL	
+	INNER JOIN PIEL_CLASIFICACION ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
 	-- =======================
 	--ORDER BY CDATE
           

@@ -149,7 +149,8 @@ GO
 
 
 
-
+--USE [DATA_02] 
+--GO
 -- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  2137674
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_TAG_NO]
