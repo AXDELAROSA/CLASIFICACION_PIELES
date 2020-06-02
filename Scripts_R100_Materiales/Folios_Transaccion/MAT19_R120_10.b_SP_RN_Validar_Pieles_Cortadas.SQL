@@ -119,6 +119,9 @@ AS
 						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_VALOR
 						AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL_VALOR
 
+						IF @VP_SQF_ORIGINAL IS NULL
+							SET @VP_SQF_ORIGINAL = '0.00'
+
 						SELECT	TOP 1 @VP_SQF_ENVIAR = LTRIM(RTRIM(SQF))
 												FROM	RP_SC 
 												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
@@ -248,7 +251,7 @@ GO
 
 
 
-
+USE DATA_02Pruebas
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
@@ -341,6 +344,9 @@ AS
 						INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
 						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_TBL
 						AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL_TBL
+
+						IF @VP_SQF_ORIGINAL IS NULL
+							SET @VP_SQF_ORIGINAL = '0.00'
 						
 						SET @VP_SQF_RECIBIR = @VP_SQF_ENVIAR
 						
