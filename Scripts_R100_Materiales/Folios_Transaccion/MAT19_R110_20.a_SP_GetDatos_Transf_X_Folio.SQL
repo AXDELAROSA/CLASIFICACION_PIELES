@@ -223,6 +223,100 @@ GO
 
 
 
+
+-- USE DATA_02
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT /								
+-- //////////////////////////////////////////////////////////////
+-- EXEC [PG_GET_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO] 0, 0, 'FMCKTX7', 3789092
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]
+GO
+
+CREATE PROCEDURE [dbo].[PG_GET_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_COLOR					VARCHAR(20),
+	@PP_FOLIO					INT
+AS
+
+	-- ///////////////////////////////////////////
+
+	DECLARE	@VP_N_PIEL_BUENA_X_FOLIO		INT = 0
+	DECLARE	@VP_N_PIEL_REGULAR_X_FOLIO		INT = 0
+	DECLARE	@VP_N_PIEL_MALA_X_FOLIO			INT = 0
+	DECLARE @VP_PIEL_PORCENTAJE_BUENO		DECIMAL(19,4)
+	DECLARE @VP_PIEL_PORCENTAJE_REGULAR		DECIMAL(19,4)
+	DECLARE @VP_PIEL_PORCENTAJE_MALO		DECIMAL(19,4)
+	DECLARE	@VP_N_PIEL_X_FOLIO				INT = 0
+	-- ///////////////////////////////////////////
+
+	SELECT	@VP_N_PIEL_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR)) = @PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO)) = @PP_FOLIO
+
+	IF @VP_N_PIEL_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_X_FOLIO = 0
+	-- ///////////////////////////////////////////
+
+	/*
+	K_PIEL_CLASIFICADA
+	#1 BUENA | #2 REGULAR | #3 MALA
+	*/
+
+	SELECT	@VP_N_PIEL_BUENA_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO))=@PP_FOLIO
+	AND		K_CLASIFICACION=1 -- BUENA
+			
+	IF @VP_N_PIEL_BUENA_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_BUENA_X_FOLIO = 0
+	-- ==================================
+
+	SET @VP_PIEL_PORCENTAJE_BUENO =	ROUND(CAST(@VP_N_PIEL_BUENA_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
+
+	-- ///////////////////////////////////////////
+
+	SELECT	@VP_N_PIEL_REGULAR_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO))=@PP_FOLIO
+	AND		K_CLASIFICACION=2 -- REGULAR
+	
+	IF @VP_N_PIEL_REGULAR_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_REGULAR_X_FOLIO = 0
+	-- ==================================
+
+	SET @VP_PIEL_PORCENTAJE_REGULAR = ROUND(CAST(@VP_N_PIEL_REGULAR_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
+
+	-- ///////////////////////////////////////////
+
+	SELECT	@VP_N_PIEL_MALA_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO))=@PP_FOLIO
+	AND		K_CLASIFICACION=3 -- MALA
+	
+	IF @VP_N_PIEL_MALA_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_MALA_X_FOLIO = 0
+	-- ==================================
+
+	SET @VP_PIEL_PORCENTAJE_MALO = ROUND(CAST(@VP_N_PIEL_MALA_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
+
+	-- ///////////////////////////////////////////
+
+	SELECT  @VP_PIEL_PORCENTAJE_BUENO	AS PORCENTAJE_BUENA,
+			@VP_PIEL_PORCENTAJE_REGULAR AS PORCENTAJE_REGULAR,
+			@VP_PIEL_PORCENTAJE_MALO	AS PORCENTAJE_MALO
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////

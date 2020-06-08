@@ -1,8 +1,53 @@
 
 USE [DATA_02] 
 GO
+--===========validacion para asignar folio a orden================================================
 
+SELECT TOP  20 * FROM CCJOBHDR_SQL 
+WHERE colour = 'MCKTX7 '
+AND standardsqm > 500
+and status = 'p'
+ORDER BY datecreated DESC
 
+SELECT * 
+FROM RP_SC 
+WHERE TAGNO = 3787113
+
+/*
+
+UPDATE RP_SC
+	SET K_CLASIFICACION = 3
+WHERE	COLOUR = 'FMCKTX7'
+AND		TAGNO = 3787113
+AND HIDE IN (
+			--0202, 
+			--0201, 
+			--0197, 
+			--0195, 
+			--0194, 
+			--0191, 
+			--0184, 
+			--0176
+			--0158, 
+			--0152, 
+			--0151, 
+			--0146, 
+			--0145, 
+			--0144, 
+			--0142 
+			0141, 
+			0140, 
+			0137, 
+			0136, 
+			0135, 
+			0134, 
+			0133, 
+			0696 
+			)
+
+*/
+
+--=======================================================
 SELECT * FROM PIEL_CLASIFICACION
 
 SELECT * FROM PIEL_CLASIFICADA_PORCENTAJE
@@ -57,8 +102,9 @@ GO
 SELECT * FROM RP_SC
 WHERE TAGNO = 3788319
 
-
+/*
 UPDATE RP_SC
 	SET K_CLASIFICACION = 0
 WHERE TAGNO = 3788319
 AND LTRIM(RTRIM(HIDE)) = '0899 '
+*/

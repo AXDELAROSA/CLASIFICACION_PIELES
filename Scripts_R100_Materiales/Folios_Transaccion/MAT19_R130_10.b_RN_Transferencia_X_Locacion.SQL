@@ -6,7 +6,7 @@
 -- // OPERACION:		LIBERACION / STORED PROCEDURES
 -- //////////////////////////////////////////////////////////////
 -- // Autor:			FEG
--- // Fecha creación:	18/DIC/2019
+-- // Fecha creación:	8/JUN/2020
 -- ////////////////////////////////////////////////////////////// 
 
 USE [DATA_02] 
@@ -29,14 +29,14 @@ CREATE PROCEDURE [dbo].[PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_FOLIO					INT
+	@PP_FOLIO					INT,
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
 
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
 	-- ///////////////////////////////////////////
-	DECLARE @VP_MENSAJE						VARCHAR(255) = ''
+
 	DECLARE @VP_N_PIEL_SIN_CLASIFICAR		INT = 0
-	-- ///////////////////////////////////////////
-		-- SELECT * FROM RP_SC WHERE TAGNO = 3788350
 
 	SELECT TOP 1 @VP_N_PIEL_SIN_CLASIFICAR = COUNT(ID)
 	FROM	RP_SC 
@@ -44,10 +44,121 @@ AS
 	AND		K_CLASIFICACION = 0
 
 	IF @VP_N_PIEL_SIN_CLASIFICAR > 0
-		SET @VP_MENSAJE = 'No se han clasificado todas las pieles de este [FOLIO]: ' + CONVERT(VARCHAR(10), @PP_FOLIO)
+		SET @VP_RESULTADO = 'No se han clasificado todas las pieles del [FOLIO]: ' + CONVERT(VARCHAR(10), @PP_FOLIO)
 		
 
-	SELECT @VP_MENSAJE AS MENSAJE
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+      
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT /								
+-- //////////////////////////////////////////////////////////////
+-- EXEC [PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO] 0, 0, 3788882
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDA_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]
+GO
+
+CREATE PROCEDURE [dbo].[PG_RN_VALIDA_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_COLOR					VARCHAR(20),
+	@PP_FOLIO					INT,
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
+	-- ///////////////////////////////////////////
+
+	DECLARE	@VP_N_PIEL_BUENA_X_FOLIO		INT = 0
+	DECLARE	@VP_N_PIEL_REGULAR_X_FOLIO		INT = 0
+	DECLARE	@VP_N_PIEL_MALA_X_FOLIO			INT = 0
+	DECLARE @VP_PIEL_PORCENTAJE_BUENO		DECIMAL(19,4)
+	DECLARE @VP_PIEL_PORCENTAJE_REGULAR		DECIMAL(19,4)
+	DECLARE @VP_PIEL_PORCENTAJE_MALO		DECIMAL(19,4)
+	DECLARE	@VP_N_PIEL_X_FOLIO				INT = 0
+	-- ///////////////////////////////////////////
+
+	SELECT	@VP_N_PIEL_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR)) = @PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO)) = @PP_FOLIO
+
+	IF @VP_N_PIEL_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_X_FOLIO = 0
+	-- ///////////////////////////////////////////
+
+	/*
+	K_PIEL_CLASIFICADA
+	#1 BUENA | #2 REGULAR | #3 MALA
+	*/
+
+	SELECT	@VP_N_PIEL_BUENA_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO))=@PP_FOLIO
+	AND		K_CLASIFICACION=1 -- BUENA
+			
+	IF @VP_N_PIEL_BUENA_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_BUENA_X_FOLIO = 0
+	-- ==================================
+
+	SET @VP_PIEL_PORCENTAJE_BUENO =	ROUND(CAST(@VP_N_PIEL_BUENA_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
+
+	IF @VP_RESULTADO = ''
+		BEGIN
+			IF ( NOT @VP_PIEL_PORCENTAJE_BUENO BETWEEN 30 AND 35 )
+				SET @VP_RESULTADO = 'El procentaje de Pieles clasificadas como [BUENA] debe de estar entre el [30% y 35%]'
+				
+		END
+	-- ///////////////////////////////////////////
+
+	SELECT	@VP_N_PIEL_REGULAR_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO))=@PP_FOLIO
+	AND		K_CLASIFICACION=2 -- REGULAR
+	
+	IF @VP_N_PIEL_REGULAR_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_REGULAR_X_FOLIO = 0
+	-- ==================================
+
+	SET @VP_PIEL_PORCENTAJE_REGULAR = ROUND(CAST(@VP_N_PIEL_REGULAR_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
+
+	IF @VP_RESULTADO = ''
+		BEGIN
+			IF ( NOT @VP_PIEL_PORCENTAJE_REGULAR BETWEEN 30 AND 35 )
+				SET @VP_RESULTADO = 'El procentaje de Pieles clasificadas como [REGULAR] debe de estar entre el [30% y 35%]'
+				
+		END
+	-- ///////////////////////////////////////////
+
+	SELECT	@VP_N_PIEL_MALA_X_FOLIO = COUNT(ID)
+	FROM	RP_SC
+	WHERE	RTRIM(LTRIM(COLOUR))=@PP_COLOR
+	AND		RTRIM(LTRIM(TAGNO))=@PP_FOLIO
+	AND		K_CLASIFICACION=3 -- MALA
+	
+	IF @VP_N_PIEL_MALA_X_FOLIO IS NULL 
+		SET @VP_N_PIEL_MALA_X_FOLIO = 0
+	-- ==================================
+
+	SET @VP_PIEL_PORCENTAJE_MALO = ROUND(CAST(@VP_N_PIEL_MALA_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
+
+	IF @VP_RESULTADO = ''
+		BEGIN
+			IF ( NOT @VP_PIEL_PORCENTAJE_MALO BETWEEN 30 AND 35 )
+				SET @VP_RESULTADO = 'El procentaje de Pieles clasificadas como [MALA] debe de estar entre el [30% y 35%]'
+				
+		END
+	-- ///////////////////////////////////////////
+
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
       
 	-- ////////////////////////////////////////////////////////////////////
 GO
