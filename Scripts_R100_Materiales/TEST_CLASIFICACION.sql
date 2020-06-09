@@ -2,21 +2,28 @@
 USE [DATA_02] 
 GO
 --===========validacion para asignar folio a orden================================================
+SELECT * FROM	BD_GENERAL.dbo.PARAMETRO_VALIDACION
 
 SELECT TOP  20 * FROM CCJOBHDR_SQL 
 WHERE colour = 'MCKTX7 '
 AND standardsqm > 500
 and status = 'p'
 ORDER BY datecreated DESC
-
+--12336
 SELECT * 
 FROM RP_SC 
 WHERE TAGNO = 3787113
 
+SELECT 1035.4 - 985.7
+
+if 70< 50 OR 70 > 100 
+	select 'soy mayor'
+else
+	select 'soy menor'
 /*
 
 UPDATE RP_SC
-	SET K_CLASIFICACION = 3
+	SET K_CLASIFICACION = 1
 WHERE	COLOUR = 'FMCKTX7'
 AND		TAGNO = 3787113
 AND HIDE IN (
@@ -35,13 +42,13 @@ AND HIDE IN (
 			--0145, 
 			--0144, 
 			--0142 
-			0141, 
-			0140, 
-			0137, 
-			0136, 
-			0135, 
-			0134, 
-			0133, 
+			--0141, 
+			--0140, 
+			--0137, 
+			--0136, 
+			--0135, 
+			--0134, 
+			--0133,
 			0696 
 			)
 
