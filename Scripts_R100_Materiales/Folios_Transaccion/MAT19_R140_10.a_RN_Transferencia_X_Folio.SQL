@@ -17,7 +17,60 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> RN_EXISTE
+-- // STORED PROCEDURE ---> 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_PIEL_SCRAP]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]
+GO
+/*
+ USE [DATA_02Pruebas] 
+	EXEC [PG_RN_VALIDA_PIEL_SCRAP] 0,0, 'FMCKTX7' , '33012' , '0487' , '11551' 
+*/
+
+CREATE PROCEDURE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================		
+	@PP_COLOR					VARCHAR(10),
+	@PP_LOTE					VARCHAR(15),
+	@PP_PIEL					VARCHAR(5),
+	@PP_ORDEN					VARCHAR(10),
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+	-- ===========================		
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
+	DECLARE @VP_N_PIEL_CORTADA	INT
+
+	-- /////////////////////////////////////////////////////
+
+	SELECT @VP_N_PIEL_CORTADA = COUNT(hideno)
+						FROM cccuthst_sql 
+						WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
+						AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@PP_LOTE)), 6) 
+						AND LTRIM(RTRIM(hideno))   = @PP_PIEL
+						AND	LTRIM(RTRIM(JOBNO))   = @PP_ORDEN
+
+	IF @VP_N_PIEL_CORTADA IS NULL
+		SET @VP_N_PIEL_CORTADA = 0
+	-- /////////////////////////////////////////////////////
+	
+	IF @VP_N_PIEL_CORTADA = 0
+		SET @VP_RESULTADO = 'La [PIEL]: ' + @PP_PIEL + ' no esta cortada.'
+
+	-- /////////////////////////////////////////////////////
+	
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> 
 -- //////////////////////////////////////////////////////////////
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_USUARIO_MQU]') AND type in (N'P', N'PC'))
@@ -55,7 +108,6 @@ AS
 
 	-- /////////////////////////////////////////////////////
 GO
-
 
 
 

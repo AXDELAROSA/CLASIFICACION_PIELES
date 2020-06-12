@@ -1,8 +1,14 @@
 
 USE [DATA_02] 
 GO
---===========validacion para asignar folio a orden================================================
+
+
 SELECT * FROM	BD_GENERAL.dbo.PARAMETRO_VALIDACION
+
+SELECT DISTINCT * FROM RP_Folios 
+WHERE TAG = '2137674'
+
+SELECT TOP 10* FROM RP_SC WHERE MOVEMENT = '3783021'
 
 SELECT TOP  20 * FROM CCJOBHDR_SQL 
 WHERE colour = 'MCKTX7 '
@@ -10,16 +16,12 @@ AND standardsqm > 500
 and status = 'p'
 ORDER BY datecreated DESC
 --12336
+
 SELECT * 
 FROM RP_SC 
 WHERE TAGNO = 3787113
 
-SELECT 1035.4 - 985.7
 
-if 70< 50 OR 70 > 100 
-	select 'soy mayor'
-else
-	select 'soy menor'
 /*
 
 UPDATE RP_SC
@@ -55,6 +57,7 @@ AND HIDE IN (
 */
 
 --=======================================================
+
 SELECT * FROM PIEL_CLASIFICACION
 
 SELECT * FROM PIEL_CLASIFICADA_PORCENTAJE
@@ -81,8 +84,6 @@ AND		CONVERT(INTEGER,LTRIM(RTRIM(hide))) BETWEEN 44 AND 54
 
 */
 
-
-
 SELECT * FROM RP_SC
 WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7' 
 AND		LTRIM(RTRIM(LOT))='33101' 
@@ -99,10 +100,7 @@ AND HIDE = '0662'
 
 */
 
-
 --===========================================
-
-
 USE [DATA_02Pruebas] 
 GO
 

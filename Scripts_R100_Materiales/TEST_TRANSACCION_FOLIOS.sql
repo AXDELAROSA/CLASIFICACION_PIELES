@@ -26,23 +26,39 @@ SELECT NEXT_DOC_NO FROM 	IMCTLFIL_SQL
 --NEXT_DOC_NO
 --4246762
 --1715937
-SELECT * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4563817   ', '4465517 ', '4465389 ')
+
+SELECT * FROM RP_Folios WHERE TAG = '3789232'
+
+SELECT * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4454014', 
+															'4454015', 
+															'4454016' )
 
 select * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where doc_type = 'T' and item_no = 'FMCKTX7        '    and loc = 'T16' and trx_dt>='20200325'
---and doc_ord_no = '12063   '
-and ord_no in ( '4563817   ', '4465517 ', '4465389 ')
+where doc_type = 'T' and item_no = 'FMCKTX7        '    and loc = 'mfp' and trx_dt>='20200611'
+and doc_ord_no = '00000'
+--and ord_no in ( '4630052')
 order by ord_no asc
 
+/*
+UPDATE IMINVTRX_SQL
+	SET doc_ord_no= '12356'
+WHERE ord_no = '4630052' 
+and doc_type = 'T' 
+and item_no = 'FMCKTX7        '    
+and loc = 'T19' and trx_dt>='20200609'
+*/
 
-SELECT D_TIPO_PIEL_LOG, --,usuario,
+SELECT * FROM [PIEL_A_TRANSFERIR_TRANSACCION] WHERE TIPO_TRANSFERENCIA = 'DEVOLUCION' AND FOLIO_ORIGEN = 3789262
+
+
+SELECT D_TIPO_PIEL_LOG,usuario,
 PIEL_LOG.*  
 FROM PIEL_LOG 
---INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
+INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE  --ORDEN_DESTIDO = 12063 AND
-LOTE = 33101 AND PIEL IN ( 128)
+WHERE -- ORDEN_ORIGEN = 12356 AND
+LOTE = 33101 AND PIEL IN ( 1343)
 order by piel
 
 ----SELECT * FROM RP_SC WHERE TAGNO IN (3787754) AND HIDE = '0483'
@@ -116,15 +132,26 @@ SELECT D_TIPO_PIEL_LOG,usuario,PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
-WHERE  --LOCACION_DESTINO = 'T16' 
---AND ORDEN_DESTIDO=12236 
---AND
- FOLIO_ORIGEN = '3789148' OR FOLIO_DESTINO = '3789148'
+WHERE  ORDEN_DESTIDO=12335
+ and	FOLIO_ORIGEN =3789271-- OR FOLIO_DESTINO = '3789148'
 ORDER BY F_ALTA ASC
 
-select * from RP_SC where TAGNO=3786904
+select * from RP_SC where TAGNO=3789271
 
-select * from CCJOBHDR_SQL where jobno = 11358
+select * from RP_Folios where TAG = 3789271
+
+ /*
+update RP_Folios
+	set MACHINE = 'Table 39',
+		JOBNO = '12374'
+WHERE TAG = 3789271
+*/
+
+select * from CCJOBHDR_SQL where jobno = 12374
+
+SELECT  *
+FROM cccuthst_sql 
+where jobno = 12374
 
 SELECT * FROM IMINVTRX_SQL WHERE ord_no IN (04376600) 
  --and lev_no = 0

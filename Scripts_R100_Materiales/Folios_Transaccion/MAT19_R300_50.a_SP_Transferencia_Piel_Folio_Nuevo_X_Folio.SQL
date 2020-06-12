@@ -54,9 +54,9 @@ AS
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		--EXECUTE [dbo].[PG_RN_TRANSFER_PIEL_DEVOLUCION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-		--												@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
-		--												@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
-		--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+		--													@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
+		--													@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
+		--													@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 		
 	-- /////////////////////////////////////////////////////////////////////
 	
@@ -73,7 +73,7 @@ AS
 				
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02', 'RP_SC', 'TAGNO',
+																	'DATA_02', 'RP_FOLIOS', 'TAG',
 																	@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 				-- =====================
 
@@ -101,8 +101,7 @@ AS
 						COLOR		VARCHAR(20),
 						LOTE		VARCHAR(20),
 						PIEL		VARCHAR(20),
-						SQF			VARCHAR(20),
-						MOVIMIENTO	VARCHAR(20)
+						SQF			VARCHAR(20)
 					)
 				SET NOCOUNT ON
 				
@@ -113,7 +112,6 @@ AS
 				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
 				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
 				DECLARE @VP_SQF_VALOR				VARCHAR(20)
-				DECLARE @VP_MOVIMIENTO_VALOR		VARCHAR(20)
 								
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
 				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
@@ -132,22 +130,12 @@ AS
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
 						SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY,  @VP_POSICION_SQF - 1)
 						
-						SELECT	TOP 1 
-								@VP_MOVIMIENTO_VALOR = LTRIM(RTRIM(MOVEMENT))
-												FROM	RP_SC 
-												WHERE	LTRIM(RTRIM(COLOUR)) = @PP_CB_COLOR 
-												AND		LTRIM(RTRIM(TAGNO)) = @PP_TAGNO_ORIGEN
-												AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_VALOR
-												AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_VALOR
-												AND		LTRIM(RTRIM(SQF)) = @VP_SQF_VALOR
-
 						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
 								VALUES	(
 											@PP_CB_COLOR,
 											@VP_LOTE_VALOR,
 											@VP_PIEL_VALOR,
-											@VP_SQF_VALOR,
-											@VP_MOVIMIENTO_VALOR	)
+											@VP_SQF_VALOR	)
 																								
 						--Reemplazamos lo procesado con nada con la funcion stuff
 						SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
@@ -167,13 +155,12 @@ AS
 				DECLARE @VP_LOTE AS VARCHAR(20)
 				DECLARE @VP_PIEL AS VARCHAR(20)
 				DECLARE @VP_SQF AS VARCHAR(20)
-				DECLARE @VP_MOVIMIENTO AS VARCHAR(20)
 
 				DECLARE CU_PIEL_SELECCIONADA CURSOR 
-				FOR SELECT LOTE, PIEL, SQF, MOVIMIENTO FROM @TBL_PIEL_SELECCIONADAS
+				FOR SELECT LOTE, PIEL, SQF FROM @TBL_PIEL_SELECCIONADAS
 				
 				OPEN CU_PIEL_SELECCIONADA
-				FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_LOTE, @VP_PIEL, @VP_SQF, @VP_MOVIMIENTO
+				FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_LOTE, @VP_PIEL, @VP_SQF
 				
 				WHILE @@FETCH_STATUS = 0
 					BEGIN
@@ -206,7 +193,7 @@ AS
 															@PP_TAGNO_ORIGEN, 'Transfer Nuevo',
 															@VP_DETAIL, @VP_PIEL
 
-						FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_LOTE, @VP_PIEL, @VP_SQF, @VP_MOVIMIENTO
+						FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_LOTE, @VP_PIEL, @VP_SQF
 	
 					END
 	
@@ -243,7 +230,7 @@ AS
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'PROCESO',

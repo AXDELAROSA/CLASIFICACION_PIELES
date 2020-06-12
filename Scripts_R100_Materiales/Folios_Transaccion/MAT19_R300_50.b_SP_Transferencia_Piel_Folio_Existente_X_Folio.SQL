@@ -79,8 +79,7 @@ AS
 								WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_DESTINO
 	--=====================
 		
-	SELECT	TOP 1 @VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR)),
-				  @VP_K_CLASIFICACION	= K_CLASIFICACION
+	SELECT	TOP 1 @VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR))
 									FROM	RP_SC
 									WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_ORIGEN
 	-- =====================
@@ -248,6 +247,14 @@ AS
 								DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE_TBL AS INT)
 								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(19,4))
+
+								-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
+								SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+															FROM RP_SC
+															WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+															AND		TAGNO = @PP_TAGNO_ORIGEN
+															AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+															AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
 
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -450,13 +457,21 @@ AS
 									END
 								ELSE
 									BEGIN
+										-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
+										SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+																	FROM RP_SC
+																	WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+																	AND		TAGNO = @PP_TAGNO_ORIGEN
+																	AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+																	AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+
 										-- /////////////////////////INGRESO EL FOLIO NUEVO////////////////////////////////////////////
 										EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@VP_F_ACTUAL, @VP_COLOR_TBL, @VP_LOTE_TBL, 
 																		@VP_PIEL_TBL, @PP_TB_SQF, @PP_TAGNO_DESTINO, 
 																		NULL, NULL, NULL, 'C', @PP_LOCACION_DESTINO, @VP_K_CLASIFICACION	
 																		
-											-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
+										-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
 										SET @VP_DETAIL = 'New part hide: ' + @VP_PIEL_TBL + ' / ' + CONVERT(VARCHAR(20),@PP_TB_SQF) + ' from:' + CONVERT(VARCHAR(20),@PP_TAGNO_DESTINO)
 										EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																			@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
@@ -468,8 +483,8 @@ AS
 						-- /////////////////////////////////////////////////////////////////////
 						-- /////////////////////////////////////////////////////////////////////
 					END
+
 					-- ///////////////OBTENEMOS LOS SQF DE LOS DIFERENTES LOTES A TRANSFERIR//////////////////////////////////////////////////////
-					
 					IF (	SELECT COUNT(*) FROM sys.table_types
 							WHERE name = 'TVPParam' AND schema_id = 1	) = 0
 							CREATE TYPE dbo.TVPParam AS TABLE(	COLOR		VARCHAR(20),

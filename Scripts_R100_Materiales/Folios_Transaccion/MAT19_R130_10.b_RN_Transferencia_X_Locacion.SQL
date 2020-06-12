@@ -62,6 +62,7 @@ GO
 -- // STORED PROCEDURE ---> SELECT /								
 -- //////////////////////////////////////////////////////////////
 -- EXEC [PG_RN_VALIDA_PIEL_CLASIFICADA_X_FOLIO] 0, 0, 3788882
+
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_VALIDA_PORCENTAJE_PIEL_CLASIFICADA_X_FOLIO]
 GO
@@ -99,7 +100,6 @@ AS
 																@OU_SQF_EXTRA_MAXIMO			 = @VP_SQF_EXTRA_MAXIMO				OUTPUT
 					
 	-- ///////////////////////////////////////////
-
 	DECLARE	@VP_N_PIEL_BUENA_X_FOLIO		INT = 0
 	DECLARE	@VP_N_PIEL_REGULAR_X_FOLIO		INT = 0
 	DECLARE	@VP_N_PIEL_MALA_X_FOLIO			INT = 0
@@ -107,7 +107,6 @@ AS
 	DECLARE @VP_PIEL_PORCENTAJE_REGULAR		DECIMAL(19,4)
 	DECLARE @VP_PIEL_PORCENTAJE_MALO		DECIMAL(19,4)
 	DECLARE	@VP_N_PIEL_X_FOLIO				INT = 0
-
 	-- ///////////////////////////////////////////
 
 	SELECT	@VP_N_PIEL_X_FOLIO = COUNT(ID)
@@ -123,10 +122,6 @@ AS
 		SET @VP_RESULTADO = 'No se encontraron pieles en el [FOLIO]: ' + CONVERT(VARCHAR(10), @PP_FOLIO)
 	-- ///////////////////////////////////////////
 
-	/*
-	K_PIEL_CLASIFICADA
-	#1 BUENA | #2 REGULAR | #3 MALA
-	*/
 	IF @VP_RESULTADO = ''
 		BEGIN
 			SELECT	@VP_N_PIEL_BUENA_X_FOLIO = COUNT(ID)
@@ -163,8 +158,7 @@ AS
 			-- ==================================
 
 			SET @VP_PIEL_PORCENTAJE_REGULAR = ROUND(CAST(@VP_N_PIEL_REGULAR_X_FOLIO AS FLOAT) / CAST(@VP_N_PIEL_X_FOLIO AS FLOAT),3) * 100
-
-	
+				
 			IF ( @VP_PIEL_PORCENTAJE_REGULAR < @VP_PORCENTAJE_MINIMO_REGULAR OR @VP_PIEL_PORCENTAJE_REGULAR > @VP_PORCENTAJE_MAXIMO_REGULAR )
 				BEGIN			
 					SET @VP_RESULTADO = 'El procentaje de Pieles clasificadas como [REGULAR] debe de estar entre el: '
@@ -242,7 +236,6 @@ AS
 	-- ///////////////////////////////////////////
 
 	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
-      
 	-- ////////////////////////////////////////////////////////////////////
 GO
 

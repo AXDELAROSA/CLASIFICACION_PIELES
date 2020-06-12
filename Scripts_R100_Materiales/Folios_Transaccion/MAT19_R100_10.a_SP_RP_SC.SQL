@@ -287,7 +287,7 @@ GO
 
 
 
---USE [DATA_02] 
+--	USE [DATA_02Pruebas] 
 --GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> INSERT / FICHA
@@ -318,34 +318,24 @@ AS
 
 	DECLARE @VP_MENSAJE				VARCHAR(300) = ''
 
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE=''
-		--EXECUTE [dbo].[PG_RN_PIEL_CLASIFICADA_INSERT]	@PP_L_DEBUG, @PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-		--												@VP_K_PIEL_CLASIFICADA,@PP_D_PIEL_CLASIFICADA,
-		--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-															
+	-- /////////////////////////////////////////////////////////////////////													
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN	
-			--IF EXISTS (SELECT ID FROM RP_SC	WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
-			--								AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
-			--								AND		LTRIM(RTRIM(LOT))=@PP_LOTE
-			--								AND		LTRIM(RTRIM(HIDE))=@PP_PIEL			)
-			--	BEGIN
 		
-			DECLARE @VP_SQF_ACTUAL	VARCHAR(10) 
-			SELECT @VP_SQF_ACTUAL  = SQF
+			DECLARE @VP_N_PIEL	INT = 0 
+			SELECT @VP_N_PIEL  = COUNT(ID)
 									FROM RP_SC	
 									WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
 									AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
 									AND		LTRIM(RTRIM(LOT))=@PP_LOTE
 									AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
 			
-			IF @VP_SQF_ACTUAL IS NULL
-				SET @VP_SQF_ACTUAL = ''
+			IF @VP_N_PIEL IS NULL
+				SET @VP_N_PIEL = 0
+			-- ===========================
 
-			IF @VP_SQF_ACTUAL = ''
+			IF @VP_N_PIEL = 0
 				BEGIN
 					INSERT INTO RP_SC	
 								(	[CDATE], 
@@ -377,6 +367,19 @@ AS
 				END
 			ELSE
 				BEGIN
+					DECLARE @VP_SQF_ACTUAL	VARCHAR(15) = ''
+
+					SELECT @VP_SQF_ACTUAL  = SQF
+									FROM RP_SC	
+									WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
+									AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
+									AND		LTRIM(RTRIM(LOT))=@PP_LOTE
+									AND		LTRIM(RTRIM(HIDE))=@PP_PIEL	
+
+					IF ( @VP_SQF_ACTUAL IS NULL OR @VP_SQF_ACTUAL = '' )
+						SET @VP_SQF_ACTUAL = 0
+					-- ===========================
+
 					SET @VP_SQF_ACTUAL = CONVERT(DECIMAL(13,2),@VP_SQF_ACTUAL) + 	CONVERT(DECIMAL(13,2),@PP_SQF)	
 
 					UPDATE RP_SC
@@ -393,20 +396,6 @@ AS
 
 	-- ///////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////
-
-	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												-- ===========================================
-	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-	--												'UPDATE',
-	--												'',
-	--												-- ===========================================
-	--												'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-	--												0, 0, @PP_LOTE, '' , 0.00, 0.00,
-	--												-- === @PP_VALOR_1 al 6_DATO
-	--												'', '', 'UP', '', '', ''
-
 	-- //////////////////////////////////////////////////////////////
 GO
 

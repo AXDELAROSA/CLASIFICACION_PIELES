@@ -57,6 +57,34 @@ AS
 	-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	-- /////////////////////////////////////////////////////////////////////
+
+	IF ( @PP_TIPO_TRANSFERENCIA = 'DEVOLUCION' AND  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T' AND @PP_ORDEN_ORIGEN = '' )
+		BEGIN
+			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
+				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Error: Devolucion de Mesa sin orden...'
+				DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
+				DECLARE @VP_BODY		NVARCHAR(MAX) 
+				
+				SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
+									N'<thead>' + 
+									  N'<tr BGCOLOR="#ADD8E6">' + 
+									    N'<th colspan="10">ERROR: Devolucion de Mesa sin orden... </th>' + 
+									  N'</tr>' + 
+									  N'<tr BGCOLOR="#48D1CC">' + 
+									    N'<th>Movimiento</th><th>Color</th><th>Folio Ori.</th><th>Folio Des.</th><th>Locacion Ori.</th><th>Locacion Des.</th><th>Orden Ori.</th><th>Orden Des.</th><th>Usuario</th>' + 
+									  N'</tr>' + 
+									N'</thead>' + 
+									N'<tbody>' + 
+									  N'<tr>' + 
+									  N'<td>'+ @PP_TIPO_TRANSFERENCIA +'</td><td>'+ @PP_CB_COLOR +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN) +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_DESTINO) +'</td><td>'+ @PP_LOCACION_ORIGEN+'</td><td>'+ @PP_LOCACION_DESTINO +'</td><td>'+ @PP_ORDEN_ORIGEN +'</td><td>'+ @PP_ORDEN_DESTINO +'</td><td>'+ CONVERT(VARCHAR(10),@PP_K_USUARIO_ACCION) +'</td>' + 
+									  N'</tr>' + 
+									N'</tbody>' + 
+								N'</table>' ;
+					SET ROWCOUNT 0
+					 				
+				EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+		END
 	
 	IF @VP_MENSAJE=''
 		BEGIN
@@ -64,7 +92,7 @@ AS
 			BEGIN TRY
 				DECLARE @VP_K_PIEL_A_TRANSFERIR_TRANSACCION		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02Pruebas', 'PIEL_A_TRANSFERIR_TRANSACCION', 'K_PIEL_A_TRANSFERIR_TRANSACCION',
+																	'DATA_02', 'PIEL_A_TRANSFERIR_TRANSACCION', 'K_PIEL_A_TRANSFERIR_TRANSACCION',
 																	@OU_K_TABLA_DISPONIBLE = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION	OUTPUT
 
 				INSERT	INTO	[PIEL_A_TRANSFERIR_TRANSACCION] (
@@ -251,7 +279,7 @@ GO
 
 
 
-USE DATA_02Pruebas
+--USE DATA_02Pruebas
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 

@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -77,8 +77,7 @@ AS
 								WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_DESTINO
 	--=====================
 		
-	SELECT	TOP 1 @VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR)),
-				  @VP_K_CLASIFICACION	= K_CLASIFICACION
+	SELECT	TOP 1 @VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR))
 									FROM	RP_SC
 									WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_ORIGEN
 	-- =====================
@@ -201,6 +200,14 @@ AS
 								DECLARE @VP_PIEL_INT INT			= CAST(@VP_PIEL_TBL AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(13,2))
 
+								-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
+								SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+															FROM RP_SC
+															WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+															AND		TAGNO = @PP_TAGNO_ORIGEN
+															AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+															AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
@@ -216,7 +223,6 @@ AS
 																NULL, NULL, NULL, 'E', @PP_LOCACION_DESTINO, @VP_K_CLASIFICACION
 
 								-- /////////////////////////ACTUALIZO EL FOLIO ANTERIOR////////////////////////////////////////////
-
 								EXECUTE [dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_LOTE_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_TAGNO_ORIGEN, 'D', @VP_PIEL_TBL, @VP_LOTE_TBL
 							
@@ -306,6 +312,7 @@ AS
 								-- =======================
 						FROM	[PIEL_A_TRANSFERIR]
 						WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+
 						-- /////////////////////////////////////////////////////////////////////
 
 						DECLARE @VP_SQF		VARCHAR(10)
@@ -403,6 +410,15 @@ AS
 									END
 								ELSE
 									BEGIN
+										-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
+
+										SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+																	FROM RP_SC
+																	WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+																	AND		TAGNO = @PP_TAGNO_ORIGEN
+																	AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+																	AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+
 										-- /////////////////////////INGRESO EL FOLIO NUEVO////////////////////////////////////////////
 										EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@VP_F_ACTUAL, @VP_COLOR_TBL, @VP_LOTE_TBL, 
