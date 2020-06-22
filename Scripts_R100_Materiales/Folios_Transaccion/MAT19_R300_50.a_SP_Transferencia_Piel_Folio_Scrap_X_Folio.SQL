@@ -18,14 +18,16 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]
-GO
 /*
 EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]	0,0,  'FMCKTX7' , 3788336 , 'T06' , '11551' , 'Table 06' , 0 , 
 '33012/33012' , '0489/0488' , '33.80/34.00' , 0 , 0 , '' , 'franciscoe' , 'IT-010'  
 
 */
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]
+GO
+
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -34,7 +36,6 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]
 	@PP_TAGNO_ORIGEN			INT,
 	@PP_LOCACION_ORIGEN			VARCHAR(5),
 	@PP_TB_ORDEN				VARCHAR(10),
-	@PP_TB_MAQUINA				VARCHAR(10),
 	@PP_SELECT_TODOS			INT, -- SE SELECCIONARON TODAS LAS PIELES #0 N0, #1 SI
 	-- ===========================
 	@PP_LOTE_ARRAY				NVARCHAR(MAX),
@@ -86,7 +87,11 @@ AS
 				-- /////////////////////////INGRESO EL NUEVO FOLIO////////////////////////////////////////////
 				EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													@VP_TAGNO_DESTINO, 'A', NULL, NULL, NULL
-					
+
+				-- /////////////////////SE IMPRIME EL FOLIO NUEVO////////////////////////////////////////////////
+				EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+											@VP_TAGNO_DESTINO, 1
+
 				-- /////////////////////////////////////////////////////////////////////
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
 						K_PIEL_SELECCIONADA INT IDENTITY(1,1),
@@ -184,6 +189,11 @@ AS
 								IF @VP_MENSAJE <> ''
 									RAISERROR (@VP_MENSAJE, 16, 1 )
 
+								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
+								EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																			@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
+																				
+
 								-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
 								SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
 															FROM RP_SC
@@ -226,7 +236,7 @@ AS
 															FROM RP_Folios
 															WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
 
-										IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
+										IF @VP_ESTATUS <> 'B' --AND @PP_LOCACION_ORIGEN <> 'MHI'
 											BEGIN
 												EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_TAGNO_ORIGEN, 5
@@ -245,8 +255,7 @@ AS
 																					@PP_TAGNO_ORIGEN, 'D'
 
 										-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
-										
-										SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
+										SET @VP_DETAIL = 'Delete hides por SCRAP (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
 										EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																			@PP_USER, @PP_COMPUTER_NAME, 'FolioScrap',
 																			@PP_TAGNO_ORIGEN, 'Delete hides',
@@ -287,6 +296,10 @@ AS
 						-- /////////////////////////////////////////////////////////////////////
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN
+								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
+								EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																			@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
+
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	9, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
@@ -316,6 +329,11 @@ AS
 							END
 						ELSE
 							BEGIN
+								-- ///////////////////SE ACTUALIZA EL SQM DE DE LA PIEL CORTADA//////////////////////////////////////////////////
+								EXECUTE [dbo].[PG_UP_CCCUTHST_HIDESQM_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, 
+																				@PP_TB_ORDEN, @PP_TB_SQF
+
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	9, @PP_TAGNO_ORIGEN, @VP_COLOR_TBL,
