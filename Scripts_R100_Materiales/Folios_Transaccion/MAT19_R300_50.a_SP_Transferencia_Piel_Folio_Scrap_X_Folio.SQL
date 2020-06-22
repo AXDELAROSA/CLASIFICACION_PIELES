@@ -400,18 +400,39 @@ AS
 						END
 					
 									
-					-- /////////////////////////////////////////////////////////////////////
+					-- ///////////////////////SE REALIZAN LAS TRANSACCIONES//////////////////////////////////////////////
 					DECLARE @VP_ORDEN_DESTINO	VARCHAR(10)
 
 					EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@VP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
 														'', @PP_TB_ORDEN,  @TBL_TOTAL_SQF_X_LOTE,						 	
 														@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
-						-- ////////////////////////////////////////////////////////////////////
 
+						-- //////////////////SE EL MOVIMIENTO/LOCACION AL FOLIO DESTINO////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@VP_TAGNO_DESTINO, 0, @VP_LOCACION_DESTINO, 0
-					-- /////////////////////////////////////////////////////////////////////
+
+					-- //////////////SE ENVIA CORREO A RESPONSABLES DE MFP CON DATOS DE LA TRANSAACION///////////////////////////////////////////////////////
+					DECLARE @VP_TOTAL_SQF_MFP  DECIMAL(8,4) = 0
+					IF @VP_N_PIEL = 1 AND (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) <> @PP_TB_SQF)
+						BEGIN
+							SET @VP_TOTAL_SQF_MFP = @PP_TB_SQF
+						END
+					ELSE
+						BEGIN
+							SELECT @VP_TOTAL_SQF_MFP = SUM(CONVERT(DECIMAL(13,4),SQF)) 
+							FROM @TBL_PIEL_SELECCIONADAS
+						END
+					
+							
+					IF @VP_TOTAL_SQF_MFP IS NULL
+						SET @VP_TOTAL_SQF_MFP = 0
+
+					EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																			@PP_CB_COLOR, @VP_TAGNO_DESTINO, @VP_TOTAL_SQF_MFP,
+																			@PP_COMENTARIO, @PP_USER
+																				
+					
 								
 			COMMIT TRANSACTION 
 			END TRY

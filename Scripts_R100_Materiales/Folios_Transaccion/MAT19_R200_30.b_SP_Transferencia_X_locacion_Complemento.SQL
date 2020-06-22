@@ -47,8 +47,9 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_COMPLEMENTO]
 AS
 
 	-- ///////////////////////////////////////////
+	DECLARE	@VP_SQF DECIMAL(13,2) = CONVERT(DECIMAL(13,2),@PP_TB_SQF)
+
 	-- ///////////////////////////////////////////
-	
 	IF (	SELECT COUNT(*) FROM sys.table_types
 			WHERE name = 'TVPParamXLocacion' AND schema_id = 1	) = 0
 			CREATE TYPE dbo.TVPParamXLocacion AS TABLE(	COLOR		VARCHAR(20),
@@ -69,35 +70,27 @@ AS
 	GROUP BY	COLOUR, LOT
 	-- =====================
 
-	DECLARE	@VP_SQF DECIMAL(13,2) = CONVERT(DECIMAL(13,2),@PP_TB_SQF)
+	-- /////////////////////////////////////////////////////////////////////
 	EXECUTE [dbo].[PG_PM_TRANSFER_X_LOCACION]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
 													@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN, @TBL_TOTAL_SQF_X_LOTE,						 	
 													@VP_SQF, @PP_COMENTARIO, @PP_USER
-	-- /////////////////////////////////////////////////////////////////////
-	
-	DECLARE @VP_COLOR VARCHAR(10) 
-	DECLARE @VP_TOTAL_SQF VARCHAR(10) 
-	SELECT TOP 1 @VP_COLOR		= COLOR,
-				 @VP_TOTAL_SQF	= SQF
-								FROM	@TBL_TOTAL_SQF_X_LOTE
-	
-	-- /////////////////////////////////////////////////////////////////////
 
+	-- /////////////////////////////////////////////////////////////////////
 	IF @PP_LOCACION_ORIGEN = 'MIT' And @PP_LOCACION_DESTINO = 'MHI' 
 		BEGIN
-			IF EXISTS ( SELECT TOP 1 RP_Folios.ID FROM RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND COLOUR = @VP_COLOR)
+			IF EXISTS ( SELECT TOP 1 RP_Folios.ID FROM RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND LTRIM(RTRIM(COLOUR)) = @PP_COLOR_PIEL)
 				BEGIN
 					DECLARE @VP_FOLIO	INT
-					SELECT TOP 1 @VP_FOLIO = TAG from RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND COLOUR = @VP_COLOR 
+					SELECT TOP 1 @VP_FOLIO = TAG from RP_Folios INNER JOIN RP_SC ON TAG=TAGNO and STATUS='B' AND LTRIM(RTRIM(COLOUR)) = @PP_COLOR_PIEL 
 					
 					-- /////////////////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_PR_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														1, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
 														@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
 														@VP_FOLIO, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
-					-- /////////////////////////////////////////////////////////////////////
 
+					-- /////////////////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_ORIGEN, @VP_FOLIO, @PP_LOCACION_DESTINO, 1
 				END
@@ -108,11 +101,12 @@ AS
 														1, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
 														@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
 														0, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
-					-- /////////////////////////////////////////////////////////////////////
 
+					-- /////////////////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_ORIGEN, 0, @PP_LOCACION_DESTINO, 0
 					
+					-- /////////////////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_UP_RP_FOLIO_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@PP_TAGNO_ORIGEN, 'B', NULL, NULL
 				END
@@ -129,8 +123,8 @@ AS
 												@VP_TIPO_PIEL_LOG, @PP_TAGNO_ORIGEN, @PP_COLOR_PIEL, 
 												@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN,
 												0, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
-			-- /////////////////////////////////////////////////////////////////////
 
+			-- /////////////////////////////////////////////////////////////////////
 			EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@PP_TAGNO_ORIGEN, 0, @PP_LOCACION_DESTINO, 0
 		END
@@ -144,31 +138,18 @@ AS
 	
 	IF 	@PP_LOCACION_DESTINO = 'MFP'
 		BEGIN
-			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'dianan@pearlleather.com.mx;manuelg@pearlleather.com.mx;fernandog@pearlleather.com.mx;pedrov@pearlleather.com.mx'
+			DECLARE @VP_TOTAL_SQF_MFP  DECIMAL(8,4) = 0
+
+			SELECT	@VP_TOTAL_SQF_MFP	=  SUM(CAST(SQF AS DECIMAL(8,4)))
+										FROM	RP_SC
+										WHERE	TAGNO=@PP_TAGNO_ORIGEN 
+									
+			IF @VP_TOTAL_SQF_MFP IS NULL
+				SET @VP_TOTAL_SQF_MFP = 0
 			
-			DECLARE @VP_SUBJECT		VARCHAR(255) = 'Transferencia hacia MFP...'
-			DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
-			DECLARE @VP_BODY		NVARCHAR(MAX) 
-			
-			SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
-								N'<thead>' + 
-								  N'<tr BGCOLOR="#ADD8E6">' + 
-								    N'<th colspan="5">Se ha creado una nueva transferencia (Entrada a MFP)... </th>' + 
-								  N'</tr>' + 
-								  N'<tr BGCOLOR="#48D1CC">' + 
-								    N'<th>Fecha</th><th>Color</th><th>Cantidad</th><th>Comentario</th><th>Usuario</th>' + 
-								  N'</tr>' + 
-								N'</thead>' + 
-								N'<tbody>' + 
-								  N'<tr>' + 
-								  N'<td>'+ @VP_FECHA +'</td><td>'+ @PP_COLOR_PIEL +'</td><td>'+ @VP_TOTAL_SQF +'</td><td>'+ @PP_COMENTARIO+'</td><td>'+ @PP_USER +'</td>' + 
-								  N'</tr>' + 
-								N'</tbody>' + 
-							N'</table>' ;
-				SET ROWCOUNT 0
-				 				
-			EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-														@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+			EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																	@PP_COLOR_PIEL, @PP_TAGNO_ORIGEN, @VP_TOTAL_SQF_MFP,
+																	@PP_COMENTARIO, @PP_USER
 	
 	END
 	
