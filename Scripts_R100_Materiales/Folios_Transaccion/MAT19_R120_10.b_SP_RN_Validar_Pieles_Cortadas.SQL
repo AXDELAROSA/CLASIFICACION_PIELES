@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 -- //////////////////////////////////////////////////////////////
@@ -58,32 +58,58 @@ AS
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	-- /////////////////////////////////////////////////////////////////////
 
+	DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
+	DECLARE @VP_SUBJECT		VARCHAR(255) = 'Error: Devolucion de Mesa sin orden...'
+	DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
+	DECLARE @VP_BODY		NVARCHAR(MAX) 
+
 	IF ( @PP_TIPO_TRANSFERENCIA = 'DEVOLUCION' AND  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T' AND @PP_ORDEN_ORIGEN = '' )
 		BEGIN
-			DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
-				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Error: Devolucion de Mesa sin orden...'
-				DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
-				DECLARE @VP_BODY		NVARCHAR(MAX) 
+			SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
+								N'<thead>' + 
+								  N'<tr BGCOLOR="#ADD8E6">' + 
+								    N'<th colspan="10">ERROR: Devolucion de Mesa sin orden... </th>' + 
+								  N'</tr>' + 
+								  N'<tr BGCOLOR="#48D1CC">' + 
+								    N'<th>Movimiento</th><th>Color</th><th>Folio Ori.</th><th>Folio Des.</th><th>Locacion Ori.</th><th>Locacion Des.</th><th>Orden Ori.</th><th>Orden Des.</th><th>Usuario</th>' + 
+								  N'</tr>' + 
+								N'</thead>' + 
+								N'<tbody>' + 
+								  N'<tr>' + 
+								  N'<td>'+ @PP_TIPO_TRANSFERENCIA +'</td><td>'+ @PP_CB_COLOR +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN) +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_DESTINO) +'</td><td>'+ @PP_LOCACION_ORIGEN+'</td><td>'+ @PP_LOCACION_DESTINO +'</td><td>'+ @PP_ORDEN_ORIGEN +'</td><td>'+ @PP_ORDEN_DESTINO +'</td><td>'+ CONVERT(VARCHAR(10),@PP_K_USUARIO_ACCION) +'</td>' + 
+								  N'</tr>' + 
+								N'</tbody>' + 
+							N'</table>' ;
+				SET ROWCOUNT 0
+				 				
+			EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+		END
+	ELSE IF ( @PP_TIPO_TRANSFERENCIA <> 'DEVOLUCION' AND @PP_LOCACION_DESTINO NOT LIKE 'T%' AND @PP_ORDEN_DESTINO <> 0 )
+		BEGIN
+			
+			SET @VP_SUBJECT = 'Error: Transferencia a Mesa con Locacion diferente...'
+			
 				
-				SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
-									N'<thead>' + 
-									  N'<tr BGCOLOR="#ADD8E6">' + 
-									    N'<th colspan="10">ERROR: Devolucion de Mesa sin orden... </th>' + 
-									  N'</tr>' + 
-									  N'<tr BGCOLOR="#48D1CC">' + 
-									    N'<th>Movimiento</th><th>Color</th><th>Folio Ori.</th><th>Folio Des.</th><th>Locacion Ori.</th><th>Locacion Des.</th><th>Orden Ori.</th><th>Orden Des.</th><th>Usuario</th>' + 
-									  N'</tr>' + 
-									N'</thead>' + 
-									N'<tbody>' + 
-									  N'<tr>' + 
-									  N'<td>'+ @PP_TIPO_TRANSFERENCIA +'</td><td>'+ @PP_CB_COLOR +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN) +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_DESTINO) +'</td><td>'+ @PP_LOCACION_ORIGEN+'</td><td>'+ @PP_LOCACION_DESTINO +'</td><td>'+ @PP_ORDEN_ORIGEN +'</td><td>'+ @PP_ORDEN_DESTINO +'</td><td>'+ CONVERT(VARCHAR(10),@PP_K_USUARIO_ACCION) +'</td>' + 
-									  N'</tr>' + 
-									N'</tbody>' + 
-								N'</table>' ;
-					SET ROWCOUNT 0
-					 				
-				EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-															@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+			SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
+								N'<thead>' + 
+								  N'<tr BGCOLOR="#ADD8E6">' + 
+								    N'<th colspan="10">ERROR: Devolucion de Mesa sin orden... </th>' + 
+								  N'</tr>' + 
+								  N'<tr BGCOLOR="#48D1CC">' + 
+								    N'<th>Movimiento</th><th>Color</th><th>Folio Ori.</th><th>Folio Des.</th><th>Locacion Ori.</th><th>Locacion Des.</th><th>Orden Ori.</th><th>Orden Des.</th><th>Usuario</th>' + 
+								  N'</tr>' + 
+								N'</thead>' + 
+								N'<tbody>' + 
+								  N'<tr>' + 
+								  N'<td>'+ @PP_TIPO_TRANSFERENCIA +'</td><td>'+ @PP_CB_COLOR +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN) +'</td><td>'+ CONVERT(VARCHAR(10),@PP_TAGNO_DESTINO) +'</td><td>'+ @PP_LOCACION_ORIGEN+'</td><td>'+ @PP_LOCACION_DESTINO +'</td><td>'+ @PP_ORDEN_ORIGEN +'</td><td>'+ @PP_ORDEN_DESTINO +'</td><td>'+ CONVERT(VARCHAR(10),@PP_K_USUARIO_ACCION) +'</td>' + 
+								  N'</tr>' + 
+								N'</tbody>' + 
+							N'</table>' ;
+				SET ROWCOUNT 0
+				 				
+			EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
 		END
 	
 	IF @VP_MENSAJE=''

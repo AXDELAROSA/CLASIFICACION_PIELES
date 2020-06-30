@@ -249,7 +249,7 @@ GO
 
 
 
--- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  3777539
+-- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  3789826
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]
 GO
@@ -273,10 +273,27 @@ AS
 			ISNULL(HIDE, '')		AS PIEL,
 			ISNULL(SQF, '')			AS SQF,
 			ISNULL(TYPE, '')		AS TIPO,
-			ISNULL(MOVEMENT, '')	AS MOVIMIENTO	
+			--ISNULL(MOVEMENT, '')	AS MOVIMIENTO	
+			(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
+																-- ===================== 
+														FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+																-- =====================
+														WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
+														AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
+														AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
+														AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
+														AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
+														AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
+														AND		IMINVTRX_SQL.ord_no	= MOVEMENT
+														-- =====================
+														AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
+																OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
+														)
+				ELSE	LTRIM(RTRIM(MOVEMENT)) END ) AS MOVEMENT
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 
+	AND LTRIM(RTRIM(COLOUR)) IN ('FMCKSTT','FMCKTX7','FMCKVT9')
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
