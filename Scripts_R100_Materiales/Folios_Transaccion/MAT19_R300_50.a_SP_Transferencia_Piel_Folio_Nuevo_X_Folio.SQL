@@ -53,11 +53,9 @@ AS
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
 	IF @VP_MENSAJE=''
-		--EXECUTE [dbo].[PG_RN_TRANSFER_PIEL_DEVOLUCION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-		--													@PP_TAGNO_ORIGEN, @PP_TAGNO_DESTINO,
-		--													@VP_COLOR_ORIGEN, @VP_COLOR_DESTINO,
-		--													@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-		
+		IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+			SET @VP_MENSAJE = 'No se puede crear folio nuevo con pieles asignadas a una mesa.'
+	
 	-- /////////////////////////////////////////////////////////////////////
 	
 	IF @VP_MENSAJE=''

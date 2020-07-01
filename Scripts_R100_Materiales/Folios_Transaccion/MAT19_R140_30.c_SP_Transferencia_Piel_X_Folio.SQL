@@ -714,7 +714,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 GO
@@ -731,7 +731,8 @@ AS
 	-- ///////////////////////////////////////////
 	SELECT	TOP 1 
 		CCJOBHDR_SQL.*,
-		IMLOCFIL_SQL.*
+		IMLOCFIL_SQL.*,
+		CONCAT('F',LTRIM(RTRIM(CCJOBHDR_SQL.colour))) AS COLOR_COMPUESTO
 	-- =====================
 	FROM	CCJOBHDR_SQL
 	INNER	JOIN IMLOCFIL_SQL ON CCJOBHDR_SQL.machine = IMLOCFIL_SQL.loc_desc

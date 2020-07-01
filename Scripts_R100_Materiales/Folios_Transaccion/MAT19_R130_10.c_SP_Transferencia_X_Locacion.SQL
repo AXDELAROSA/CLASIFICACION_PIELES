@@ -169,7 +169,7 @@ AS
 	
 	DECLARE @VP_TAG_NO_NUEVO		INT = 0
 	EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-														'DATA_02', 'RP_SC', 'TAGNO',
+														'DATA_02', 'RP_Folios', 'TAG',
 														@OU_K_TABLA_DISPONIBLE = @VP_TAG_NO_NUEVO	OUTPUT
 	-- =====================
 

@@ -5,13 +5,14 @@ PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE ORDEN_ORIGEN = 12851 or ORDEN_DESTIDO = 12851
+WHERE --ORDEN_ORIGEN = 12851 or ORDEN_DESTIDO = 12851
 --FOLIO_ORIGEN = 3789959
-ORDER BY F_ALTA desc
+PIEL = 2190 
+ORDER BY F_ALTA asc
 
-SELECT * FROM	RP_FOLIOS WHERE TAG IN (3789959)
+SELECT * FROM  RP_SC WHERE TAGNO IN (3790160)
+SELECT * FROM	RP_FOLIOS WHERE TAG IN (3790160)
 
-SELECT * FROM  RP_SC --WHERE TAGNO IN (3789959)
 WHERE HIDE  IN (0764)
 AND LOT = '105081'
 AND COLOUR = 'FCPRDX9'
@@ -48,8 +49,8 @@ SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4628184     '
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where doc_type = 'T' and item_no = 'FMCKTX7        '    and loc = 'T18' and trx_dt>='20200625'
-and doc_ord_no = '12803'
+where doc_type = 'T' and item_no = 'FMCKTX7        '    and loc = 'T16' and trx_dt>='20200629'
+--and doc_ord_no = '00000'
 --and ord_no in ( '4642651','4642598')
 order by trx_dt desc
 --order by ord_no asc
