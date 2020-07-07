@@ -308,7 +308,7 @@ GO
 
 
 -- EXECUTE [dbo].[PG_IN_IMLSTRX_SQL] 0,0, 'TEST', 'TEST', 10, 'TEST', 0, 1
-
+-- USE DATA_02Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_IMLSTRX_SQL]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_IMLSTRX_SQL]
 GO
@@ -338,6 +338,9 @@ AS
 	
 	IF @VP_MENSAJE=''
 		BEGIN
+			-- AGREGADO POR LO DE LOS KITS
+			IF LEN(@PP_LOTE) < 7
+				SET @PP_LOTE = CONCAT('         ',@PP_LOTE)
 
 			DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
 			DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
@@ -348,7 +351,7 @@ AS
                                       EXP_DAYS, ITEM_NO, MFG_SER_LOT_NO, BIN_NO,
                                       TRX_COST, SER_LOT_QTY_SELECT, MFG_BATCH_NO, ITEM_FILLER)
                              VALUES ( 'I', @PP_TRANSACCION_NO, '0', '0', 
-                                      @PP_NIVEL_NO, '0', (CONCAT('         ',@PP_LOTE)), @VP_F_TRANSACCION,
+                                      @PP_NIVEL_NO, '0', @PP_LOTE, @VP_F_TRANSACCION,
                                       @VP_TIME, @PP_SQF, @VP_F_TRANSACCION, @VP_F_TRANSACCION, 
                                       '30', @PP_COLOR, '   ', @PP_INDICE, 
                                       '0.000000', '0.000000', '0', '' )
@@ -546,7 +549,7 @@ GO
 
 
 -- EXECUTE [dbo].[PG_IN_IMINVTRX_SQL] 0,0, 'TEST', 'TEST', 'TEST', 'TST', 10, 'TEST', 'TEST', 'TEST', 0
-
+-- USE [DATA_02Pruebas] 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_IMINVTRX_SQL]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_IMINVTRX_SQL]
 GO
@@ -563,7 +566,10 @@ CREATE PROCEDURE [dbo].[PG_IN_IMINVTRX_SQL]
 	@PP_ORDEN_NO				VARCHAR(10),
 	@PP_USERNAME				VARCHAR(15),
 	@PP_COMENTARIO				VARCHAR(255),
-	@PP_NIVEL_NO				INT
+	@PP_NIVEL_NO				INT,
+	@PP_DOC_TYPE				VARCHAR(10), -- 'T' VALOR PARA TRANSACCION POR FOLIO
+	@PP_DOC_SOURCE				VARCHAR(10), --	'M' VALOR PARA TRANSACCION POR FOLIO
+	@PP_OLD_QUANTITY			DECIMAL(13,4) -- @PP_SQF VALOR PARA TRANSACCION POR FOLIO
 AS			
 
 	DECLARE @VP_MENSAJE				VARCHAR(300) = ''
@@ -599,9 +605,9 @@ AS
 
 							VALUES	  ( 'I', @PP_TRANSACCION_NO, @PP_COLOR, @PP_LOCACION, @VP_F_TRANSACCION,
 
-										@VP_TIME, @VP_F_TRANSACCION, 'T', 'M', @PP_SQF, 
+										@VP_TIME, @VP_F_TRANSACCION, @PP_DOC_TYPE, @PP_DOC_SOURCE, @PP_SQF, 
 
-										@PP_ORDEN_NO, @PP_SQF, @PP_USERNAME, @PP_ID_NO, @VP_F_TRANSACCION,
+										@PP_ORDEN_NO, @PP_OLD_QUANTITY, @PP_USERNAME, @PP_ID_NO, @VP_F_TRANSACCION,
 
 										@PP_NIVEL_NO, 0, 0, 0, 0, 0,
 										

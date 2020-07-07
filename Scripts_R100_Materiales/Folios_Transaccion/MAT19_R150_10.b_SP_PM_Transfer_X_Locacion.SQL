@@ -114,7 +114,8 @@ AS
 	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
 											@PP_TB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
-											@PP_USER, @PP_COMENTARIO, 0
+											@PP_USER, @PP_COMENTARIO, 0,
+											'T', 'M', @PP_TB_SQF
 	
 	-- ////////////////////////////////////////////////////////////////////
 
@@ -134,7 +135,8 @@ AS
 	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
 											@PP_CB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
-											@PP_USER, @PP_COMENTARIO, 1
+											@PP_USER, @PP_COMENTARIO, 1,
+											'T', 'M', @PP_TB_SQF
 	-- ////////////////////////////////////////////////////////////////////
 
 
