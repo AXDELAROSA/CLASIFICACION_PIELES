@@ -64,6 +64,7 @@ AS
 	-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
+	DECLARE @VP_F_ACTUAL	AS DATE = GETDATE()
 	DECLARE @VP_TIPO_PIEL_LOG INT = 5
 
 	IF @PP_TIPO_TRANSFERENCIA = 'DEVOLUCION'
@@ -264,7 +265,6 @@ AS
 																	@PP_TAGNO_DESTINO, @PP_LOCACION_DESTINO, @PP_ORDEN_DESTINO
 
 								-- /////////////////////////INGRESO EL FOLIO NUEVO////////////////////////////////////////////
-								DECLARE @VP_F_ACTUAL	AS DATE = GETDATE()
 								EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@VP_F_ACTUAL, @PP_CB_COLOR, @VP_LOTE_TBL, 
 																@VP_PIEL_TBL, @VP_SQF_TBL, @PP_TAGNO_DESTINO, 
@@ -510,8 +510,6 @@ AS
 					
 									
 					-- /////////////////////////////////////////////////////////////////////
-					DECLARE @VP_ORDEN_DESTINO	VARCHAR(10)
-
 					EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
 														@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN,  @TBL_TOTAL_SQF_X_LOTE,						 	
