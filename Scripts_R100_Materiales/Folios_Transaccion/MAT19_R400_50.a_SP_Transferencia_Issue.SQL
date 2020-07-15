@@ -42,7 +42,8 @@ AS
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
-	
+	IF LTRIM(RTRIM(@PP_COMENTARIO)) = '' OR @PP_COMENTARIO IS NULL
+		SET  @VP_MENSAJE = 'Es necesario agregar un comentario para poder realizar la accion.'
 		
 	-- /////////////////////////////////////////////////////////////////////
 	
@@ -94,10 +95,8 @@ AS
 				DEALLOCATE CU_PIELES_A_BORRAR
 				-- ////////////////////////////////////////////////////////////////////	
 
-				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX) -- = 'franciscoe@pearlleather.com.mx;rafaelf@pearlleather.com.mx'
+				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = ''	-- 'franciscoe@pearlleather.com.mx'
 				SET @VP_RECIPIENTS = 'manuelg@pearlleather.com.mx;omard@pearlleather.com.mx;adelaree@pearlleather.com.mx;guillermom@pearlleather.com.mx;jorgeh@pearlleather.com.mx;miguelc@pearlleather.com.mx;pedrov@pearlleather.com.mx'
-			    
-
 
 				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out MQU'
 				DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
@@ -106,10 +105,10 @@ AS
 				SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
 									N'<thead>' + 
 									  N'<tr BGCOLOR="#ADD8E6">' + 
-									    N'<th colspan="7">Se han eliminado las siguientes pieles</th>' + 
+									    N'<th colspan="8">Se han eliminado las siguientes pieles</th>' + 
 									  N'</tr>' + 
 									  N'<tr BGCOLOR="#48D1CC">' + 
-									    N'<th>Folio</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Usuario</th><th>Fecha</th>' + 
+									    N'<th>Folio</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Comentario</th><th>Usuario</th><th>Fecha</th>' + 
 									  N'</tr>' + 
 									N'</thead>' + 
 									N'<tbody>' + 
@@ -118,13 +117,14 @@ AS
 								                td = RTRIM(LTRIM(COLOUR)), '',  
 								                td = RTRIM(LTRIM(LOT)), '',  
 								                td = RTRIM(LTRIM(HIDE)), '',  
-								                td = RTRIM(LTRIM(SQF)), '',  
+								                td = RTRIM(LTRIM(SQF)), '', 
+												td = @PP_COMENTARIO, '',  
 												td = @PP_USER, '',  
 								                td = CONVERT(DATE,GETDATE())  
 								         FROM RP_SC
 										 WHERE RTRIM(LTRIM(TAGNO)) = @PP_FOLIO_ORIGEN
 								          FOR XML PATH('tr'), TYPE   
-								) AS NVARCHAR(MAX) ) +  
+										) AS NVARCHAR(MAX) ) +  
 								  N'</tr>' + 
 									N'</tbody>' + 
 								N'</table>' ; 
@@ -163,7 +163,7 @@ AS
 	IF @VP_MENSAJE<>''
 		BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible Eliminar el [FOLIO]: '+CONVERT(VARCHAR(10),@PP_FOLIO_ORIGEN)+']' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = 'No es posible Eliminar el [FOLIO]: '+CONVERT(VARCHAR(10),@PP_FOLIO_ORIGEN)+'] ' + @VP_MENSAJE 
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
 		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
@@ -174,7 +174,7 @@ AS
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE COT19_Cotizaciones_V9999_R0.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													-- ===========================================
 													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
 													'PROCESO',
