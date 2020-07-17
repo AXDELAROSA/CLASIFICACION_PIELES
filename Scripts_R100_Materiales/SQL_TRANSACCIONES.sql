@@ -53,16 +53,41 @@ SELECT * FROM ccjobhdr_sql WHERE folio = '3791158'
 SELECT * FROM ccjobhdr_sql WHERE jobno = '12867'
 SELECT * FROM ccjobhdr_sql WHERE jobno = '12851'
 
-SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4628184     ','4628077 ','4625312 ' )
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4628184     ','4628077 ' ,'4625312 ')
+SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '04718701',
+'04716177',
+'04713298',
+'04713839',
+'04711148',
+'04711149',
+'04711307')
+
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4718701',
+'4716177',
+'4713298',
+'4713839',
+'4711148',
+'4711149',
+'4711307')
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where doc_type = 'T' and item_no = 'FMCKTX7        '    and loc = 'T16' and trx_dt>='20200629'
---and doc_ord_no = '00000'
+where  item_no = 'FCPRDX9        '    and loc = 'T10' and trx_dt>='20200129'
+and doc_ord_no = '13222'
 --and ord_no in ( '4642651','4642598')
 order by trx_dt desc
 --order by ord_no asc
+
+/*
+original entraron 1530.3 y se le restaron 65.4 orden 13222
+
+UPDATE IMLSTRX_SQL
+	SET trx_qty= trx_qty - 65.40
+WHERE ord_no = '04711148' 
+AND LEV_NO = 1
+and ser_lot_no = '         105131'
+
+*/
+
 
 /*
 UPDATE IMINVTRX_SQL
