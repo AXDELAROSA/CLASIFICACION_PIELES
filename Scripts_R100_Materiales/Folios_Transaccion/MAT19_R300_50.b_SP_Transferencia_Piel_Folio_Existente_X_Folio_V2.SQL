@@ -342,7 +342,6 @@ AS
 									BEGIN
 										IF  @PP_LOTE_PIEL_EXISTE_ADD = 1
 											BEGIN
-
 												SET @VP_TOTAL_SQF = CAST(@VP_SQF AS DECIMAL(13,2)) + @PP_TB_SQF
 												
 												-- /////////////////////////SUMA AL FOLIO DESTINO LOS SQF////////////////////////////////
@@ -461,7 +460,7 @@ AS
 														@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
 														@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN,  @TBL_TOTAL_SQF_X_LOTE,						 	
 														@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
-						-- ////////////////////////////////////////////////////////////////////
+					-- ////////////////////////////////////////////////////////////////////
 
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@PP_TAGNO_DESTINO, 0, @PP_LOCACION_DESTINO, 0

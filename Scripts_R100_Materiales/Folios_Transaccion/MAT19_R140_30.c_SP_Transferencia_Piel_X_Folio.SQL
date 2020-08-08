@@ -195,7 +195,7 @@ GO
 
 
 -- EXECUTE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR] 0,0, 'TST', 'TST', 'TEST', 'TEST', 10, 0 
-
+-- USE DATA_02Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]
 GO
@@ -257,6 +257,10 @@ AS
 				END
 			ELSE
 				BEGIN
+					-- AGREGADO POR LO DE LOS KITS
+					IF LEN(@PP_LOTE) < 7
+						SET @PP_LOTE = CONCAT('         ',@PP_LOTE)
+
 					DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
 					DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
 			
@@ -268,7 +272,7 @@ AS
                                                mfg_batch_no, dt_lst_cntd, times_cntd_ytd, pct_err_lst_cnt, 
                                                frz_cst, frz_qty, frz_dt, frz_tm, tag_qty, filler_0004 )
 									VALUES	( @PP_COLOR, '   ', @PP_LOCACION_DESTINO,'   ',
-                                              (CONCAT('         ',@PP_LOTE)), @VP_F_TRANSACCION, @VP_TIME, '   ',
+                                              @PP_LOTE, @VP_F_TRANSACCION, @VP_TIME, '   ',
                                               'IM', 'A', @VP_F_TRANSACCION, @VP_F_TRANSACCION, @VP_F_TRANSACCION,
                                                @PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO, '0.000000', '0.000000',
                                                @PP_SQF, @PP_SQF, '0.000000', '00000000', 
@@ -725,7 +729,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_
 	DROP PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 GO
 
--- EXEC [PG_SK_CCJOBHDR_SQL_X_ORDEN] 0,144, '09489'
+-- EXEC [PG_SK_CCJOBHDR_SQL_X_ORDEN] 0,144, '11615'
 
 CREATE PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 	@PP_K_SISTEMA_EXE			INT,
@@ -734,11 +738,17 @@ CREATE PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 	@PP_ORDEN_NO				VARCHAR(10)
 AS
 
+	-- ////////////////SE OBTIENE LA FECHA ACTUAL ENTERA/////////////////////////////////////////////////////
+	DECLARE @VP_F_ACTUAL INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
+
 	-- ///////////////////////////////////////////
 	SELECT	TOP 1 
 		CCJOBHDR_SQL.*,
 		IMLOCFIL_SQL.*,
-		CONCAT('F',LTRIM(RTRIM(CCJOBHDR_SQL.colour))) AS COLOR_COMPUESTO
+		CONCAT('F',LTRIM(RTRIM(CCJOBHDR_SQL.colour))) AS COLOR_COMPUESTO,
+	-- =====================
+		( CASE WHEN ISNULL(CCJOBHDR_SQL.datecompleted, 0) = 0	 THEN @VP_F_ACTUAL
+			ELSE datecompleted	END) FECHA_COMPLETADA
 	-- =====================
 	FROM	CCJOBHDR_SQL
 	INNER	JOIN IMLOCFIL_SQL ON CCJOBHDR_SQL.machine = IMLOCFIL_SQL.loc_desc
