@@ -307,86 +307,6 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> INSERT / 
--- //////////////////////////////////////////////////////////////
-
-
--- EXECUTE [dbo].[PG_IN_IMLSTRX_SQL] 0,0, 'TEST', 'TEST', 10, 'TEST', 0, 1
--- USE DATA_02Pruebas
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_IMLSTRX_SQL]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_IN_IMLSTRX_SQL]
-GO
-
-CREATE PROCEDURE [dbo].[PG_IN_IMLSTRX_SQL]
-	@PP_K_SISTEMA_EXE			INT,
-	@PP_K_USUARIO_ACCION		INT,
-	-- ========================================			
-	@PP_COLOR					VARCHAR(20),
-	@PP_LOTE					VARCHAR(20),
-	@PP_SQF						DECIMAL(13,4),
-	@PP_TRANSACCION_NO			INT,
-	@PP_INDICE					VARCHAR(10),
-	@PP_NIVEL_NO				INT
-AS			
-
-	DECLARE @VP_MENSAJE				VARCHAR(300) = ''
-		
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE=''
-	--	EXECUTE [dbo].[PG_RN_IMLSMST_SQL_UPDATE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												@PP_LOCACION, @PP_COLOR, @PP_LOTE, @PP_SQF,
-	--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-
-	-- /////////////////////////////////////////////////////////////////////
-	
-	IF @VP_MENSAJE=''
-		BEGIN
-			-- AGREGADO POR LO DE LOS KITS
-			IF LEN(@PP_LOTE) < 7
-				SET @PP_LOTE = CONCAT('         ',@PP_LOTE)
-
-			DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
-			DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
-			
-			INSERT INTO IMLSTRX_SQL ( SOURCE, ORD_NO, CTL_NO, LINE_NO,
-                                      LEV_NO, SEQ_NO, SER_LOT_NO, TRX_DT,
-                                      TRX_TM, TRX_QTY, EFF_DT, EXP_DT,
-                                      EXP_DAYS, ITEM_NO, MFG_SER_LOT_NO, BIN_NO,
-                                      TRX_COST, SER_LOT_QTY_SELECT, MFG_BATCH_NO, ITEM_FILLER)
-                             VALUES ( 'I', @PP_TRANSACCION_NO, '0', '0', 
-                                      @PP_NIVEL_NO, '0', @PP_LOTE, @VP_F_TRANSACCION,
-                                      @VP_TIME, @PP_SQF, @VP_F_TRANSACCION, @VP_F_TRANSACCION, 
-                                      '30', @PP_COLOR, '   ', @PP_INDICE, 
-                                      '0.000000', '0.000000', '0', '' )
-
-			IF @@ROWCOUNT = 0
-				SET @VP_MENSAJE = 'ERROR: // INSERT IMLSTRX_SQL // '
-				
-		END
-	-- ///////////////////////////////////////////////////////////////
-	-- //////////////////////////////////////////////////////////////
-
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'INSERT',
-													'',
-													-- ===========================================
-													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_TRANSACCION_NO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
-
-	-- //////////////////////////////////////////////////////////////
-GO
-
-
-
-
--- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> UPDATE / 
 -- //////////////////////////////////////////////////////////////
 
@@ -552,6 +472,86 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 
+-- EXECUTE [dbo].[PG_IN_IMLSTRX_SQL] 0,0, 'TEST', 'TEST', 10, 'TEST', 0, 1
+-- USE DATA_02Pruebas
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_IMLSTRX_SQL]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_IN_IMLSTRX_SQL]
+GO
+
+CREATE PROCEDURE [dbo].[PG_IN_IMLSTRX_SQL]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ========================================			
+	@PP_COLOR					VARCHAR(20),
+	@PP_LOTE					VARCHAR(20),
+	@PP_SQF						DECIMAL(13,4),
+	@PP_TRANSACCION_NO			INT,
+	@PP_INDICE					VARCHAR(10),
+	@PP_NIVEL_NO				INT
+AS			
+
+	DECLARE @VP_MENSAJE				VARCHAR(300) = ''
+		
+	-- /////////////////////////////////////////////////////////////////////
+	
+	--IF @VP_MENSAJE=''
+	--	EXECUTE [dbo].[PG_RN_IMLSMST_SQL_UPDATE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												@PP_LOCACION, @PP_COLOR, @PP_LOTE, @PP_SQF,
+	--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+
+	-- /////////////////////////////////////////////////////////////////////
+	
+	IF @VP_MENSAJE=''
+		BEGIN
+			-- AGREGADO POR LO DE LOS KITS
+			IF LEN(@PP_LOTE) < 7
+				SET @PP_LOTE = CONCAT('         ',@PP_LOTE)
+
+			DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
+			DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
+			
+			INSERT INTO IMLSTRX_SQL ( SOURCE, ORD_NO, CTL_NO, LINE_NO,
+                                      LEV_NO, SEQ_NO, SER_LOT_NO, TRX_DT,
+                                      TRX_TM, TRX_QTY, EFF_DT, EXP_DT,
+                                      EXP_DAYS, ITEM_NO, MFG_SER_LOT_NO, BIN_NO,
+                                      TRX_COST, SER_LOT_QTY_SELECT, MFG_BATCH_NO, ITEM_FILLER)
+                             VALUES ( 'I', @PP_TRANSACCION_NO, '0', '0', 
+                                      @PP_NIVEL_NO, @PP_INDICE, @PP_LOTE, @VP_F_TRANSACCION,
+                                      @VP_TIME, @PP_SQF, @VP_F_TRANSACCION, @VP_F_TRANSACCION, 
+                                      '30', @PP_COLOR, '   ', @PP_INDICE, 
+                                      '0.000000', '0.000000', '0', '' )
+
+			IF @@ROWCOUNT = 0
+				SET @VP_MENSAJE = 'ERROR: // INSERT IMLSTRX_SQL // '
+				
+		END
+	-- ///////////////////////////////////////////////////////////////
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'INSERT',
+													'',
+													-- ===========================================
+													'[IN]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_TRANSACCION_NO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- //////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> INSERT / 
+-- //////////////////////////////////////////////////////////////
+
+
 -- EXECUTE [dbo].[PG_IN_IMINVTRX_SQL] 0,0, 'TEST', 'TEST', 'TEST', 'TST', 10, 'TEST', 'TEST', 'TEST', 0
 -- USE [DATA_02Pruebas] 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_IMINVTRX_SQL]') AND type in (N'P', N'PC'))
@@ -571,6 +571,7 @@ CREATE PROCEDURE [dbo].[PG_IN_IMINVTRX_SQL]
 	@PP_USERNAME				VARCHAR(15),
 	@PP_COMENTARIO				VARCHAR(255),
 	@PP_NIVEL_NO				INT,
+	@PP_SEQ_NO					INT,
 	@PP_DOC_TYPE				VARCHAR(10), -- 'T' VALOR PARA TRANSACCION POR FOLIO
 	@PP_DOC_SOURCE				VARCHAR(10), --	'M' VALOR PARA TRANSACCION POR FOLIO
 	@PP_OLD_QUANTITY			DECIMAL(13,4) -- @PP_SQF VALOR PARA TRANSACCION POR FOLIO
@@ -613,7 +614,7 @@ AS
 
 										@PP_ORDEN_NO, @PP_OLD_QUANTITY, @PP_USERNAME, @PP_ID_NO, @VP_F_TRANSACCION,
 
-										@PP_NIVEL_NO, 0, 0, 0, 0, 0,
+										@PP_NIVEL_NO, @PP_SEQ_NO, 0, 0, 0, 0,
 										
 										0, 0, 0, 0, 0, 
 										
