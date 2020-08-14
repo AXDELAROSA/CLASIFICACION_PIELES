@@ -725,7 +725,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE DATA_02Pruebas
+-- USE DATA_02
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_CCJOBHDR_SQL_X_ORDEN]
 GO

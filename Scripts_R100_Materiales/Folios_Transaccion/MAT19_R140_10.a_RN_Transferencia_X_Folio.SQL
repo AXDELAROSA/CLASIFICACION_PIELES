@@ -15,6 +15,93 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_LOCACION_ORDEN_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDA_LOCACION_ORDEN_X_FOLIO]
+GO
+/*
+ USE [DATA_02Pruebas] 
+	EXEC [PG_RN_VALIDA_PIEL_SCRAP] 0,0, 'FMCKTX7' , '33012' , '0487' , '11551' 
+*/
+
+CREATE PROCEDURE [dbo].[PG_RN_VALIDA_LOCACION_ORDEN_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================		
+	@PP_COLOR					VARCHAR(50),
+	@PP_FOLIO					INT,
+	@PP_LOCACION				VARCHAR(5),
+	@PP_ORDEN					VARCHAR(10),
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+	-- ===========================		
+AS
+
+	DECLARE @VP_RESULTADO			VARCHAR(300) = '' 
+	DECLARE @VP_LOCACION_ORIGINAL	VARCHAR(5)
+	DECLARE @VP_ORDEN_ORIGINAL		VARCHAR(10)
+
+	-- /////////////////////////////////////////////////////
+	SELECT	@VP_LOCACION_ORIGINAL = (CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
+															-- ===================== 
+													FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+															-- =====================
+													WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
+													AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
+													AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
+													AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
+													AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
+													AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
+													AND		IMINVTRX_SQL.ord_no	= MOVEMENT
+													-- =====================
+													AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
+															OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
+													)
+										ELSE	LTRIM(RTRIM(MOVEMENT)) END )
+	-- =====================
+	FROM	RP_SC
+	WHERE	TAGNO=@PP_FOLIO 
+	AND LTRIM(RTRIM(COLOUR)) = @PP_COLOR
+	-- /////////////////////////////////////////////////////
+
+	IF @VP_RESULTADO = ''
+		IF @VP_LOCACION_ORIGINAL IS NULL OR @VP_LOCACION_ORIGINAL = ''
+			SET @VP_RESULTADO = 'No fue posible obtener locacion del folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + '.'
+	-- /////////////////////////////////////////////////////
+
+	IF @VP_RESULTADO = ''
+		IF @VP_LOCACION_ORIGINAL <> @PP_LOCACION
+			SET @VP_RESULTADO = 'La locacion: ' + @PP_LOCACION + ' no corresponde al folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + '.'
+	-- /////////////////////////////////////////////////////
+	
+	IF @VP_RESULTADO = ''
+		IF SUBSTRING(@VP_LOCACION_ORIGINAL, 1, 1) <> 'T' AND LEN(@PP_ORDEN) = 5
+			SET @VP_RESULTADO = 'El folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + ' no deberia tener orden asignada'	
+	-- /////////////////////////////////////////////////////
+
+	IF @VP_RESULTADO = ''
+		IF SUBSTRING (@VP_LOCACION_ORIGINAL, 1, 1) = 'T' AND LEN(@PP_ORDEN) <> 5
+			SET @VP_RESULTADO = 'La orden: ' + @PP_ORDEN + ' no corresponde al folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + '.'
+	-- /////////////////////////////////////////////////////
+
+	SELECT	@VP_ORDEN_ORIGINAL = ISNULL(LTRIM(RTRIM(JOBNO)), '')
+	FROM	RP_Folios 
+	WHERE	TAG = @PP_FOLIO
+
+	IF @VP_RESULTADO = ''
+		IF SUBSTRING (@VP_LOCACION_ORIGINAL, 1, 1) = 'T' AND @VP_ORDEN_ORIGINAL <> @PP_ORDEN
+			SET @VP_RESULTADO = 'La orden: ' + @PP_ORDEN + ' no corresponde al folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + '.'
+	-- /////////////////////////////////////////////////////
+	
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
+
+
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> 
