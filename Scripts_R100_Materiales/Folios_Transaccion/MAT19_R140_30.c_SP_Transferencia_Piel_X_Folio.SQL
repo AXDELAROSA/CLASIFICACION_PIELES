@@ -190,123 +190,6 @@ GO
 
 
 -- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> UPDATE-INSERT / 
--- //////////////////////////////////////////////////////////////
-
-
--- EXECUTE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR] 0,0, 'TST', 'TST', 'TEST', 'TEST', 10, 0 
--- USE DATA_02Pruebas
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]
-GO
-
-CREATE PROCEDURE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]
-	@PP_K_SISTEMA_EXE			INT,
-	@PP_K_USUARIO_ACCION		INT,
-	-- ========================================
-	@PP_LOCACION_ORIGEN			VARCHAR(10),		
-	@PP_LOCACION_DESTINO		VARCHAR(10),			
-	@PP_COLOR					VARCHAR(20),
-	@PP_LOTE					VARCHAR(20),
-	@PP_SQF						DECIMAL(13,4),
-	@PP_TRANSACCION_NO			INT
-AS			
-
-	DECLARE @VP_MENSAJE				VARCHAR(300) = ''
-		
-	-- /////////////////////////////////////////////////////////////////////
-	
-	--IF @VP_MENSAJE=''
-	--	EXECUTE [dbo].[PG_RN_IMLSMST_SQL_UPDATE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--												@PP_LOCACION, @PP_COLOR, @PP_LOTE, @PP_SQF,
-	--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-
-	-- /////////////////////////////////////////////////////////////////////
-	
-	IF @VP_MENSAJE=''
-		BEGIN
-			--IF EXISTS( SELECT ITEM_NO FROM IMLSMST_SQL WHERE LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO AND LTRIM(RTRIM(ITEM_NO))=@PP_COLOR AND LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE )
-			--	BEGIN
-			DECLARE @VP_COLOR VARCHAR(20)
-
-			SELECT @VP_COLOR =LTRIM(RTRIM(ITEM_NO)) 
-			FROM IMLSMST_SQL 
-			WHERE LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO 
-			AND LTRIM(RTRIM(ITEM_NO))=@PP_COLOR 
-			AND LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
-			
-			IF @VP_COLOR IS NULL
-				SET @VP_COLOR = ''
-
-			IF @VP_COLOR <> ''
-				BEGIN
-					UPDATE	IMLSMST_SQL
-					SET		
-							QTY_ON_HAND =  QTY_ON_HAND + @PP_SQF
-					-- ==================
-					WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO
-					AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
-					AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
-
-					IF @@ROWCOUNT = 0
-						BEGIN
-							RAISERROR ('ERROR SP: PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR', 16, 1 ) --MENSAJE - Severity -State.
-							--SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
-						END
-
-				END
-			ELSE
-				BEGIN
-					-- AGREGADO POR LO DE LOS KITS
-					IF LEN(@PP_LOTE) < 7
-						SET @PP_LOTE = CONCAT('         ',@PP_LOTE)
-
-					DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
-					DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
-			
-					INSERT	INTO IMLSMST_SQL ( item_no, item_filler, loc, bin_no, 
-                                               ser_lot_no, issue_priority, issue_pri_tm, mfg_ser_lot_no,
-                                               pkg_id, status, ser_lot_dt, eff_dt,exp_dt, xfer_frm_loc, 
-                                               xfer_to_loc, ser_lot_cost, orig_cost, orig_qty, 
-                                               qty_on_hand, qty_allocated, issue_ord_no, orig_ord_no, 
-                                               mfg_batch_no, dt_lst_cntd, times_cntd_ytd, pct_err_lst_cnt, 
-                                               frz_cst, frz_qty, frz_dt, frz_tm, tag_qty, filler_0004 )
-									VALUES	( @PP_COLOR, '   ', @PP_LOCACION_DESTINO,'   ',
-                                              @PP_LOTE, @VP_F_TRANSACCION, @VP_TIME, '   ',
-                                              'IM', 'A', @VP_F_TRANSACCION, @VP_F_TRANSACCION, @VP_F_TRANSACCION,
-                                               @PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO, '0.000000', '0.000000',
-                                               @PP_SQF, @PP_SQF, '0.000000', '00000000', 
-                                               @PP_TRANSACCION_NO, 0, 0, 0, 
-                                               '0.000000', '0.000000', '0.000000', 0, 0, '0.000000', 0 )
-
-					IF @@ROWCOUNT = 0
-						SET @VP_MENSAJE = 'ERROR: // INSERT IMLSMST_SQL // '
-				END
-		END
-	-- ///////////////////////////////////////////////////////////////
-	-- //////////////////////////////////////////////////////////////
-
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'UPDATE',
-													'',
-													-- ===========================================
-													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_LOCACION_DESTINO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
-
-	-- //////////////////////////////////////////////////////////////
-GO
-
-
-
-
-
--- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> UPDATE / 
 -- //////////////////////////////////////////////////////////////
 
@@ -443,6 +326,123 @@ AS
                 
 					IF @@ROWCOUNT = 0
 						SET @VP_MENSAJE = 'ERROR: // INSERT IMINVLOC_SQL // '
+				END
+		END
+	-- ///////////////////////////////////////////////////////////////
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'UPDATE',
+													'',
+													-- ===========================================
+													'[UP]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_LOCACION_DESTINO, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- //////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> UPDATE-INSERT / 
+-- //////////////////////////////////////////////////////////////
+
+
+-- EXECUTE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR] 0,0, 'TST', 'TST', 'TEST', 'TEST', 10, 0 
+-- USE DATA_02Pruebas
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]
+GO
+
+CREATE PROCEDURE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ========================================
+	@PP_LOCACION_ORIGEN			VARCHAR(10),		
+	@PP_LOCACION_DESTINO		VARCHAR(10),			
+	@PP_COLOR					VARCHAR(20),
+	@PP_LOTE					VARCHAR(20),
+	@PP_SQF						DECIMAL(13,4),
+	@PP_TRANSACCION_NO			INT
+AS			
+
+	DECLARE @VP_MENSAJE				VARCHAR(300) = ''
+		
+	-- /////////////////////////////////////////////////////////////////////
+	
+	--IF @VP_MENSAJE=''
+	--	EXECUTE [dbo].[PG_RN_IMLSMST_SQL_UPDATE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												@PP_LOCACION, @PP_COLOR, @PP_LOTE, @PP_SQF,
+	--												@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+
+	-- /////////////////////////////////////////////////////////////////////
+	
+	IF @VP_MENSAJE=''
+		BEGIN
+			--IF EXISTS( SELECT ITEM_NO FROM IMLSMST_SQL WHERE LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO AND LTRIM(RTRIM(ITEM_NO))=@PP_COLOR AND LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE )
+			--	BEGIN
+			DECLARE @VP_COLOR VARCHAR(20)
+
+			SELECT @VP_COLOR =LTRIM(RTRIM(ITEM_NO)) 
+			FROM IMLSMST_SQL 
+			WHERE LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO 
+			AND LTRIM(RTRIM(ITEM_NO))=@PP_COLOR 
+			AND LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
+			
+			IF @VP_COLOR IS NULL
+				SET @VP_COLOR = ''
+
+			IF @VP_COLOR <> ''
+				BEGIN
+					UPDATE	IMLSMST_SQL
+					SET		
+							QTY_ON_HAND =  QTY_ON_HAND + @PP_SQF
+					-- ==================
+					WHERE	LTRIM(RTRIM(LOC))=@PP_LOCACION_DESTINO
+					AND		LTRIM(RTRIM(ITEM_NO))=@PP_COLOR
+					AND		LTRIM(RTRIM(SER_LOT_NO))=@PP_LOTE
+
+					IF @@ROWCOUNT = 0
+						BEGIN
+							RAISERROR ('ERROR SP: PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR', 16, 1 ) --MENSAJE - Severity -State.
+							--SET @VP_MENSAJE = 'ERROR: // UPDATE IMLSMST_SQL // '
+						END
+
+				END
+			ELSE
+				BEGIN
+					-- AGREGADO POR LO DE LOS KITS
+					IF LEN(@PP_LOTE) < 7
+						SET @PP_LOTE = CONCAT('         ',@PP_LOTE)
+
+					DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
+					DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
+			
+					INSERT	INTO IMLSMST_SQL ( item_no, item_filler, loc, bin_no, 
+                                               ser_lot_no, issue_priority, issue_pri_tm, mfg_ser_lot_no,
+                                               pkg_id, status, ser_lot_dt, eff_dt,exp_dt, xfer_frm_loc, 
+                                               xfer_to_loc, ser_lot_cost, orig_cost, orig_qty, 
+                                               qty_on_hand, qty_allocated, issue_ord_no, orig_ord_no, 
+                                               mfg_batch_no, dt_lst_cntd, times_cntd_ytd, pct_err_lst_cnt, 
+                                               frz_cst, frz_qty, frz_dt, frz_tm, tag_qty, filler_0004 )
+									VALUES	( @PP_COLOR, '   ', @PP_LOCACION_DESTINO,'   ',
+                                              @PP_LOTE, @VP_F_TRANSACCION, @VP_TIME, '   ',
+                                              'IM', 'A', @VP_F_TRANSACCION, @VP_F_TRANSACCION, @VP_F_TRANSACCION,
+                                               @PP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO, '0.000000', '0.000000',
+                                               @PP_SQF, @PP_SQF, '0.000000', '00000000', 
+                                               @PP_TRANSACCION_NO, 0, 0, 0, 
+                                               '0.000000', '0.000000', '0.000000', 0, 0, '0.000000', 0 )
+
+					IF @@ROWCOUNT = 0
+						SET @VP_MENSAJE = 'ERROR: // INSERT IMLSMST_SQL // '
 				END
 		END
 	-- ///////////////////////////////////////////////////////////////
