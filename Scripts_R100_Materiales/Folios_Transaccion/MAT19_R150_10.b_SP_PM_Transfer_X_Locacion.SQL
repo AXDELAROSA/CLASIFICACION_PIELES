@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -95,6 +95,40 @@ AS
 		-- ///////////////////////////////////////////
 		EXECUTE [dbo].[PG_IN_UP_IMINVLOC_SQL_X_LOCACION_COLOR_AGREGAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																			@PP_CB_LOCACION, @VP_COLOR_TBL, @VP_SQF_TBL
+
+		-- ////////////////////////////////////////////////////////////////////
+	
+		DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
+		DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_CB_ORDEN + '00000' , 5)
+
+		EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
+												@PP_TB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
+												@PP_USER, @PP_COMENTARIO, 0, @VP_INDICE,
+												'T', 'M', @PP_TB_SQF
+		
+		-- ////////////////////////////////////////////////////////////////////
+
+		SET @PP_CB_ORDEN = '00000'
+
+		IF @PP_ORDEN_DESTINO <> '' 
+			BEGIN
+		         SET	@VP_ORDERNO = @PP_ORDEN_DESTINO
+			END
+		ELSE
+			BEGIN
+		         SET	@VP_ORDERNO = '00000'
+		    END
+
+		SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
+
+		EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
+												@PP_CB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
+												@PP_USER, @PP_COMENTARIO, 1, @VP_INDICE,
+												'T', 'M', @PP_TB_SQF
+
+	-- ////////////////////////////////////////////////////////////////////
 		-- ///////////////////////////////////////////
 		SET @VP_CONTADOR = @VP_CONTADOR + 1
 		-- ///////////////////////////////////////////
@@ -105,40 +139,6 @@ AS
 	
 	CLOSE CU_SQF_X_LOTE
 	DEALLOCATE CU_SQF_X_LOTE
-			
-	-- ////////////////////////////////////////////////////////////////////
-	
-	DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
-	DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_CB_ORDEN + '00000' , 5)
-
-	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
-											@PP_TB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
-											@PP_USER, @PP_COMENTARIO, 0, @VP_CONTADOR,
-											'T', 'M', @PP_TB_SQF
-	
-	-- ////////////////////////////////////////////////////////////////////
-
-	SET @PP_CB_ORDEN = '00000'
-
-	IF @PP_ORDEN_DESTINO <> '' 
-		BEGIN
-             SET	@VP_ORDERNO = @PP_ORDEN_DESTINO
-		END
-    ELSE
-		BEGIN
-             SET	@VP_ORDERNO = '00000'
-        END
-
-	SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
-
-	EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-											@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
-											@PP_CB_LOCACION, @PP_TB_SQF, @VP_ORDERNO, 
-											@PP_USER, @PP_COMENTARIO, 1, @VP_CONTADOR,
-											'T', 'M', @PP_TB_SQF
-	-- ////////////////////////////////////////////////////////////////////
-
 
 	-- ////////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
