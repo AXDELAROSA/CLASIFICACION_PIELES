@@ -248,6 +248,7 @@ GO
 
 
 
+--	USE [DATA_02] 
 
 -- EXECUTE [dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO] 0,0,  3789826
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_COLOUR_X_TAG_NO]') AND type in (N'P', N'PC'))
@@ -293,7 +294,7 @@ AS
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 
-	AND LTRIM(RTRIM(COLOUR)) IN ('FMCKSTT','FMCKTX7','FMCKVT9')
+	AND LTRIM(RTRIM(COLOUR)) IN ('FMCKTX7','FMCKVT9','FYPATX7','FYPAWA6','FYPASD4','FYPAWT5')
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
