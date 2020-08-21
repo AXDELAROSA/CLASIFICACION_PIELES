@@ -9,7 +9,7 @@
 -- // Fecha creación:	1/JUN/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 -- //////////////////////////////////////////////////////////////
@@ -20,7 +20,7 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 /*
- EXEC DBO.[PG_LI_TRACKING_PIEL] 0,0, 'FMCKTX7', '33101', 2137674, '', '', 'MALA'
+ EXEC DBO.[PG_LI_TRACKING_PIEL] 0,0, 'FMCKTX7' , '033241' , 0 , '0355' , '' , '( TODOS )' 
 */
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_TRACKING_PIEL]') AND type in (N'P', N'PC'))
@@ -63,7 +63,7 @@ AS
 	LEFT  JOIN  IMLOCFIL_SQL ON RP_Folios.MACHINE = IMLOCFIL_SQL.loc_desc
 	-- =======================
 	WHERE	LTRIM(RTRIM(RP_SC.COLOUR)) = @PP_COLOR	
-	AND		LTRIM(RTRIM(LOT)) =			( CASE	WHEN @PP_LOTE = '' THEN LTRIM(RTRIM(LOT))
+	AND		RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) = ( CASE	WHEN @PP_LOTE = '' THEN LTRIM(RTRIM(LOT))
 												ELSE @PP_LOTE	END) 
 	AND		LTRIM(RTRIM(TAG)) =			( CASE	WHEN @PP_FOLIO = '0' THEN TAG
 												ELSE @PP_FOLIO	END)
@@ -99,7 +99,7 @@ AS
 	LEFT	JOIN	CCJOBHDR_SQL ON RP_Folios.JOBNO = CCJOBHDR_SQL.jobno 
 	LEFT	JOIN  IMLOCFIL_SQL ON RP_Folios.MACHINE = IMLOCFIL_SQL.loc_desc 
 	WHERE	LTRIM(RTRIM(RP_SC_END.COLOUR)) = @PP_COLOR	
-	AND		LTRIM(RTRIM(LOT)) =			( CASE	WHEN @PP_LOTE = '' THEN LTRIM(RTRIM(LOT))
+	AND		RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) = ( CASE	WHEN @PP_LOTE = '' THEN LTRIM(RTRIM(LOT))
 												ELSE @PP_LOTE	END) 
 	AND		LTRIM(RTRIM(TAG)) =			( CASE	WHEN @PP_FOLIO = '' THEN TAG
 												ELSE @PP_FOLIO	END)

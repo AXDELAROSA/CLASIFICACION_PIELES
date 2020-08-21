@@ -294,7 +294,7 @@ AS
 	-- =====================
 	FROM	RP_SC
 	WHERE	TAGNO=@PP_TAG_NO 
-	AND LTRIM(RTRIM(COLOUR)) IN ('FMCKTX7','FMCKVT9','FYPATX7','FYPAWA6','FYPASD4','FYPAWT5')
+	AND LTRIM(RTRIM(COLOUR)) IN (SELECT COLOR FROM COLORES_CONTROLADOS WHERE COLOR <> 'FMCKSTT')
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
