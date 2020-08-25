@@ -61,11 +61,12 @@ AS
 		EXECUTE [dbo].[PG_RN_RP_SC_FOLIO_EXISTE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 													@PP_TAGNO_ORIGEN, @PP_CB_COLOR,
 													@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
-	
+
 	IF @VP_MENSAJE=''
-		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-															@PP_TB_ORDEN,
-															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+		IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+			EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@PP_TB_ORDEN,
+																@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
@@ -190,8 +191,9 @@ AS
 									RAISERROR (@VP_MENSAJE, 16, 1 )
 
 								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																			@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+									EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
 																				
 
 								-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
@@ -286,9 +288,10 @@ AS
 						SET @VP_PIEL_INT 	= CAST(@VP_PIEL_TBL AS INT)
 
 						-- ///////////////////VALIDO QUE LA PIEL ESTE CORTADA//////////////////////////////////////////////////
-						EXECUTE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																	@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN,
-																	@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+						IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+							EXECUTE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																		@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN,
+																		@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 		
 						IF @VP_MENSAJE <> ''
 							RAISERROR (@VP_MENSAJE, 16, 1 )
@@ -297,8 +300,9 @@ AS
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN
 								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																			@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+									EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
 
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -330,9 +334,10 @@ AS
 						ELSE
 							BEGIN
 								-- ///////////////////SE ACTUALIZA EL SQM DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								EXECUTE [dbo].[PG_UP_CCCUTHST_HIDESQM_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, 
-																				@PP_TB_ORDEN, @PP_TB_SQF
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+									EXECUTE [dbo].[PG_UP_CCCUTHST_HIDESQM_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																					@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, 
+																					@PP_TB_ORDEN, @PP_TB_SQF
 
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,

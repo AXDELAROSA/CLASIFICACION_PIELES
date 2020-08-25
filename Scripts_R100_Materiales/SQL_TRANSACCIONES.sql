@@ -19,15 +19,15 @@ INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_L
 WHERE 
 --ORDEN_ORIGEN = 13600 or ORDEN_DESTIDO = 13600
  --FOLIO_ORIGEN = 3791831 AND FOLIO_DESTINO = 3791829
-PIEL = 0174
-AND LOTE = 33341
-AND COLOR = 'FMCKVT9' 
+PIEL = 358
+AND LOTE = 33251
+AND COLOR = 'FMCKTX7' 
 --ORDER BY K_PIEL_LOG asc
 
 
 SELECT * FROM  RP_SC 
-WHERE HIDE = '0355'
-AND LOT = '33241'
+WHERE HIDE = '0358'
+AND LOT = '33251'
 AND COLOUR = 'FMCKTX7'
 
 /*
@@ -91,10 +91,10 @@ SELECT * FROM ccjobhdr_sql WHERE jobno = '14856'
 
 SELECT *
 	FROM cccuthst_sql 
-	WHERE LTRIM(RTRIM(COLOUR)) = 'FMCKTX7'   
+	WHERE LTRIM(RTRIM(COLOUR)) = 'FCNPDX9'   
 	--AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim('33231')), 6) 
 	--AND LTRIM(RTRIM(hideno))   IN ('0197')
-	AND	LTRIM(RTRIM(JOBNO))   = '14215'
+	AND	LTRIM(RTRIM(JOBNO))   = '14755'
 
 	/*
 	
@@ -128,26 +128,40 @@ WHERE
 PIEL = 332 
 AND LOTE = 33233
 
-SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4749018')
+SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4754736 ')
 
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4749018 ')
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4754736  ')
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200816' --and doc_type = 'T' AND SEQ_NO <> 0
+where  item_no = 'FMCKTX7        '    and loc = 'T61' and trx_dt>='20200820' --and doc_type = 'T' AND SEQ_NO <> 0
 --and doc_ord_no = '14697'
 --and ord_no in ( '4642651','4642598')
 order by trx_dt, ORD_NO desc
 --order by ord_no asc
 
 
-select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
-from IMLSTRX_SQL 
-where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'  --AND SEQ_NO <> 0
---and doc_ord_no = '14697'
---and ord_no in ( '4642651','4642598')
-order by trx_dt, ORD_NO desc
---order by ord_no asc
+--select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
+--from IMLSTRX_SQL 
+--where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'  --AND SEQ_NO <> 0
+----and doc_ord_no = '14697'
+----and ord_no in ( '4642651','4642598')
+--order by trx_dt, ORD_NO desc
+----order by ord_no asc
+
+
+SELECT TOP 1000 D_TIPO_PIEL_LOG,usuario,
+PIEL_LOG.*  
+FROM PIEL_LOG 
+INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
+INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
+WHERE 
+--ORDEN_ORIGEN = 13600 or ORDEN_DESTIDO = 13600
+ --FOLIO_ORIGEN = 3791831 AND FOLIO_DESTINO = 3791829
+PIEL = 358
+AND LOTE = 33251
+AND COLOR = 'FMCKTX7' 
+--ORDER BY K_PIEL_LOG asc
 
 
 /*
@@ -159,14 +173,10 @@ where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'
 
 */
 
-
 /*
+
 UPDATE IMINVTRX_SQL
-	SET doc_ord_no= '12803'
-WHERE ord_no = '4643540' 
-and doc_type = 'T' 
-and item_no = 'FMCKTX7        '    
-and doc_ord_no = '12891'
-and loc = 'T18' 
-AND LEV_NO = 1
+	SET doc_ord_no= '14860 '
+WHERE A4GLIdentity = 59782067
+
 */
