@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -53,8 +53,8 @@ AS
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
 	IF @VP_MENSAJE=''
-		IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
-			SET @VP_MENSAJE = 'No se puede crear folio nuevo con pieles asignadas a una mesa.'
+		IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
+			SET @VP_MENSAJE = 'No se puede crear folio nuevo con pieles asignadas a una Mesa/Gerber.'
 	
 	-- /////////////////////////////////////////////////////////////////////
 	
@@ -71,7 +71,7 @@ AS
 				
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02', 'RP_FOLIOS', 'TAG',
+																	'DATA_02Pruebas', 'RP_FOLIOS', 'TAG',
 																	@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 				-- =====================
 
@@ -147,7 +147,7 @@ AS
 
 				-- /////////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION////////////////////////////////////////////
 				IF @VP_N_PIEL IS NULL
-					RAISERROR ('Error raised in TRY block.', 16, 1 ) --MENSAJE - Severity -State.
+					RAISERROR ('ERROR: No se seleccionaron pieles para la transferencia.', 16, 1 ) --MENSAJE - Severity -State.
 				-- ///////////////////////////////////////////
 								
 				DECLARE @VP_LOTE AS VARCHAR(20)

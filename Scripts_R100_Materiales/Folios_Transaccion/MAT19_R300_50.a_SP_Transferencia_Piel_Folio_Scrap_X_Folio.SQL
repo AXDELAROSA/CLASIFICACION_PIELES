@@ -19,9 +19,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]	0,0,  'FMCKTX7' , 3788336 , 'T06' , '11551' , 'Table 06' , 0 , 
-'33012/33012' , '0489/0488' , '33.80/34.00' , 0 , 0 , '' , 'franciscoe' , 'IT-010'  
-
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]	0,0,   'FMCKTX7' , 3788389 , 'GT2' , '11619' , 0 , '33012' , '0899' , '15.00' , 0 , 15.00 , '' , 'franciscoe' , 'IT-010'  
 */
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_SCRAP]') AND type in (N'P', N'PC'))
@@ -55,6 +53,7 @@ AS
 
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	DECLARE @VP_K_CLASIFICACION	INT = 0
+	DECLARE @VP_F_CREACION_INT	INT = DATA_02.DBO.[CONVERT_DATE_TO_INT](CONVERT(DATE, GETDATE()),'yyyyMMdd')
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
 	IF @VP_MENSAJE=''
@@ -63,7 +62,7 @@ AS
 													@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
 	IF @VP_MENSAJE=''
-		IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+		IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
 			EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																@PP_TB_ORDEN,
 																@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
@@ -76,9 +75,16 @@ AS
 			
 				-- /////////////////////////SI SE SELECIONO TODAS LAS PIELES DE LA PIEL ACTUALIZO EL FOLIO///////////////////////
 				IF	@PP_SELECT_TODOS = 1
-					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+					BEGIN
 
+						EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+																@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+
+						IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'G'
+							EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_X_ORDEN]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+																		@PP_TB_ORDEN, 'C', @VP_F_CREACION_INT, 
+																		0, 0, 0
+					END
 				-- ///////////////OBTENGO UN NUEVO FOLIO//////////////////////////////////////////////////////
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
@@ -183,15 +189,16 @@ AS
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(19,4))
 
 								-- ///////////////////VALIDO QUE LA PIEL ESTE CORTADA//////////////////////////////////////////////////
-								EXECUTE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																			@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN,
-																			@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
+									EXECUTE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN,
+																				@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 		
 								IF @VP_MENSAJE <> ''
 									RAISERROR (@VP_MENSAJE, 16, 1 )
 
 								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
 									EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
 																				
@@ -288,7 +295,7 @@ AS
 						SET @VP_PIEL_INT 	= CAST(@VP_PIEL_TBL AS INT)
 
 						-- ///////////////////VALIDO QUE LA PIEL ESTE CORTADA//////////////////////////////////////////////////
-						IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+						IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
 							EXECUTE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																		@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN,
 																		@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
@@ -300,7 +307,7 @@ AS
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN
 								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
 									EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
 
@@ -334,7 +341,7 @@ AS
 						ELSE
 							BEGIN
 								-- ///////////////////SE ACTUALIZA EL SQM DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
 									EXECUTE [dbo].[PG_UP_CCCUTHST_HIDESQM_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																					@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, 
 																					@PP_TB_ORDEN, @PP_TB_SQF
@@ -433,9 +440,9 @@ AS
 					IF @VP_TOTAL_SQF_MFP IS NULL
 						SET @VP_TOTAL_SQF_MFP = 0
 
-					EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																			@PP_CB_COLOR, @VP_TAGNO_DESTINO, @VP_TOTAL_SQF_MFP,
-																			@PP_COMENTARIO, @PP_USER
+					--EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+					--														@PP_CB_COLOR, @VP_TAGNO_DESTINO, @VP_TOTAL_SQF_MFP,
+					--														@PP_COMENTARIO, @PP_USER
 																				
 					
 								

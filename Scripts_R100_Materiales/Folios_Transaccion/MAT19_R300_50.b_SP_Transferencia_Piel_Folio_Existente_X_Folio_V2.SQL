@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -117,7 +117,7 @@ AS
 				IF @PP_TIPO_TRANSFERENCIA = 'DEVOLUCION'
 					BEGIN
 						 --IF @PP_LOCACION_DESTINO <> 'MHI'
-						 IF @PP_LOCACION_DESTINO NOT IN( 'MHI', 'MQU', 'MRD', 'MFP', 'GT1', 'GT2','GT3' )
+						 IF @PP_LOCACION_DESTINO NOT IN( 'MHI', 'MQU', 'MRD', 'MFP') --, 'GT1', 'GT2','GT3' )
 							BEGIN
 								IF @VP_MENSAJE=''
 									EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -138,7 +138,7 @@ AS
 				ELSE
 					BEGIN
 						--IF (@PP_LOCACION_DESTINO <> 'MHI' Or  @PP_LOCACION_DESTINO <> 'MQU' Or  @PP_LOCACION_DESTINO <> 'MRD' Or  @PP_LOCACION_DESTINO <> 'MFP')
-						IF @PP_LOCACION_DESTINO NOT IN( 'MHI', 'MQU', 'MRD', 'MFP', 'GT1', 'GT2','GT3' )
+						IF @PP_LOCACION_DESTINO NOT IN( 'MHI', 'MQU', 'MRD', 'MFP') --, 'GT1', 'GT2','GT3' )
 							BEGIN
 								IF @VP_MENSAJE=''
 									EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,

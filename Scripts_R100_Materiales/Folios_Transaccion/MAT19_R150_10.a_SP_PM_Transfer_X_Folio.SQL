@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -109,7 +109,7 @@ AS
 		
 		-- ////////////////////////////////////////////////////////////////////
 
-		SET @PP_CB_ORDEN = '00000'
+		DECLARE @PP_ORDEN_DEFAULT VARCHAR(10) = '00000'
 
 		IF @PP_ORDEN_DESTINO <> '' 
 			BEGIN
@@ -117,7 +117,7 @@ AS
 			END
 		ELSE
 			BEGIN
-		         SET	@VP_ORDERNO = LEFT(@PP_CB_ORDEN + '00000' , 5)
+		         SET	@VP_ORDERNO = LEFT(@PP_ORDEN_DEFAULT + '00000' , 5)
 		    END
 
 		SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'

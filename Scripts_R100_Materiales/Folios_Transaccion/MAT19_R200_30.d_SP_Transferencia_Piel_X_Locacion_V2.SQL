@@ -109,7 +109,7 @@ AS
 			END
 			-- ////////////////////////////////////////////////////////////////////	
 
-			IF SUBSTRING(@PP_LOCACION_DESTINO, 1, 1) = 'T' AND @PP_ORDEN_DESTINO <> '' AND  @PP_CARGAR_ORDEN = 1
+			IF SUBSTRING(@PP_LOCACION_DESTINO, 1, 1) IN ('T', 'G') AND @PP_ORDEN_DESTINO <> '' AND  @PP_CARGAR_ORDEN = 1
 				BEGIN
 					EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_ORIGEN, @PP_ORDEN_DESTINO, 

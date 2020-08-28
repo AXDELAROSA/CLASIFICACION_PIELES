@@ -116,7 +116,7 @@ SELECT '         ' + RIGHT('000000' + Ltrim(Rtrim('0033231')), 6)
 
 SELECT * FROM ccjobhdr_sql WHERE folio = '12338'
 SELECT * FROM ccjobhdr_sql WHERE jobno = '14215'
-SELECT * FROM ccjobhdr_sql WHERE jobno = '13980'
+SELECT * FROM ccjobhdr_sql WHERE jobno = '14905'
 
 USE DATA_02
 SELECT TOP 1000 D_TIPO_PIEL_LOG,usuario,
@@ -128,16 +128,25 @@ WHERE
 PIEL = 332 
 AND LOTE = 33233
 
-SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4754736 ')
 
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4754736  ')
+/*
+
+UPDATE IMINVTRX_SQL
+	SET doc_ord_no= '15006'
+WHERE A4GLIdentity = 59795438
+
+*/
+
+SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4758960   ') order by trx_dt,trx_tm, ORD_NO desc
+
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4758960   ') order by trx_dt,trx_tm, ORD_NO desc
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where  item_no = 'FMCKTX7        '    and loc = 'T61' and trx_dt>='20200820' --and doc_type = 'T' AND SEQ_NO <> 0
---and doc_ord_no = '14697'
+where  item_no = 'FMCKTX7        '    /*and loc = 'T61'*/ and trx_dt>='20200820' --and doc_type = 'T' AND SEQ_NO <> 0
+and doc_ord_no = '14905'
 --and ord_no in ( '4642651','4642598')
-order by trx_dt, ORD_NO desc
+order by trx_dt,trx_tm, ORD_NO desc
 --order by ord_no asc
 
 
@@ -170,13 +179,5 @@ UPDATE IMLSTRX_SQL
 	SET seq_no = '0'
 where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'  AND SEQ_NO <> 0
 --AND LEV_NO = 1
-
-*/
-
-/*
-
-UPDATE IMINVTRX_SQL
-	SET doc_ord_no= '14860 '
-WHERE A4GLIdentity = 59782067
 
 */

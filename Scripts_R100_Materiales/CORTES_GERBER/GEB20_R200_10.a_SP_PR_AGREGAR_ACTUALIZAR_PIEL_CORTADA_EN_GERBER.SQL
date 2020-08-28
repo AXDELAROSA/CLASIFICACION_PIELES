@@ -2,14 +2,14 @@
 -- // ARCHIVO:			
 -- //////////////////////////////////////////////////////////////
 -- // BASE DE DATOS:	[DATA_02Pruebas]
--- // MODULO:			KITS / Lots
--- // OPERACION:		LIBERACION / STORED PROCEDURES
+-- // MODULO:			PROYECTO/GERBER
+-- // OPERACION:		LIBERACION / TABLAS
 -- //////////////////////////////////////////////////////////////
 -- // Autor:			FEG
--- // Fecha creación:	20/JUL/2020
+-- // Fecha creación:	27/AGO/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02PRUEBAS] 
 GO
 
 
@@ -31,7 +31,7 @@ CREATE PROCEDURE [dbo].[PG_PR_IN_UP_CCCUTHST_SQL_GERBER]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_ORDEN					INT,
+	@PP_ORDEN					VARCHAR(10),
 	@PP_FOLIO					INT,
 	@PP_COLOR					VARCHAR(10),
 	@PP_LOCACION				VARCHAR(5),
@@ -51,10 +51,10 @@ AS
 	-- /////////////////OBTENEMOS EL SQF DE LA PIEL ASIGNADA AL FOLIO//////
 	DECLARE @VP_SQF_PIEL_FOLIO	DECIMAL(13,4) = 0
 	SELECT  @VP_SQF_PIEL_FOLIO	= CONVERT(DECIMAL(13,4),LTRIM(RTRIM(SQF)))
-								FROM RP_SC
+								FROM	RP_SC
 								WHERE	TAGNO = @PP_FOLIO
 								AND		LTRIM(RTRIM(COLOUR)) = @PP_COLOR
-								AND		RIGHT( '000000' + LTRIM(RTRIM(LOT)), 6) = @PP_LOTE
+								AND		LTRIM(RTRIM(LOT)) = @PP_LOTE
 								AND		LTRIM(RTRIM(HIDE)) = @PP_PIEL
 	
 	IF @VP_SQF_PIEL_FOLIO IS NULL 
@@ -83,14 +83,15 @@ AS
 					IF @VP_HORA > 2000 AND @VP_HORA < 60002
 						SET @VP_TURNO = '2'
 
-					SET @PP_COD_UTILIZACION = SUBSTRING(@PP_COD_UTILIZACION, 1, 3)
+					--SET @PP_COD_UTILIZACION = SUBSTRING(@PP_COD_UTILIZACION, 1, 3)
 
 					-- /////////////SE VALIDA SI LA PIEL YA SE ENCUENTRA DADA DE ALTA SE UN UPDATE SI NO UN INSERT////////////////////
 					DECLARE @VP_PIEL_EXISTE INT = 0
 
 					SELECT @VP_PIEL_EXISTE	=	COUNT(JOBNO)
 											FROM	cccuthst_sql
-											WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
+											WHERE LTRIM(RTRIM(JOBNO)) = @PP_ORDEN
+											AND	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
 											AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + @PP_LOTE, 6) 
 											AND LTRIM(RTRIM(hideno)) = @PP_PIEL
 					-- ===========================
@@ -102,41 +103,48 @@ AS
 					IF @VP_PIEL_EXISTE > 0
 						BEGIN
 							-- /////////////////////SE ACTUALIZA LA PIEL CORTADA////////////////////////////////////
-							/*
-								SELECT  * FROM cccuthst_sql WHERE cccuthst_sql.jobno = '11345' order by linenum
-								SELECT  * FROM cccuthst_sql WHERE cccuthst_sql.CSHIFT = '2'
-							*/
-							UPDATE	cccuthst_sql
-								SET cdate			= @VP_FECHA,
-									ctime			= @VP_HORA,
-									cshiftdate		= @VP_FECHA,
-									cshift			= @VP_TURNO,
-									hideinspector	= @PP_NUM_INSPECTOR,
-									hidesqm			= @PP_PIEL_SQM,
-									operator1		= @PP_NUM_OPE1,
-									operator2		= @PP_NUM_OPE2,
-									operator4		= @PP_NUM_OPE4,
-									operator6		= @PP_NUM_OPE6,
-									operator7		= @PP_NUM_OPE7,
-									rawpatterns		= @PP_RAW_PATT,
-									rawpatternsqm	= @PP_RAW_PATT_SQM,
-									patternsqm		= @PP_PATT_SQM,
-									lowutilcd		= @PP_COD_UTILIZACION
-							-- ===========================
-							WHERE	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
-							AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@PP_LOTE)), 6) 
-							AND	LTRIM(RTRIM(hideno)) = @PP_PIEL
-							AND	LTRIM(RTRIM(JOBNO)) = @PP_ORDEN 
+							IF @PP_PIEL_SQF_CORTADO = 0
+								BEGIN
+									DELETE cccuthst_sql
+									WHERE	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
+									AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@PP_LOTE)), 6) 
+									AND	LTRIM(RTRIM(hideno)) = @PP_PIEL
+									AND	LTRIM(RTRIM(JOBNO)) = @PP_ORDEN 
+								END
+							ELSE
+								BEGIN
+									UPDATE	cccuthst_sql
+										SET cdate			= @VP_FECHA,
+											ctime			= @VP_HORA,
+											cshiftdate		= @VP_FECHA,
+											cshift			= @VP_TURNO,
+											hideinspector	= '00000',
+											hidesqm			= @PP_PIEL_SQF_CORTADO,
+											operator1		= '00000',
+											operator2		= '00000',
+											operator4		= '00000',
+											operator6		= '00000',
+											operator7		= '00000',
+											rawpatterns		= 0,
+											rawpatternsqm	= 0,
+											patternsqm		= 0,
+											lowutilcd		= ''
+									-- ===========================
+									WHERE	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
+									AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@PP_LOTE)), 6) 
+									AND	LTRIM(RTRIM(hideno)) = @PP_PIEL
+									AND	LTRIM(RTRIM(JOBNO)) = @PP_ORDEN 
 
-							IF @@ROWCOUNT = 0
-								RAISERROR ('ERROR: No fue posible Actualizar la piel en [cccuthst_sql]', 16, 1 ) --MENSAJE - Severity -State.
+									IF @@ROWCOUNT = 0
+										RAISERROR ('ERROR: No fue posible Actualizar la piel en [cccuthst_sql]', 16, 1 ) --MENSAJE - Severity -State.
 
-							-- /////////////////////SE INGRESA EL LOG////////////////////////////////////////////////
-							SET @VP_DETAIL = 'Los datos de la piel: ' + @PP_PIEL + ' fueron modificados'  
-							EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																@PP_USER, @PP_COMPUTER_NAME, 'Production Screen',
-																@PP_ORDEN, 'Modify',
-																@VP_DETAIL, @PP_PIEL
+									-- /////////////////////SE INGRESA EL LOG////////////////////////////////////////////////
+									SET @VP_DETAIL = 'Los datos de la piel: ' + @PP_PIEL + ' fueron modificados'  
+									EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																		@PP_USER, @PP_COMPUTER_NAME, 'CORTE EN GERBER',
+																		@PP_ORDEN, 'Modify',
+																		@VP_DETAIL, @PP_PIEL
+								END
 						END
 					ELSE
 						BEGIN
@@ -171,16 +179,11 @@ AS
 									SET @VP_LINEA_NUEVA =  '0000'
 								END
 
-							-- /////////////////////SE OBTINE LA PRENSA A LA QUE PERTENECE LA MESA///////////////////////////////////////
-							DECLARE @VP_PRENSA	VARCHAR(3) = ''
+							DECLARE @VP_LOCACION_DESC VARCHAR(50) = ''
 
-							SELECT	@VP_PRENSA = alt1_type
-							FROM	imlocfil_sql 
-							WHERE	LTRIM(RTRIM(loc_desc)) = @PP_MESA
-							OR		LTRIM(RTRIM(loc)) = @PP_MESA 
-
-							IF @VP_PRENSA IS NULL
-								RAISERROR ('ERROR: No fue posible obtener la prensa a la cual pertenece la mesa en [imlocfil_sql]', 16, 1 ) --MENSAJE - Severity -State.
+							SELECT @VP_LOCACION_DESC = LTRIM(RTRIM(LOC_DESC))
+							FROM IMLOCFIL_SQL
+							WHERE LTRIM(RTRIM(LOC)) = @PP_LOCACION
 
 							-- /////////////////////SE INGRESA LA PIEL CORTADA///////////////////////////////////////
 							DECLARE @VP_LOTE_CON_ESPACIO VARCHAR(50) = CONCAT('         ', RIGHT('000000' + @PP_LOTE, 6) )
@@ -190,19 +193,19 @@ AS
 																	-- ===========================
 																	@VP_HORA, @VP_FECHA, @VP_TURNO, @PP_COLOR, 
 																	-- ===========================
-																	@VP_LOTE_CON_ESPACIO, @PP_PIEL, @PP_PIEL_SQM,
+																	@VP_LOTE_CON_ESPACIO, @PP_PIEL, @PP_PIEL_SQF_CORTADO,
 																	-- ===========================
-																	@PP_NUM_INSPECTOR, @PP_MESA, @PP_NUM_OPE1, @PP_NUM_OPE2,
-																	'00000', @PP_NUM_OPE4, '00000', @PP_NUM_OPE6, @PP_NUM_OPE7,
+																	'00000', @VP_LOCACION_DESC, '00000', '00000',
+																	'00000', '00000', '00000', '00000', '00000',
 																	-- ===========================
-																	@PP_RAW_PATT_SQM, @PP_RAW_PATT, @PP_PATT_SQM, 0,
+																	0, 0, 0, 0,
 																	-- ===========================
-																	1, 0, 'P', @VP_PRENSA, @PP_COD_UTILIZACION, @PP_USER, @PP_COMPUTER_NAME
+																	1, 0, 'P', '', '', @PP_USER, @PP_COMPUTER_NAME
 						
 							-- /////////////////////SE INGRESA EL LOG////////////////////////////////////////////////
 							SET @VP_DETAIL = 'New hide' 
 							EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																@PP_USER, @PP_COMPUTER_NAME, 'Production Screen',
+																@PP_USER, @PP_COMPUTER_NAME, 'CORTE GERBER',
 																@PP_ORDEN, 'Add',
 																@VP_DETAIL, @PP_PIEL
 
@@ -216,7 +219,7 @@ AS
 				ROLLBACK TRANSACTION
 				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
 				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
-				SET @VP_MENSAJE = 'ERROR: //TRANSAC. PG_PR_IN_UP_CCCUTHST_SQL // ' + @VP_ERROR_TRANS
+				SET @VP_MENSAJE = 'ERROR: //TRANSAC. PG_PR_IN_UP_CCCUTHST_SQL_GERBER // ' + @VP_ERROR_TRANS
 			END CATCH
 					
 	END
@@ -225,7 +228,7 @@ AS
 	IF @VP_MENSAJE<>''
 		BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible Guardar la [PIEL]: '+CONVERT(VARCHAR(10),@PP_PIEL)+'] ' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = 'No es posible Guardar la [PIEL: '+CONVERT(VARCHAR(10),@PP_PIEL)+'] ' + @VP_MENSAJE 
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
 		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
