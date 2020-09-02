@@ -9,7 +9,7 @@
 -- // Fecha creación:	27/AGO/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -192,7 +192,7 @@ AS
 	AND		( @PP_ESTATUS = 0				OR	ESTATUS_ORDEN.K_ESTATUS_ORDEN = @PP_ESTATUS )
 	-- ============================= 
 	AND		SUBSTRING(LTRIM(RTRIM(MACHINE)),1,1) = 'G'
-	ORDER BY DATECREATED, MACHINE, CUSTOMER DESC
+	ORDER BY jobno DESC
 
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////

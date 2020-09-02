@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -71,7 +71,7 @@ AS
 				
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02Pruebas', 'RP_FOLIOS', 'TAG',
+																	'DATA_02', 'RP_FOLIOS', 'TAG',
 																	@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 				-- =====================
 

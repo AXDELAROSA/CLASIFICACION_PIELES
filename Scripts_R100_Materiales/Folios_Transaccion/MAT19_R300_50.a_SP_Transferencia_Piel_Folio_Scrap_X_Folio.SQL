@@ -9,7 +9,7 @@
 -- // Fecha creación:	10/JUN/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -88,7 +88,7 @@ AS
 				-- ///////////////OBTENGO UN NUEVO FOLIO//////////////////////////////////////////////////////
 				DECLARE @VP_TAGNO_DESTINO		INT = 0
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02Pruebas', 'RP_FOLIOS', 'TAG',
+																	'DATA_02', 'RP_FOLIOS', 'TAG',
 																	@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 
 				-- /////////////////////////INGRESO EL NUEVO FOLIO////////////////////////////////////////////
@@ -198,7 +198,7 @@ AS
 									RAISERROR (@VP_MENSAJE, 16, 1 )
 
 								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
 									EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
 																				
@@ -307,7 +307,7 @@ AS
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN
 								-- ///////////////////SE BORRA EL REGISTRO DE DE LA PIEL CORTADA//////////////////////////////////////////////////
-								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
+								IF  SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'T'
 									EXECUTE [dbo].[PG_DL_CCCUTHST_SQL_X_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																				@VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @PP_TB_ORDEN
 
@@ -440,9 +440,9 @@ AS
 					IF @VP_TOTAL_SQF_MFP IS NULL
 						SET @VP_TOTAL_SQF_MFP = 0
 
-					--EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-					--														@PP_CB_COLOR, @VP_TAGNO_DESTINO, @VP_TOTAL_SQF_MFP,
-					--														@PP_COMENTARIO, @PP_USER
+					EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																			@PP_CB_COLOR, @VP_TAGNO_DESTINO, @VP_TOTAL_SQF_MFP,
+																			@PP_COMENTARIO, @PP_USER
 																				
 					
 								
