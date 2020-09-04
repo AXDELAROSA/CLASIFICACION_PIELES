@@ -129,29 +129,33 @@ AS
 															@PP_TAGNO_ORIGEN, 0, @PP_LOCACION_DESTINO, 0
 		END
 	
-	
+	-- /////////////////////////////////////////////////////////////////////
 	DECLARE @VP_DETAIL VARCHAR(255)= 'from: ' + @PP_LOCACION_ORIGEN + ' to: ' +@PP_LOCACION_DESTINO + ' orden:' + @PP_ORDEN_DESTINO
 	EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 										@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
 										@PP_TAGNO_ORIGEN, 'Transfer Folio',
 										@VP_DETAIL, ''
-	
-	IF 	@PP_LOCACION_DESTINO = 'MFP'
-		BEGIN
-			DECLARE @VP_TOTAL_SQF_MFP  DECIMAL(8,4) = 0
 
-			SELECT	@VP_TOTAL_SQF_MFP	=  SUM(CAST(SQF AS DECIMAL(8,4)))
-										FROM	RP_SC
-										WHERE	TAGNO=@PP_TAGNO_ORIGEN 
-									
-			IF @VP_TOTAL_SQF_MFP IS NULL
-				SET @VP_TOTAL_SQF_MFP = 0
-			
+	-- /////////////////////////////////////////////////////////////////////
+	DECLARE @VP_TOTAL_SQF_TRANSFER  DECIMAL(8,4) = 0
+	SELECT	@VP_TOTAL_SQF_TRANSFER	=  SUM(CAST(SQF AS DECIMAL(8,4)))
+									FROM	RP_SC
+									WHERE	TAGNO=@PP_TAGNO_ORIGEN 
+							
+	IF @VP_TOTAL_SQF_TRANSFER IS NULL
+		SET @VP_TOTAL_SQF_TRANSFER = 0
+
+	IF 	@PP_LOCACION_DESTINO = 'MFP'
 			EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
-																	@PP_COLOR_PIEL, @PP_TAGNO_ORIGEN, @VP_TOTAL_SQF_MFP,
-																	@PP_COMENTARIO, @PP_USER
+																	@PP_LOCACION_ORIGEN, @PP_COLOR_PIEL, @PP_TAGNO_ORIGEN, 
+																	@VP_TOTAL_SQF_TRANSFER, @PP_COMENTARIO, @PP_USER
+
+	IF 	 ( @PP_LOCACION_ORIGEN IN ('MQU','MRD') AND @PP_LOCACION_DESTINO = 'MHI' )
+		EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MHI_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
+																@PP_LOCACION_ORIGEN, @PP_COLOR_PIEL, @PP_TAGNO_ORIGEN, 
+																@VP_TOTAL_SQF_TRANSFER, @PP_COMENTARIO, @PP_USER
 	
-	END
+
 	
 	-- ////////////////////////////////////////////////////////////////////	
 	-- ////////////////////////////////////////////////////////////////////

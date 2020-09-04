@@ -46,22 +46,52 @@ AS
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
 	-- ///////////RN VALIDACIONES////////////////////////////////
-	
+	DECLARE @VP_PIEL_EXISTE INT = 0
 
-	-- /////////////////OBTENEMOS EL SQF DE LA PIEL ASIGNADA AL FOLIO//////
-	DECLARE @VP_SQF_PIEL_FOLIO	DECIMAL(13,4) = 0
-	SELECT  @VP_SQF_PIEL_FOLIO	= CONVERT(DECIMAL(13,4),LTRIM(RTRIM(SQF)))
-								FROM	RP_SC
-								WHERE	TAGNO = @PP_FOLIO
-								AND		LTRIM(RTRIM(COLOUR)) = @PP_COLOR
-								AND		LTRIM(RTRIM(LOT)) = @PP_LOTE
-								AND		LTRIM(RTRIM(HIDE)) = @PP_PIEL
+	SELECT @VP_PIEL_EXISTE	=	COUNT(JOBNO)
+							FROM	cccuthst_sql
+							WHERE LTRIM(RTRIM(JOBNO)) = @PP_ORDEN
+							AND	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
+							AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + @PP_LOTE, 6) 
+							AND LTRIM(RTRIM(hideno)) = @PP_PIEL
+	-- ===========================
+	IF @VP_PIEL_EXISTE IS NULL
+		SET @VP_PIEL_EXISTE = 0
 	
-	IF @VP_SQF_PIEL_FOLIO IS NULL 
-		SET @VP_SQF_PIEL_FOLIO = 0
-		
-	IF 	@PP_PIEL_SQF_CORTADO > 	@VP_SQF_PIEL_FOLIO
-		SET @VP_MENSAJE = 'El SQF cortado no puede ser mayor al SQF de la piel'
+	-- /////////////////OBTENEMOS EL SQF DE LA PIEL ASIGNADA AL FOLIO//////
+	DECLARE @VP_N_K_PIEL_LOG INT = 0
+	
+	SELECT @VP_N_K_PIEL_LOG = COUNT(K_PIEL_LOG)
+	FROM PIEL_LOG 
+	WHERE K_TIPO_PIEL_LOG = 6 --DEVOLUCION
+	AND	FOLIO_ORIGEN = @PP_FOLIO
+	AND	PIEL = CONVERT(INT, @PP_PIEL)
+	AND LOCACION_ORIGEN = @PP_LOCACION
+	AND	ORDEN_ORIGEN = CONVERT(INT, @PP_ORDEN)
+
+	IF @VP_N_K_PIEL_LOG IS NULL
+		SET @VP_N_K_PIEL_LOG = 0
+
+	IF (@VP_N_K_PIEL_LOG > 0 AND @VP_PIEL_EXISTE > 0)
+		SET @VP_MENSAJE = 'Se le realizo movimiento de devolucion'
+		 
+	-- /////////////////OBTENEMOS EL SQF DE LA PIEL ASIGNADA AL FOLIO//////
+	IF @VP_MENSAJE = ''
+		BEGIN
+			DECLARE @VP_SQF_PIEL_FOLIO	DECIMAL(13,4) = 0
+			SELECT  @VP_SQF_PIEL_FOLIO	= CONVERT(DECIMAL(13,4),LTRIM(RTRIM(SQF)))
+										FROM	RP_SC
+										WHERE	TAGNO = @PP_FOLIO
+										AND		LTRIM(RTRIM(COLOUR)) = @PP_COLOR
+										AND		LTRIM(RTRIM(LOT)) = @PP_LOTE
+										AND		LTRIM(RTRIM(HIDE)) = @PP_PIEL
+			
+			IF @VP_SQF_PIEL_FOLIO IS NULL 
+				SET @VP_SQF_PIEL_FOLIO = 0
+				
+			IF 	@PP_PIEL_SQF_CORTADO > 	@VP_SQF_PIEL_FOLIO
+				SET @VP_MENSAJE = 'El SQF cortado no puede ser mayor al SQF de la piel'
+		END
 
 	-- ///////////////////////////////////////////
 	IF @VP_MENSAJE=''
@@ -72,32 +102,39 @@ AS
 					DECLARE @VP_FECHA	INT = FORMAT(CAST(GETDATE() AS DATE), N'yyyyMMdd');
 					DECLARE @VP_HORA	INT = FORMAT(CAST(GETDATE() AS TIME(0)), N'hhmmss');
 					DECLARE @VP_DETAIL	VARCHAR(100) = ''
-					DECLARE @VP_TURNO	VARCHAR(5) = ''
+					DECLARE @VP_TURNO	VARCHAR(5) = '1'
 			
-					IF @VP_HORA > 60001 AND @VP_HORA < 153001
-						SET @VP_TURNO = '0'
-
-					IF @VP_HORA > 153000 AND @VP_HORA < 2001
-						SET @VP_TURNO = '1'
-
 					IF @VP_HORA > 2000 AND @VP_HORA < 60002
 						SET @VP_TURNO = '2'
+					ELSE IF @VP_HORA > 60001 AND @VP_HORA < 153001
+						SET @VP_TURNO = '0'
+
+					--DECLARE @VP_TURNO	VARCHAR(5) = ''
+			
+					--IF @VP_HORA > 60001 AND @VP_HORA < 153001
+					--	SET @VP_TURNO = '0'
+
+					--IF @VP_HORA > 153000 AND @VP_HORA < 2001
+					--	SET @VP_TURNO = '1'
+
+					--IF @VP_HORA > 2000 AND @VP_HORA < 60002
+					--	SET @VP_TURNO = '2'
 
 					--SET @PP_COD_UTILIZACION = SUBSTRING(@PP_COD_UTILIZACION, 1, 3)
 
 					-- /////////////SE VALIDA SI LA PIEL YA SE ENCUENTRA DADA DE ALTA SE UN UPDATE SI NO UN INSERT////////////////////
-					DECLARE @VP_PIEL_EXISTE INT = 0
+					--DECLARE @VP_PIEL_EXISTE INT = 0
 
-					SELECT @VP_PIEL_EXISTE	=	COUNT(JOBNO)
-											FROM	cccuthst_sql
-											WHERE LTRIM(RTRIM(JOBNO)) = @PP_ORDEN
-											AND	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
-											AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + @PP_LOTE, 6) 
-											AND LTRIM(RTRIM(hideno)) = @PP_PIEL
-					-- ===========================
+					--SELECT @VP_PIEL_EXISTE	=	COUNT(JOBNO)
+					--						FROM	cccuthst_sql
+					--						WHERE LTRIM(RTRIM(JOBNO)) = @PP_ORDEN
+					--						AND	LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
+					--						AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + @PP_LOTE, 6) 
+					--						AND LTRIM(RTRIM(hideno)) = @PP_PIEL
+					---- ===========================
 
-					IF @VP_PIEL_EXISTE IS NULL
-						SET @VP_PIEL_EXISTE = 0
+					--IF @VP_PIEL_EXISTE IS NULL
+					--	SET @VP_PIEL_EXISTE = 0
 						
 					-- ////////////////////////////////////////////////////////////////////////////
 					IF @VP_PIEL_EXISTE > 0

@@ -81,6 +81,7 @@ AS
 		AND LTRIM(RTRIM(cccuthst_sql.hideno)) =  LTRIM(RTRIM(RP_SC.HIDE))
 	WHERE	TAGNO = @PP_FOLIO
 	AND		SUBSTRING(MOVEMENT, 1,2) = 'GT'
+	AND RP_Folios.STATUS <> 'XX'
 	-- =======================
 	--ORDER BY HIDE ASC
 
