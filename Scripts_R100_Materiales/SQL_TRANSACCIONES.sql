@@ -4,12 +4,10 @@
 
 /*
 -- PIEL AGREGADA MANUALMENTE
-INSERT INTO RP_SC( [CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION]
-		)
- SELECT GETDATE(),'FMCKTX7','32271', '9998','39.70','2137674',NULL,NULL,NULL,'C','MHI',0
+--INSERT INTO RP_SC( [CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION]
+--		)
+-- SELECT GETDATE(),'FMCKTX7','32271', '9998','39.70','2137674',NULL,NULL,NULL,'C','MHI',0
  */
-
- select * from [PIEL_A_TRANSFERIR_TRANSACCION]
 
 
 SELECT TOP 1000 D_TIPO_PIEL_LOG,usuario,
@@ -91,16 +89,6 @@ WHERE  JOBNO = 15134
 
 SELECT * FROM COLORES_CONTROLADOS
 
-SELECT * FROM  RP_SC WHERE  TAGNO IN (3793655) 
-
-SELECT * FROM	RP_FOLIOS WHERE TAG IN (3793655)
-
-SELECT * FROM ccjobhdr_sql WHERE jobno = '15134  '
-
-SELECT * FROM  RP_SC WHERE TAGNO IN (3793653) 
-
-SELECT * FROM	RP_FOLIOS WHERE TAG IN (3793653)
-
 select * from HIDESHDR_SQL   
  inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
 AND	LTRIM(RTRIM(PLOT)) = '401191' 
@@ -108,13 +96,25 @@ AND	LTRIM(RTRIM(PLOT)) = '401191'
  AND PCOLOR = 'FWLCPT3'
 
 
+SELECT * FROM ccjobhdr_sql WHERE jobno = '15134  '
+
+SELECT * FROM  RP_SC WHERE HIDE = '0223' AND LOT = '33012' AND COLOUR = 'FMCKTX7'
+
+SELECT * FROM  RP_SC WHERE TAGNO IN (3788360) order by hide asc
+
+SELECT * FROM	RP_FOLIOS WHERE TAG IN (3788360)
+
+SELECT	* FROM	[PIEL_A_TRANSFERIR]
+
+SELECT	* FROM [PIEL_A_TRANSFERIR_TRANSACCION]
+
 SELECT *
 	FROM cccuthst_sql 
 	WHERE --LTRIM(RTRIM(COLOUR)) = 'FCNPDX9'   
 	--AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim('33231')), 6) 
 	--AND LTRIM(RTRIM(hideno))   IN ('0197')
 	--AND	
-	LTRIM(RTRIM(JOBNO))   = '15134'
+	LTRIM(RTRIM(JOBNO))   = '11611'
 
 	/*
 	
@@ -164,7 +164,7 @@ SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4764353 ') or
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where  ltrim(rtrim(item_no)) = 'FCNPWU9'    /*and loc = 'T61'*/ and trx_dt>='20200825' --and doc_type = 'T' AND SEQ_NO <> 0
+where  ltrim(rtrim(item_no)) = 'FMCKTX7'    /*and loc = 'T61'*/ and trx_dt>='20200908' --and doc_type = 'T' AND SEQ_NO <> 0
 --and doc_ord_no = '15205'
 --and ord_no in ( '4642651','4642598') 
 order by trx_dt,trx_tm, ORD_NO desc

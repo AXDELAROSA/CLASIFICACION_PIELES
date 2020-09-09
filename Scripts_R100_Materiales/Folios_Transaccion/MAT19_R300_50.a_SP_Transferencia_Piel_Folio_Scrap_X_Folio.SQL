@@ -74,27 +74,25 @@ AS
 			BEGIN TRY
 			
 				-- /////////////////////////SI SE SELECIONO TODAS LAS PIELES DE LA PIEL ACTUALIZO EL FOLIO///////////////////////
-				IF	@PP_SELECT_TODOS = 1
+				IF	@PP_SELECT_TODOS = 1 AND SUBSTRING(@PP_LOCACION_ORIGEN,1,1) <> 'G'
 					BEGIN
-						IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) <> 'G'
 							EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
 																	@PP_TAGNO_ORIGEN, 'A', NULL, NULL
-
-						IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'G'
-							BEGIN
-								-- /////////////////////////SI ACTUALIZA EL ESTATUS DE LA ORDEN A CERRADO///////////////////////
-								EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_X_ORDEN]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-																			@PP_TB_ORDEN, 'C', @VP_F_CREACION_INT, 
-																			0, 0, 0
-								
-								-- /////////////////////////SI ACTUALIZA EL ESTATUS DEL FOLIO A XX CERRADO///////////////////////
-								UPDATE RP_FOLIOS
-									SET STATUS = 'XX'
-								WHERE TAG = @PP_TAGNO_ORIGEN
-							END
 					END
 
+				IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'G'
+					BEGIN
+						-- /////////////////////////SI ACTUALIZA EL ESTATUS DE LA ORDEN A CERRADO///////////////////////
+						EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_X_ORDEN]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+																	@PP_TB_ORDEN, 'C', @VP_F_CREACION_INT, 
+																	0, 0, 0
 				
+						-- /////////////////////////SI ACTUALIZA EL ESTATUS DEL FOLIO A XX CERRADO///////////////////////
+						UPDATE RP_FOLIOS
+							SET STATUS = 'XX'
+						WHERE TAG = @PP_TAGNO_ORIGEN
+					END
+
 				DECLARE @VP_TAGNO_DESTINO		INT = @PP_TAGNO_ORIGEN
 
 				IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) <> 'G'
@@ -124,47 +122,59 @@ AS
 					)
 				SET NOCOUNT ON
 				
-				DECLARE @VP_POSICION_PIEL			INT
-				DECLARE @VP_POSICION_LOTE			INT
-				DECLARE @VP_POSICION_SQF			INT
-
-				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
-				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
-				DECLARE @VP_SQF_VALOR				VARCHAR(20)
-								
-				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
-				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
-				SET	@PP_PIEL_ARRAY			= @PP_PIEL_ARRAY		+ '/'		
-				SET	@PP_SQF_ARRAY			= @PP_SQF_ARRAY			+ '/'
-			
-				--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
-				WHILE patindex('%/%' , @PP_PIEL_ARRAY) <> 0
+				IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) = 'G'
 					BEGIN
-						SELECT @VP_POSICION_PIEL	=	patindex('%/%' , @PP_PIEL_ARRAY)
-						SELECT @VP_POSICION_LOTE	=	patindex('%/%' , @PP_LOTE_ARRAY)
-						SELECT @VP_POSICION_SQF		=	patindex('%/%' , @PP_SQF_ARRAY)
+						INSERT INTO @TBL_PIEL_SELECCIONADAS(COLOR, LOTE, PIEL, SQF	)
+						SELECT LTRIM(RTRIM(COLOUR)), LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)), LTRIM(RTRIM(SQF))
+						FROM RP_SC
+						WHERE TAGNO = @PP_TAGNO_ORIGEN
 						
-						--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
-						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
-						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
-						SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY,  @VP_POSICION_SQF - 1)
-						
-
-						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
-								VALUES	(
-											@PP_CB_COLOR,
-											@VP_LOTE_VALOR,
-											@VP_PIEL_VALOR,
-											@VP_SQF_VALOR
-										)
-																								
-						--Reemplazamos lo procesado con nada con la funcion stuff
-						SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
-						SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
-						SELECT @PP_SQF_ARRAY			= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION_SQF, '')
-
+						IF @@ROWCOUNT = 0
+							RAISERROR ('NO fue posible obtener las pieles del folio origen.', 16, 1 ) --MENSAJE - Severity -State.
 					END
+				ELSE
+					BEGIN
+						DECLARE @VP_POSICION_PIEL			INT
+						DECLARE @VP_POSICION_LOTE			INT
+						DECLARE @VP_POSICION_SQF			INT
+
+						DECLARE @VP_LOTE_VALOR				VARCHAR(20)
+						DECLARE @VP_PIEL_VALOR				VARCHAR(20)
+						DECLARE @VP_SQF_VALOR				VARCHAR(20)
+										
+						--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
+						SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
+						SET	@PP_PIEL_ARRAY			= @PP_PIEL_ARRAY		+ '/'		
+						SET	@PP_SQF_ARRAY			= @PP_SQF_ARRAY			+ '/'
+			
+						--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
+						WHILE patindex('%/%' , @PP_PIEL_ARRAY) <> 0
+							BEGIN
+								SELECT @VP_POSICION_PIEL	=	patindex('%/%' , @PP_PIEL_ARRAY)
+								SELECT @VP_POSICION_LOTE	=	patindex('%/%' , @PP_LOTE_ARRAY)
+								SELECT @VP_POSICION_SQF		=	patindex('%/%' , @PP_SQF_ARRAY)
 								
+								--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
+								SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
+								SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
+								SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY,  @VP_POSICION_SQF - 1)
+								
+
+								INSERT	INTO	@TBL_PIEL_SELECCIONADAS
+										VALUES	(
+													@PP_CB_COLOR,
+													@VP_LOTE_VALOR,
+													@VP_PIEL_VALOR,
+													@VP_SQF_VALOR
+												)
+																										
+								--Reemplazamos lo procesado con nada con la funcion stuff
+								SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
+								SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
+								SELECT @PP_SQF_ARRAY			= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION_SQF, '')
+
+							END
+					END		
 				DECLARE @VP_N_PIEL INT = 0
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
