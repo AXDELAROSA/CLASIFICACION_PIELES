@@ -9,7 +9,7 @@
 -- // Fecha creación:	27/AGO/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -25,7 +25,7 @@ GO
 --3793219
 --2137674
 /*
- EXEC PG_LI_FOLIO_EN_GERBER 0 ,0, 3788389
+ EXEC PG_LI_FOLIO_EN_GERBER 0 ,0, 3788388
 */
 
 CREATE PROCEDURE [dbo].[PG_LI_FOLIO_EN_GERBER]
@@ -37,7 +37,7 @@ AS
 
 	-- ///////////////////////////////////////////
 
-	SELECT DISTINCT
+	SELECT DISTINCT  ROW_NUMBER() OVER(ORDER BY RP_SC.ID ASC) AS [ROW],
 			ISNULL(RP_SC.CDATE, '')					AS CDATE,
 			ISNULL(LTRIM(RTRIM(RP_SC.COLOUR)), '')	AS COLOR,
 			ISNULL(LTRIM(RTRIM(LOT)), '')			AS LOTE,
@@ -45,27 +45,28 @@ AS
 			ISNULL(LTRIM(RTRIM(SQF)), '')			AS SQF,
 			CONVERT(DECIMAL(13,2),ISNULL(hidesqm, 0.0000))	AS SQF_CORTADO_ORIGINAL,
 			CONVERT(DECIMAL(13,2),ISNULL(hidesqm, 0.0000))	AS SQF_CORTADO,
-			ISNULL(TAGNO, 0)		AS FOLIO,
-			ISNULL(YARDAS, '')		AS YARDAS,
-			ISNULL(YLB, '')			AS YLB,
-			ISNULL(PESO, '')		AS PESO,
+			ISNULL(TAGNO, 0)						AS FOLIO,
+			ISNULL(YARDAS, '')						AS YARDAS,
+			ISNULL(YLB, '')							AS YLB,
+			ISNULL(PESO, '')						AS PESO,
 			ISNULL(LTRIM(RTRIM(RP_SC.TYPE)), '')	AS TYPE,
-			(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
-																-- ===================== 
-														FROM	IMLSTRX_SQL, IMINVTRX_SQL 
-																-- =====================
-														WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
-														AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
-														AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
-														AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
-														AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
-														AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
-														AND		IMINVTRX_SQL.ord_no	= MOVEMENT
-														-- =====================
-														AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
-																OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
-														)
-				ELSE	LTRIM(RTRIM(MOVEMENT)) END ) AS LOCACION,
+			LTRIM(RTRIM(MOVEMENT))					AS LOCACION,
+			--(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
+			--													-- ===================== 
+			--											FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+			--													-- =====================
+			--											WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
+			--											AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
+			--											AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
+			--											AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
+			--											AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
+			--											AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
+			--											AND		IMINVTRX_SQL.ord_no	= MOVEMENT
+			--											-- =====================
+			--											AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
+			--													OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
+			--											)
+			--	ELSE	LTRIM(RTRIM(MOVEMENT)) END ) AS LOCACION,
 				S_PIEL_CLASIFICACION,
 				(CASE	WHEN RP_Folios.JOBNO IS NULL THEN 'SN/EVENT'
 						WHEN RP_Folios.JOBNO = '-' THEN 'SN/EVENT'

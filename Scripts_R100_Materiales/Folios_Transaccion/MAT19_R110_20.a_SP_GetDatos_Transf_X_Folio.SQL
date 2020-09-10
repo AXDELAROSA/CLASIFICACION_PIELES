@@ -178,12 +178,12 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]
 GO
 
--- EXEC [PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN] 0,0,  'FMCKTX7' , 'MFP' , '' 
+-- EXEC [PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN] 0,0,  'FMCKTX7' , 'GT2' , '11622' 
 
 CREATE PROCEDURE [dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]
 	@PP_K_SISTEMA_EXE			INT,
@@ -211,11 +211,16 @@ AS
         -- =====================
 		WHERE Ltrim(Rtrim(IMINVTRX_SQL.item_no)) = Ltrim(Rtrim(@PP_COLOR))
         AND Ltrim(Rtrim(IMINVTRX_SQL.loc)) = Ltrim(Rtrim(@PP_LOCACION)) 
-        AND (Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = Ltrim(Rtrim(@PP_ORDEN_NO))
+        AND ( Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = Ltrim(Rtrim(@PP_ORDEN_NO))
 			OR Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
         ) 
-		 -- =====================
-		--ORDER BY IMLSTRX_SQL.ser_lot_no
+		AND LTRIM(RTRIM(IMLSTRX_SQL.ser_lot_no)) IN (	SELECT	DISTINCT RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+														FROM	RP_SC
+														INNER JOIN RP_Folios ON RP_SC.TAGNO = RP_Folios.TAG
+														INNER JOIN CCJOBHDR_SQL ON RP_FOLIOS.TAG	= CCJOBHDR_SQL.FOLIO
+														WHERE	LTRIM(RTRIM(CCJOBHDR_SQL.JOBNO))= @PP_ORDEN_NO
+														AND	LTRIM(RTRIM(RP_SC.COLOUR)) = @PP_COLOR
+														 )
 
 	-- ////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////

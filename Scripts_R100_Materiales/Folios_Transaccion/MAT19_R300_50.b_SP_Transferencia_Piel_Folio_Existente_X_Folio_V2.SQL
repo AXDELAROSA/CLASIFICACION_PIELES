@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -172,21 +172,43 @@ AS
 																	@PP_TAGNO_DESTINO, @PP_ESTATUS, NULL, NULL, NULL
 							END
 					END
-				-- /////////////////////////////////////////////////////////////////////
 
-				--IF	@PP_SELECT_TODOS = 1
-				--	EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-				--											@PP_TAGNO_ORIGEN, 'A', NULL, NULL
-				-- /////////////////////////////////////////////////////////////////////
-								
-			
+				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
 				DECLARE @VP_N_PIEL INT = 0
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_A_TRANSFERIR) FROM [PIEL_A_TRANSFERIR]
 				WHERE K_PIEL_A_TRANSFERIR_TRANSACCION = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 
-				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
 				IF @VP_N_PIEL IS NULL
 					RAISERROR ('NO hay pieles seleccionadas.', 16, 1 ) --MENSAJE - Severity -State.
+
+				-- /////////////SE VERIFICA SI SE MOVIERON TODAS LAS PIELES DEL FOLIO ORIGEN SE ACTUALIZA EL FOLIO///////////////////////////
+				--IF	@PP_SELECT_TODOS = 1
+				--	EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+				--											@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+
+				DECLARE @VP_N_PIEL_FOLIO INT = 0
+				SELECT @VP_N_PIEL_FOLIO = COUNT(ID) 
+				FROM RP_SC
+				WHERE TAGNO = @PP_TAGNO_ORIGEN
+
+				IF @VP_N_PIEL_FOLIO IS NULL 
+					SET @VP_N_PIEL_FOLIO = 0
+				-- =======================
+
+				DECLARE @VP_N_PIEL_A_TRANSFERIR INT = 0
+				SELECT  @VP_N_PIEL_A_TRANSFERIR = COUNT(K_PIEL_A_TRANSFERIR) 
+				FROM [PIEL_A_TRANSFERIR]
+				WHERE [K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
+				AND CONVERT(DECIMAL(13,2),SQF_ENVIAR) = CONVERT(DECIMAL(13,2),SQF_RECIBIR) 
+
+				IF @VP_N_PIEL_A_TRANSFERIR IS NULL 
+					SET @VP_N_PIEL_A_TRANSFERIR = 0
+				-- =======================
+
+				IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR
+					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+																			
 				-- /////////////////////////////////////////////////////////////////////////////////////
 									
 				DECLARE @VP_COLOR_TBL			VARCHAR(10)
@@ -532,32 +554,8 @@ AS
 					-- ////////////////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@PP_TAGNO_DESTINO, 0, @PP_LOCACION_DESTINO, 0
-
-					-- /////////////SE VERIFICA SI SE MOVIERON TODAS LAS PIELES DEL FOLIO ORIGEN SE ACTUALIZA EL FOLIO///////////////////////////
-					DECLARE @VP_N_PIEL_FOLIO INT = 0
-					SELECT @VP_N_PIEL_FOLIO = COUNT(ID) 
-					FROM RP_SC
-					WHERE TAGNO = @PP_TAGNO_ORIGEN
-
-					IF @VP_N_PIEL_FOLIO IS NULL 
-						SET @VP_N_PIEL_FOLIO = 0
-					-- =======================
-
-					DECLARE @VP_N_PIEL_A_TRANSFERIR INT = 0
-					SELECT  @VP_N_PIEL_A_TRANSFERIR = COUNT(K_PIEL_A_TRANSFERIR) 
-					FROM [PIEL_A_TRANSFERIR]
-					WHERE [K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
-					AND CONVERT(DECIMAL(13,2),SQF_ENVIAR) = CONVERT(DECIMAL(13,2),SQF_RECIBIR) 
-
-					IF @VP_N_PIEL_A_TRANSFERIR IS NULL 
-						SET @VP_N_PIEL_A_TRANSFERIR = 0
-					-- =======================
-
-					IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR
-						EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-																@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+																							
 					-- /////////////////////////////////////////////////////////////////////
-
 					DELETE	FROM	[PIEL_A_TRANSFERIR]
 					WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 					
