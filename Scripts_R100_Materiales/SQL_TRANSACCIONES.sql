@@ -158,9 +158,9 @@ WHERE A4GLIdentity = 59804277
 
 */
 
-SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4764353 ') order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '04840477 ') order by trx_dt,trx_tm, ORD_NO desc
 
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '4764353 ') order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '04840477 ') order by trx_dt,trx_tm, ORD_NO desc
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
