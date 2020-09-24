@@ -134,8 +134,8 @@ SELECT '         ' + RIGHT('000000' + Ltrim(Rtrim('0033231')), 6)
 
 
 
-SELECT * FROM ccjobhdr_sql WHERE folio = '12338'
-SELECT * FROM ccjobhdr_sql WHERE jobno = '14215'
+SELECT * FROM RP_SC WHERE TAGNO = '3795035'
+SELECT * FROM RP_Folios WHERE TAG = '14215'
 SELECT * FROM ccjobhdr_sql WHERE jobno = '14905'
 
 USE DATA_02
@@ -145,18 +145,10 @@ FROM PIEL_LOG
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
 WHERE 
-PIEL = 332 
-AND LOTE = 33233
+PIEL = 432 
+and lote = 401201    
+order by K_PIEL_LOG
 
-
-/*
-
-UPDATE IMINVTRX_SQL
-	SET LOC= 'T01',
-		doc_ord_no = '15205'
-WHERE A4GLIdentity = 59804277
-
-*/
 
 SELECT top 10 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ( '04840477 ') order by trx_dt,trx_tm, ORD_NO desc
 
@@ -169,43 +161,3 @@ where  ltrim(rtrim(item_no)) = 'FMCKTX7'    /*and loc = 'T61'*/ and trx_dt>='202
 --and ord_no in ( '4642651','4642598') 
 order by trx_dt,trx_tm, ORD_NO desc
 --order by ord_no asc
-
-
---select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
---from IMLSTRX_SQL 
---where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'  --AND SEQ_NO <> 0
-----and doc_ord_no = '14697'
-----and ord_no in ( '4642651','4642598')
---order by trx_dt, ORD_NO desc
-----order by ord_no asc
---3793653
---3793523
-
-SELECT TOP 100000 D_TIPO_PIEL_LOG,usuario,
-PIEL_LOG.*  
-FROM PIEL_LOG 
-INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
-INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG=TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE 
---ORDEN_ORIGEN = 13600 or ORDEN_DESTIDO = 13600
- FOLIO_ORIGEN = 3793523 OR FOLIO_DESTINO = 3793523
---PIEL = 358
---AND LOTE = 33251
---AND COLOR = 'FMCKTX7' 
-ORDER BY K_PIEL_LOG ASC
-
-
- select TOP 100 * from [PIEL_A_TRANSFERIR_TRANSACCION] 
- WHERE  FOLIO_ORIGEN = 3793523 OR FOLIO_DESTINO = 3793523
-
-  select TOP 100 * from [PIEL_A_TRANSFERIR_TRANSACCION] 
- WHERE  FOLIO_ORIGEN = 3793653 OR FOLIO_DESTINO = 3793653
-
-/*
-Table 16  
-UPDATE IMLSTRX_SQL
-	SET seq_no = '0'
-where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'  AND SEQ_NO <> 0
---AND LEV_NO = 1
-
-*/
