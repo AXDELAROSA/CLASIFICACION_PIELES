@@ -66,29 +66,34 @@ SELECT * FROM RP_SC WHERE  LTRIM(RTRIM(COLOUR)) = 'FWLCPX7'  AND LOT = '501031' 
 SELECT * FROM RP_SC WHERE  LTRIM(RTRIM(COLOUR)) = 'FWLCPX7'  --AND LOT = '501031' AND TAGNO = 3793137
 ORDER BY HIDE ASC
 
-SELECT * FROM RP_SC WHERE TAGNO = 3795171 ORDER BY HIDE ASC
+SELECT * FROM RP_SC WHERE TAGNO = 3793314 ORDER BY HIDE ASC
 
-SELECT ID, CDATE, COLOUR, LOT, SUBSTRING(HIDE,2,5) AS HIDE, HIDE AS HIDE_ORIGINAL, SQF, MOVEMENT, TAGNO FROM RP_SC WHERE COLOUR = 'FWLCPT3' AND LOT = '401191'  order by hide asc
+--SELECT ID, CDATE, COLOUR, LOT, SUBSTRING(HIDE,2,5) AS HIDE, HIDE AS HIDE_ORIGINAL, SQF, MOVEMENT, TAGNO FROM RP_SC WHERE COLOUR = 'FWLCPT3' AND LOT = '401191'  order by hide asc
 
 SELECT D_TIPO_PIEL_LOG, usuario, PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE --FOLIO_ORIGEN = 3795212 OR FOLIO_DESTINO = 3795212   
-LOTE = 401151 AND PIEL = 230
+WHERE FOLIO_ORIGEN = 3793314 OR FOLIO_DESTINO = 3793314   
+--LOTE = 33301
+-- AND PIEL = 522
 ORDER BY K_PIEL_LOG ASC
 
-SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ('4850023   ' ) order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ('4758911' ) order by trx_dt,trx_tm, ORD_NO desc
 
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ('4850023   ' )  order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN ('4758911 ' )  order by trx_dt,trx_tm, ORD_NO desc
 
 select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 from IMINVTRX_SQL 
-where -- item_no = 'FWLCPT3           '   /*and loc = 'mhi' */ and trx_dt>='20200918' --and doc_type = 'T' AND SEQ_NO <> 0
+where  item_no = 'FMCKTX7           '   and loc = 'T45' and trx_dt='20200826' --and doc_type = 'T' AND SEQ_NO <> 0
 --and doc_ord_no = '14905'
-ord_no in ( '04855875')
+--ord_no in ( '04855875')
 order by trx_dt,trx_tm, ORD_NO desc
 --order by ord_no asc
+
+--UPDATE IMINVTRX_SQL
+--set doc_ord_no = '15003'
+--where A4GLIdentity = 59795366
 
 
 /*
