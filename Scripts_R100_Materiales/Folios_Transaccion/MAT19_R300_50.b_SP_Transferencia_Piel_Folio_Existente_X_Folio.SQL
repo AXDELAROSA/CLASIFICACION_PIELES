@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -381,6 +381,9 @@ AS
 											AND		LTRIM(RTRIM(LOT))=@VP_LOTE_TBL
 
 						-- /////////////////////////////////////////////////////////////////////
+						IF CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_TBL))) < @PP_TB_SQF
+							RAISERROR ('El SQF a transferir es mayor a lo disponible en el folio.', 16, 1 ) --MENSAJE - Severity -State.
+
 						-- /////////////////////////////////////////////////////////////////////
 						IF (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) = @PP_TB_SQF)
 							BEGIN

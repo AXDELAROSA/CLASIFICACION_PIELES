@@ -230,6 +230,9 @@ AS
 						OPEN CU_PIEL_SELECCIONADA
 						FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_DISPONIBLE_TBL, @VP_SQF_CORTADO_TBL, @VP_SQF_TBL
 						
+						IF CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_DISPONIBLE_TBL))) < CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_TBL)))
+							RAISERROR ('El SQF a transferir es mayor a lo disponible en el folio.', 16, 1 ) --MENSAJE - Severity -State.
+
 						WHILE @@FETCH_STATUS = 0
 							BEGIN
 						
@@ -403,6 +406,8 @@ AS
 						FROM	[PIEL_A_TRANSFERIR]
 						WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 
+						IF CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_TBL))) < @PP_TB_SQF
+							RAISERROR ('El SQF a transferir es mayor a lo disponible en el folio.', 16, 1 ) --MENSAJE - Severity -State.
 						-- /////////////////////////////////////////////////////////////////////
 
 						DECLARE @VP_SQF		VARCHAR(10)
