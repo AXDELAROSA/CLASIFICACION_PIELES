@@ -51,8 +51,11 @@ WHERE LTRIM(RTRIM(LOT)) = '501061'
  AND LTRIM(RTRIM(HIDE))  IN (SELECT LTRIM(RTRIM(HIDE)) FROM RP_SC_FOLIO_TYPE_2 WHERE TAGNO = 3788190 AND LOT <> '401071' )
  ORDER BY HIDE ASC
 
+ SELECT * FROM RP_SC WHERE TAGNO = 3793141
+ SELECT * FROM RP_SC WHERE TAGNO = 3793145
+
 -- UPDATE RP_SC
---	SET COLOUR = 'FWLPAT5   '
+--	SET TAGNO = 3793141
 --WHERE LTRIM(RTRIM(LOT)) = '501061'
 -- AND LTRIM(RTRIM(HIDE))  IN (SELECT LTRIM(RTRIM(HIDE)) FROM RP_SC_FOLIO_TYPE_2 WHERE TAGNO = 3788190 AND LOT <> '401071' )
 
@@ -131,20 +134,25 @@ order by trx_dt,trx_tm, ORD_NO desc
 --where A4GLIdentity = 59795366
 
 
-/*
+					
+SELECT  * FROM cccuthst_sql 
+WHERE LTRIM(RTRIM(LOTNO)) = '401091'
+AND LTRIM(RTRIM(HIDENO)) = '0088'
 
+
+/*
 DECLARE @VP_FECHA	INT = FORMAT(CAST(GETDATE() AS DATE), N'yyyyMMdd');
 DECLARE @VP_HORA	INT = FORMAT(CAST(GETDATE() AS TIME(0)), N'hhmmss');
-DECLARE @VP_LOTE_CON_ESPACIO VARCHAR(50) = CONCAT('         ', RIGHT('000000' + '401131', 6) )
+DECLARE @VP_LOTE_CON_ESPACIO VARCHAR(50) = CONCAT('         ', RIGHT('000000' + '401091', 6) )
 DECLARE @VP_TURNO	VARCHAR(5) = '0'
 
 EXECUTE [dbo].[PG_IN_CCCUTHST_SQL]		0, 0,
 										-- ===========================
 										'00000', '0000', '1', @VP_FECHA,
 										-- ===========================
-										@VP_HORA, @VP_FECHA, 0, 'FWLCPX7', 
+										@VP_HORA, @VP_FECHA, 0, 'FWLCPT3', 
 										-- ===========================
-										@VP_LOTE_CON_ESPACIO, '0032', 9.3500,
+										@VP_LOTE_CON_ESPACIO, '0088', 4.7500,
 										-- ===========================
 										'00000', '', '00000', '00000',
 										'00000', '00000', '00000', '00000', '00000',
@@ -153,6 +161,7 @@ EXECUTE [dbo].[PG_IN_CCCUTHST_SQL]		0, 0,
 										-- ===========================
 																	1, 0, 'P', '', '', 'FRANCISCOE', 'IT-10'
 */
+
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
