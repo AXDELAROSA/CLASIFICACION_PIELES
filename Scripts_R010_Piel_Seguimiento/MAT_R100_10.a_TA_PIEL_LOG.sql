@@ -143,6 +143,7 @@ EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 7, 'ISSUE_OUT',						'ISSUE_OUT', 7, '
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 8, 'REIMPRESION',						'REIMPRESO', 8, '', 1
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 9, 'FOLIO SCRAP',						'FOLIO_SCRAP', 9, '', 1
 EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 10, 'TRANSFERENCIA PIEL CORTADA',		'PIEL_CORTD', 10, '', 1
+EXECUTE [dbo].[PG_CI_TIPO_PIEL_LOG] 0, 0, 11, 'CAMBIO COLOR',					'CAMB_COLOR', 11, '', 1
 GO
 -- ===============================================
 SET NOCOUNT OFF

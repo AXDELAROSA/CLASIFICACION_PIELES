@@ -15,6 +15,87 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_FOLIO_X_CAMBIO_COLOR]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_VALIDA_FOLIO_X_CAMBIO_COLOR]
+GO
+/*
+ USE [DATA_02Pruebas] 
+	EXEC [PG_RN_VALIDA_PIEL_SCRAP] 0,0, 'FMCKTX7' , '33012' , '0487' , '11551' 
+*/
+
+CREATE PROCEDURE [dbo].[PG_RN_VALIDA_FOLIO_X_CAMBIO_COLOR]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================		
+	@PP_FOLIO					INT,
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+	-- ===========================		
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
+	DECLARE @VP_ESTATUS			VARCHAR(5) = ''
+	DECLARE @VP_LOCACION		VARCHAR(5) = ''
+
+	-- /////////////////////////////////////////////////////
+
+	SELECT @VP_ESTATUS = LTRIM(RTRIM(STATUS))
+	FROM RP_FOLIOS 
+	WHERE TAG = @PP_FOLIO
+
+	IF @VP_ESTATUS IS NULL OR @VP_ESTATUS = ''
+		SET @VP_RESULTADO = 'No fue posible obtener el tipo del folio origen.'
+		
+	IF @VP_RESULTADO = ''
+		IF @VP_ESTATUS = 'B'
+			SET @VP_RESULTADO = 'El folio origen es tipo base, no se puede cambiar de color.'
+	-- /////////////////////////////////////////////////////
+	
+	IF @VP_RESULTADO = ''
+		BEGIN
+			SELECT	TOP 1 @VP_LOCACION = (CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
+															-- ===================== 
+													FROM	IMLSTRX_SQL, IMINVTRX_SQL 
+															-- =====================
+													WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
+													AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
+													AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
+													AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
+													AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
+													AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
+													AND		IMINVTRX_SQL.ord_no	= MOVEMENT
+													-- =====================
+													AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
+															OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
+													)
+										ELSE	LTRIM(RTRIM(MOVEMENT)) END )
+			-- =====================
+			FROM	RP_SC
+			WHERE	TAGNO=@PP_FOLIO 
+
+			-- /////////////////////////////////////////////////////
+			IF @VP_LOCACION IS NULL OR @VP_LOCACION = ''
+				SET @VP_RESULTADO = 'No fue posible obtener locacion del folio origen'
+
+			IF @VP_RESULTADO = ''
+				IF @VP_LOCACION <> 'MHI'
+					SET @VP_RESULTADO = 'El folio origen debe estar en MHI.'
+			-- /////////////////////////////////////////////////////
+		END
+	-- /////////////////////////////////////////////////////
+	
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> 
 -- //////////////////////////////////////////////////////////////
