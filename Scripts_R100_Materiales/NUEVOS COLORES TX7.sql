@@ -46,20 +46,20 @@ FROM RP_SC_HIDE_DELETE WHERE LTRIM(RTRIM(COLOUR)) = 'FNCPWA3'
 
 
 
-DECLARE @VP_FOLIO_BASE INT = 0
-SELECT TOP 1 @VP_FOLIO_BASE = MAX(TAG) FROM RP_FOLIOS 
+--DECLARE @VP_FOLIO_BASE INT = 0
+--SELECT TOP 1 @VP_FOLIO_BASE = MAX(TAG) FROM RP_FOLIOS 
 
-SET @VP_FOLIO_BASE = @VP_FOLIO_BASE + 1
+--SET @VP_FOLIO_BASE = @VP_FOLIO_BASE + 1
 
-EXECUTE [dbo].[PG_IN_RP_FOLIOS]		0, 0,
-									@VP_FOLIO_BASE, 'B', NULL, NULL, NULL
+--EXECUTE [dbo].[PG_IN_RP_FOLIOS]		0, 0,
+--									@VP_FOLIO_BASE, 'B', NULL, NULL, NULL
 
 
-INSERT INTO RP_SC( 
-		[CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION]
-		)
-SELECT GETDATE(),[COLOUR],[LOT],'0000','0000',@VP_FOLIO_BASE,[YARDAS],[YLB],[PESO],[TYPE],'MHI',[K_CLASIFICACION]
-FROM RP_SC WHERE TAGNO = 3797403 AND HIDE = '0137'
+--INSERT INTO RP_SC( 
+--		[CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION]
+--		)
+--SELECT GETDATE(),[COLOUR],[LOT],'0000','0000',@VP_FOLIO_BASE,[YARDAS],[YLB],[PESO],[TYPE],'MHI',[K_CLASIFICACION]
+--FROM RP_SC WHERE TAGNO = 3797403 AND HIDE = '0137'
 
 
 
@@ -175,8 +175,6 @@ order by trx_dt, ORD_NO desc
 --order by ord_no asc
 
 
-
-SELECT 1942.4000 - 41.20
 --select top 1000 * --ord_no,lev_no,doc_type, item_no, loc,quantity,doc_ord_no,trx_dt,trx_tm, user_name, A4GLIdentity
 --from IMLSTRX_SQL 
 --where  item_no = 'FMCKTX7        '    /*and loc = 'MHI'*/ and trx_dt>='20200814'  --AND SEQ_NO <> 0
@@ -186,18 +184,6 @@ SELECT 1942.4000 - 41.20
 ----order by ord_no asc
 
 --=====================COLOR CON PIELES DUPLICADAS==========================
-
-
-
---UPDATE RP_SC
---	SET HIDE = '5042'
---WHERE TAGNO = 3793136
---AND LTRIM(RTRIM(COLOUR)) = 'FWLCPT3'
---AND LTRIM(RTRIM(LOT)) = '401191'
---AND MOVEMENT = 'MHI'
---AND LTRIM(RTRIM(HIDE)) = '0042'
---AND SQF='54.50'
-
 select * from RP_SC where colour='FWLCPT3'  order by  HIDE 
 
 select * from rp_sc where tagno='3793136' order by HIDE
