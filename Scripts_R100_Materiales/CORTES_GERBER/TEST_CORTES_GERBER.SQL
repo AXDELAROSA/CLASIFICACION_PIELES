@@ -44,6 +44,12 @@ SELECT * FROM  RP_FOLIOS WHERE jobno = '18123'
 
 SELECT * FROM ccjobhdr_sql WHERE jobno = '18137'
 
+/* ordenes ficticas cerradas solicitado por dianan*/
+-- SELECT * FROM ccjobhdr_sql WHERE jobno IN ( '18077', '18078', '18221', '18222' )
+-- UPDATE ccjobhdr_sql 
+--	SET STATUS = 'C'
+-- WHERE jobno IN ('18077', '18078', '18221', '18222' )
+
 SELECT * FROM RP_SC WHERE TAGNO = 3798607 ORDER BY HIDE
 
 --USE DATA_02
