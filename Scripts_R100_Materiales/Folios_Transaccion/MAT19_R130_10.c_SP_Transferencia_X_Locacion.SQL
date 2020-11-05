@@ -381,8 +381,8 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 
-
--- EXECUTE [dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO] 0,0,  '3783325'
+--USE DATA_02
+-- EXECUTE [dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO] 0,0,  '3799051'
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_TEMP_X_TAG_NO]
 GO
@@ -401,7 +401,7 @@ AS
 
 	-- =========================================
 		
-	SELECT	*
+	SELECT	TAGNO, CDATE, COLOUR, ( CASE WHEN SUBSTRING(LTRIM(RTRIM(LOT)),1,1) = '0' THEN SUBSTRING(LTRIM(RTRIM(LOT)),2, 10) ELSE LTRIM(RTRIM(LOT)) END ) AS LOT, HIDE, SQF --*
 	-- =====================
 	FROM	RP_SC_TEMP
 	WHERE	tagno=@PP_TAG_NO 
