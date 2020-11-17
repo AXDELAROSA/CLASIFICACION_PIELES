@@ -57,7 +57,7 @@ AS
 			BEGIN TRANSACTION 
 			BEGIN TRY
 			-- ////////////////////////////////////////////////////////////////////	
-
+			DECLARE @VP_MENSAJE_TRANSACCION VARCHAR(255) = ''
 			DECLARE @VP_COLOR_TBL	VARCHAR(10)
 			DECLARE @VP_LOTE_TBL	VARCHAR(10)
 			DECLARE @VP_PIEL_TBL	VARCHAR(10)
@@ -86,7 +86,7 @@ AS
 
 					IF @@ROWCOUNT = 0
 					BEGIN
-						DECLARE @VP_MENSAJE_TRANSACCION VARCHAR(255)= 'No fue posible actualizar la piel: ' + @VP_PIEL_TBL
+						SET @VP_MENSAJE_TRANSACCION = 'No fue posible actualizar la piel: ' + @VP_PIEL_TBL
 						RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 					END
 
@@ -104,13 +104,36 @@ AS
 			
 			IF @@ROWCOUNT = 0
 			BEGIN
-				DECLARE @VP_MENSAJE_DEL_TRANSACCION VARCHAR(255)= 'No fue posible borrar la transaccion: ' + CONVERT(VARCHAR(10), @PP_K_PIEL_A_TRANSFERIR_TRANSACCION)
-				RAISERROR (@VP_MENSAJE_DEL_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+				SET @VP_MENSAJE_TRANSACCION = 'No fue posible borrar la transaccion: ' + CONVERT(VARCHAR(10), @PP_K_PIEL_A_TRANSFERIR_TRANSACCION)
+				RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 			END
 			-- ////////////////////////////////////////////////////////////////////	
 
 			IF SUBSTRING(@PP_LOCACION_DESTINO, 1, 1) IN ('T', 'G') AND @PP_ORDEN_DESTINO <> '' AND  @PP_CARGAR_ORDEN = 1
 				BEGIN
+					DECLARE @VP_ORDEN_ASIGNADA VARCHAR(15) = ''
+
+					SELECT @VP_ORDEN_ASIGNADA = RTRIM(LTRIM(JOBNO)) 
+					FROM  RP_FOLIOS 
+					WHERE TAG = @PP_TAGNO_ORIGEN
+
+					IF @PP_ORDEN_DESTINO = @VP_ORDEN_ASIGNADA
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'El folio ya esta asignado a la Orden: ' + @PP_ORDEN_DESTINO
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END
+
+					DECLARE	@VP_FOLIO_ASIGANDO INT = 0
+					SELECT	@VP_FOLIO_ASIGANDO = FOLIO 
+					FROM	ccjobhdr_sql 
+					WHERE	LTRIM(RTRIM(jobno)) = @PP_ORDEN_DESTINO
+
+					IF @PP_TAGNO_ORIGEN = @VP_FOLIO_ASIGANDO
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'La Orden ya tiene asignado el Folio: ' + CONVERT(VARCHAR(50), @PP_TAGNO_ORIGEN)
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END
+
 					EXECUTE [dbo].[PG_UP_CCJOBHDR_SQL_Y_RP_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_ORIGEN, @PP_ORDEN_DESTINO, 
 																	@PP_LOCACION_DESTINO, @PP_USER, @PP_COMPUTER_NAME		

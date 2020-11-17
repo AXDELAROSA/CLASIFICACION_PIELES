@@ -193,7 +193,7 @@ AS
 				INSERT INTO HIDESLIN_SQL (
 											FILENO,HIDE,SQF,PRINTED
 										) 
-									SELECT	@VP_FILE_NO, [PIEL], [SQF], 1
+									SELECT	@VP_FILE_NO, [PIEL], [SQF], 0
 									FROM	@TBL_PIEL_SELECCIONADAS 
                                                          
 				-- /////////SE INGRESA EL LOG DEL INGROSO MANUAL DE LA PIEL///////////////////////////////////////////////////////////							
