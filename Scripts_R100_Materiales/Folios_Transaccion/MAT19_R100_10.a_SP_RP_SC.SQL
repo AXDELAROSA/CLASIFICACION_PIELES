@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -149,7 +149,7 @@ GO
 
 
 
---USE [DATA_02] 
+USE [DATA_02] 
 --GO
 -- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  3791264
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO]') AND type in (N'P', N'PC'))
@@ -174,7 +174,7 @@ AS
 			COLOUR  AS COLOR,
 			LOT		AS LOTE,
 			HIDE	AS PIEL,
-			SQF,
+			CONVERT(DECIMAL(13,2),SQF) AS SQF,
 			--ISNULL(MOVEMENT, '') AS MOVEMENT
 			(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
 																-- ===================== 
