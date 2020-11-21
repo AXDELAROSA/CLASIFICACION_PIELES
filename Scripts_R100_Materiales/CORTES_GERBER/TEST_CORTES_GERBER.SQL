@@ -66,20 +66,17 @@ SELECT * FROM TIPO_PIEL_LOG
 
 SELECT COUNT(K_PIEL_LOG) FROM PIEL_LOG
 
-SELECT * FROM RP_SC WHERE TAGNO = 3793137 AND LOT = '401471' --AND HIDE = '0436'
+
 
 SELECT * FROM RP_SC WHERE LEN(LTRIM(RTRIM(SQF))) < 4
 AND COLOUR IN (SELECT COLOR FROM COLORES_CONTROLADOS)
 
-/*
---UPDATE RP_SC
---	SET SQF = '41.30'
---WHERE ID = 5139465
-*/
 
-SELECT * FROM  RP_FOLIOS WHERE TAG = 3798304
+SELECT * FROM  RP_FOLIOS WHERE TAG = 3800248
 
-SELECT *  FROM ccjobhdr_sql WHERE COLOUR = FMC--jobno = '18900'
+SELECT * FROM RP_SC WHERE TAGNO = 3800248
+
+SELECT *  FROM ccjobhdr_sql WHERE jobno = '18964'
 
 SELECT * FROM cccuthst_sql WHERE jobno = '18523' --and hideno = '0647' order by linenum asc
 
@@ -89,21 +86,25 @@ SELECT top 10000 D_TIPO_PIEL_LOG, usuario, PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE -- FOLIO_ORIGEN = 3799533 OR FOLIO_DESTINO = 3799533 
+WHERE FOLIO_ORIGEN = 3800248 OR FOLIO_DESTINO = 3800248 
 --AND 
-LOTE = 401471     
-AND PIEL IN (436)
+--LOTE = 401471     
+--AND PIEL IN (436)
 --and color = 'FMCKTX7'
 ORDER BY PIEL, K_PIEL_LOG ASC
 
-SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (04991858, 4991859   ) order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (05018251
+,05018252
+,05018255
+,05018256
+,05018259 ) order by trx_dt,trx_tm, ORD_NO desc
 
 SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (04991858, 4991859   )  order by trx_dt,trx_tm, ORD_NO desc
 
 select top 1000 * 
 from IMINVTRX_SQL 
-where  item_no = 'FMCKTX7           '   and loc = 'T17' and trx_dt>='20201103' and doc_type = 'T' --AND SEQ_NO <> 0
-and doc_ord_no = '18032'
+where  item_no = 'fcnpdx9           '   and loc = 't13' and trx_dt>='20201119' and doc_type = 'T' --AND SEQ_NO <> 0
+and doc_ord_no = '19037'
 --ord_no in ( '04855875')
 order by trx_dt,trx_tm, ORD_NO desc
 --order by ord_no asc
