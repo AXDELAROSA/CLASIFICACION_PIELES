@@ -93,18 +93,14 @@ WHERE FOLIO_ORIGEN = 3800248 OR FOLIO_DESTINO = 3800248
 --and color = 'FMCKTX7'
 ORDER BY PIEL, K_PIEL_LOG ASC
 
-SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (05018251
-,05018252
-,05018255
-,05018256
-,05018259 ) order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (5026175   ) order by trx_dt,trx_tm, ORD_NO desc
 
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (04991858, 4991859   )  order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (5026175 )  order by trx_dt,trx_tm, ORD_NO desc
 
 select top 1000 * 
 from IMINVTRX_SQL 
-where  item_no = 'fcnpdx9           '   and loc = 't13' and trx_dt>='20201119' and doc_type = 'T' --AND SEQ_NO <> 0
-and doc_ord_no = '19037'
+where  item_no = 'fDnpdx9           '   /*and loc = 't13' */ and trx_dt>='20201123' --and doc_type = 'T' --AND SEQ_NO <> 0
+--and doc_ord_no = '19037'
 --ord_no in ( '04855875')
 order by trx_dt,trx_tm, ORD_NO desc
 --order by ord_no asc

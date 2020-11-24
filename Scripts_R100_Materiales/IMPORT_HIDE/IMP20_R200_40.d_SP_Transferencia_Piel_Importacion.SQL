@@ -301,7 +301,7 @@ AS
 					END
 				
 				-- ///////SE ENVIA CORREO TEMPORALMENTE PARA ESTAR MONITORIANDO////////////////////////////////////////////
-				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
+				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx;monicag@pearlleather.com.mx'
 				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Importación de Pieles Manuales...'
 				DECLARE @VP_BODY		NVARCHAR(MAX) 
 
