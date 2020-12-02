@@ -22,7 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_CAMBIO_COLOR]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_X_CAMBIO_COLOR]	0, 144, 3800963, 'MHI', 'FNPJTX7', 'FWLNPX7', 'cambio de color de FNPJTX7 a FWLNPX7 por materiales', 'FRANCISCOE', 'IT-010'
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_X_CAMBIO_COLOR]	0, 144, 3801523, 'MHI', 'FYPATX7', 'FYCPAX7', 'cambio de color de FYPATX7 a FYCPAX7 por materiales', 'FRANCISCOE', 'IT-010'
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_CAMBIO_COLOR]
 	@PP_K_SISTEMA_EXE						INT,
@@ -88,7 +88,7 @@ AS
 								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 							END	
 
-						-- /////////SE VALIDA QUE EL LOTE Y PIEL NO EXISTA EN EL COLOR NUEVO///////////////////////////////////////////////////////////	
+						---- /////////SE VALIDA QUE EL LOTE Y PIEL NO EXISTA EN EL COLOR NUEVO///////////////////////////////////////////////////////////	
 						DECLARE @VP_N_PIEL_DUPLICADA INT = 0
 						SELECT	@VP_N_PIEL_DUPLICADA = COUNT(ID)
 						FROM	RP_SC
