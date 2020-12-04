@@ -70,40 +70,43 @@ AND COLOUR IN (SELECT COLOR FROM COLORES_CONTROLADOS)
 
 SELECT * FROM  RP_FOLIOS WHERE JOBNO = '19157'
 
-SELECT * FROM RP_SC WHERE LOT = '33901' AND HIDE = '0516'
-
-SELECT *  FROM ccjobhdr_sql WHERE jobno = '19157'
+SELECT *  FROM ccjobhdr_sql WHERE jobno = '19407'
 
 SELECT * FROM cccuthst_sql WHERE jobno = '19157' --and hideno = '0647' order by linenum asc
 
 SELECT top 100  * FROM cccuthst_sql order by colkey asc
 
+SELECT * FROM RP_SC_TEMP WHERE TAGNO = 3802149
+SELECT * FROM RP_SC_TEMP WHERE TAGNO = 3802154
 
-SELECT * FROM RP_SC WHERE LOT IN ('401501','33901') AND HIDE IN ( '0516', '0494', '0068' )
+SELECT * FROM RP_SC WHERE --COLOUR = 'FMCKTX7' AND LOT = '33851' --AND HIDE = '0516'
+TAGNO IN (3802142,  3800993)
+ORDER BY HIDE ASC
 
 SELECT top 10000 D_TIPO_PIEL_LOG, usuario, PIEL_LOG.*
 FROM PIEL_LOG 
 INNER JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-WHERE --FOLIO_ORIGEN = 3800663 OR FOLIO_DESTINO = 3800663 
+WHERE --FOLIO_ORIGEN = 3802142 OR FOLIO_DESTINO = 3802142 
+		ORDEN_ORIGEN = 19407 OR ORDEN_DESTIDO = 19407
 --AND 
-LOTE = 700151         
-AND PIEL IN (282)
+--LOTE = 33851         
+--AND PIEL IN (76, 813, 1212, 672, 711, 806, 810, 125)
 --and color = 'FMCKTX7'
---AND D_TIPO_PIEL_LOG = 'DEVOLUCION'
+--AND D_TIPO_PIEL_LOG = 'TRANSFERENCIA A ORDEN'
 ORDER BY  K_PIEL_LOG ASC
 
 SELECT TOP 100 * FROM pearl_log WHERE JOBNO = '3800386' --HIDENO = '0089' 
 ORDER BY  cdate DESC
 
-SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (5026175   ) order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 100 * FROM IMLSTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (5031218, 5107455    ) order by trx_dt,trx_tm, ORD_NO desc
 
-SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (5026175 )  order by trx_dt,trx_tm, ORD_NO desc
+SELECT top 10 * FROM IMINVTRX_SQL	WHERE LTRIM(RTRIM(ord_no)) IN (5031218, 5107455 )  order by trx_dt,trx_tm, ORD_NO desc
 
 select top 1000 * 
 from IMINVTRX_SQL 
-where  item_no = 'fDnpdx9           '   /*and loc = 't13' */ and trx_dt>='20201123' --and doc_type = 'T' --AND SEQ_NO <> 0
---and doc_ord_no = '19037'
+where  item_no = 'FWLCPX7           '   /*and loc = 't13' */ and trx_dt>='20201023' --and doc_type = 'T' --AND SEQ_NO <> 0
+and doc_ord_no = '19407'
 --ord_no in ( '04855875')
 order by trx_dt,trx_tm, ORD_NO desc
 --order by ord_no asc
