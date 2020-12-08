@@ -137,8 +137,8 @@ AS
 										@VP_DETAIL, ''
 
 	-- /////////////////////////////////////////////////////////////////////
-	DECLARE @VP_TOTAL_SQF_TRANSFER  DECIMAL(8,4) = 0
-	SELECT	@VP_TOTAL_SQF_TRANSFER	=  SUM(CAST(SQF AS DECIMAL(8,4)))
+	DECLARE @VP_TOTAL_SQF_TRANSFER  DECIMAL(13,4) = 0
+	SELECT	@VP_TOTAL_SQF_TRANSFER	=  SUM(CAST(SQF AS DECIMAL(13,4)))
 									FROM	RP_SC
 									WHERE	TAGNO=@PP_TAGNO_ORIGEN 
 							

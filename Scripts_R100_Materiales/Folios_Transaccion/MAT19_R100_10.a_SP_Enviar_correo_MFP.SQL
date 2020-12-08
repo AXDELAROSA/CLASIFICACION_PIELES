@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 -- ////////////////////////////////////////////////////////////// 
@@ -29,7 +29,7 @@ CREATE PROCEDURE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]
 	@PP_LOCACION_ORIGEN			VARCHAR(10),
 	@PP_COLOR					VARCHAR(10),
 	@PP_FOLIO					INT,
-	@VP_TOTAL_SQF				DECIMAL(8,4),
+	@VP_TOTAL_SQF				DECIMAL(13,4),
 	@PP_COMENTARIO				VARCHAR(255),
 	@PP_USER					VARCHAR(50)
 AS
@@ -89,7 +89,7 @@ CREATE PROCEDURE [dbo].[PG_CONFIGURAR_CORREO_MHI_ENTRADA_PIEL]
 	@PP_LOCACION_ORIGEN			VARCHAR(10),
 	@PP_COLOR					VARCHAR(10),
 	@PP_FOLIO					INT,
-	@VP_TOTAL_SQF				DECIMAL(8,4),
+	@VP_TOTAL_SQF				DECIMAL(13,4),
 	@PP_COMENTARIO				VARCHAR(255),
 	@PP_USER					VARCHAR(50)
 AS

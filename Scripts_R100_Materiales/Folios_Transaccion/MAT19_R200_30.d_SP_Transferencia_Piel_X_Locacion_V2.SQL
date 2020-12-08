@@ -22,8 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_V2]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION]	0,0,  3785638 , '-' , '09400' , 'MHI' , 'T12' , 1 , 
-												'FMCKTX7' , '0' , '' , 'franciscoe' , 'ITX-002' 
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_V2]	0,0,  8724 , 3802196 , '-' , '' , 'MHI' , 'MQU' , 1 , 'FMCKVT9' , '0' , '' , 'franciscoe' , 'IT-010' 
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_X_LOCACION_V2]
 	@PP_K_SISTEMA_EXE						INT,
