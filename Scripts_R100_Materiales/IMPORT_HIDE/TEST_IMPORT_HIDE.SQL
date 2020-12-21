@@ -11,26 +11,39 @@ USE DATA_02Pruebas
  order by k_piel_log ASC
 
 
-SELECT	* FROM	IncInsp_sql 
-WHERE	LTRIM(RTRIM([Date])) = 20201111
-AND		LTRIM(RTRIM(Lot)) = '401481' 
-AND		LTRIM(RTRIM([Description])) = 'FWLCPX7'
+SELECT TOP 100	* FROM	IncInsp_sql --ORDER BY Date DESC
+WHERE --	LTRIM(RTRIM([Date])) = 20201221
+
+----AND		
+LTRIM(RTRIM(Lot)) = '401771' 
+AND		LTRIM(RTRIM([Description])) = 'FWLNPX7'
+
+--UPDATE IncInsp_sql
+--	SET Lot_size = 250
+--WHERE LTRIM(RTRIM(Lot)) = '401771' 
+--AND		LTRIM(RTRIM([Description])) = 'FWLNPX7'
+
+	-- ///////////////SE NOTIFICA A CALIDAD PARA INSPECCION /////////////////////////////////////////////////////	
+	--DECLARE @VP_FECHA	INT = FORMAT(CAST(GETDATE() AS DATE), N'yyyyMMdd');
+
+	--		INSERT INTO IncInsp_sql (	[Date], Lot, [Description], Lot_size, Sample_size, [Status], Accepted ) 
+	--						VALUES (	@VP_FECHA, CONCAT('         ', '106661'), 'FCNPLT5', 362, 5, '-', '-')
 
 
 SELECT TOP 10000 *
 FROM RP_SC 
-WHERE LOT = '700171' 
-and colour = 'FYCPAT5'
---and CONVERT( DATE,CDATE) = '2020-11-21' 
---AND MOVEMENT = 'MHI'
+WHERE LOT = '67561' 
+and colour = 'FMCKDX9'
+AND HIDE = '0221'
 order by hide asc
 
 SELECT TOP 1000 * FROM HIDESHDR_SQL   
  inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-AND	LTRIM(RTRIM(pLOT)) = '700171'
+AND	LTRIM(RTRIM(pLOT)) = '401771'
  --AND LTRIM(RTRIM(HIDE))  IN ('0200')
- --AND PCOLOR = 'FYPAWT5'
- AND HIDESHDR_SQL.FILENO IN ( '201030110128T1000001')
+ AND PCOLOR = 'FWLNPX7'
+ --AND THIDES = '109'
+ --AND HIDESHDR_SQL.FILENO IN ( '201030110128T1000001')
  ORDER BY HIDE ASC
   	
 --SELECT * FROM HIDESHDR_SQL WHERE FILENO IN ('201030110128T1000001' )
