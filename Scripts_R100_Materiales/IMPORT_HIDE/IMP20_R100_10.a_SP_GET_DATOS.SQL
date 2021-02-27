@@ -40,9 +40,7 @@ AS
 
 	SELECT  TOP 1 @VP_LOTE_PIEL_ULTIMA_RP_SC = CONVERT(INT, LTRIM(RTRIM(HIDE)))
 	FROM	RP_SC 
-	WHERE	--LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
-	--AND		
-	LTRIM(RTRIM(LOT)) = @PP_LOTE
+	WHERE	LTRIM(RTRIM(LOT)) = @PP_LOTE
 	ORDER BY HIDE DESC
 
 	IF @VP_LOTE_PIEL_ULTIMA_RP_SC IS NULL
@@ -51,9 +49,7 @@ AS
 	SELECT	TOP 1  @VP_LOTE_PIEL_ULTIMA_HIDESLIN_SQL = CONVERT(INT, LTRIM(RTRIM(HIDE))) 
 	FROM	HIDESLIN_SQL 
 	INNER JOIN HIDESHDR_SQL ON HIDESLIN_SQL.FILENO=HIDESHDR_SQL.FILENO 
-	WHERE	--LTRIM(RTRIM(PCOLOR)) = @PP_COLOR -- SE COMENTO PORQUE EL LOTE DEBE SER UNICO POR COLOR
-	--AND		
-	LTRIM(RTRIM(PLOT)) = @PP_LOTE
+	WHERE LTRIM(RTRIM(PLOT)) = @PP_LOTE
 	ORDER BY hide DESC
 
 	IF @VP_LOTE_PIEL_ULTIMA_HIDESLIN_SQL IS NULL
@@ -65,6 +61,42 @@ AS
 		SET @VP_CONSECUTIVO = @VP_LOTE_PIEL_ULTIMA_HIDESLIN_SQL + 1
 
 	SELECT RIGHT('0000' + CONVERT(VARCHAR(4), @VP_CONSECUTIVO), 4) AS CONSECUTIVO
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02PRUEBAS
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_PACKING_NO_LOTE_IMPORTADO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_PACKING_NO_LOTE_IMPORTADO]
+GO
+
+/*
+ EXEC PG_GET_PACKING_NO_LOTE_IMPORTADO 0 ,0, '100061'
+*/
+
+CREATE PROCEDURE [dbo].[PG_GET_PACKING_NO_LOTE_IMPORTADO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_LOTE					VARCHAR(15)
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_PACKING_NO VARCHAR(20) = ''
+	
+	SELECT TOP 1 @VP_PACKING_NO = ISNULL(INVOICE,'')   
+	FROM HIDESHDR_SQL   
+	INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
+	AND	LTRIM(RTRIM(PLOT)) = @PP_LOTE
+	ORDER BY HIDE DESC
+
+	SELECT @VP_PACKING_NO AS PACKING_NO
 
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////

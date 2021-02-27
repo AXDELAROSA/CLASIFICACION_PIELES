@@ -143,7 +143,7 @@ AS
 				GROUP BY TAG, COLOUR
 				
 				-- /////////SI NO EXISTE UN FOLIO BASE PARA EL COLOR NUEVO SE CREA///////////////////////////////////////////////////////////	
-				IF @VP_FOLIO IS NULL OR @VP_FOLIO = ''
+				IF @VP_FOLIO IS NULL OR @VP_FOLIO = 0
 					BEGIN
 						EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
 																			'DATA_02', 'RP_FOLIOS', 'TAG',

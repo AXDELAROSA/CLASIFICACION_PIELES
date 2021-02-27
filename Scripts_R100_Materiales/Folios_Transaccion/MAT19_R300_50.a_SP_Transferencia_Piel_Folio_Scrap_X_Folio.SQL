@@ -106,10 +106,6 @@ AS
 						-- /////////////////////////INGRESO EL NUEVO FOLIO////////////////////////////////////////////
 						EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@VP_TAGNO_DESTINO, 'A', NULL, NULL, NULL
-
-						-- /////////////////////SE IMPRIME EL FOLIO NUEVO////////////////////////////////////////////////
-						EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-													@VP_TAGNO_DESTINO, 1
 					END
 
 				-- /////////////////////////////////////////////////////////////////////
@@ -261,44 +257,7 @@ AS
 										EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																			@PP_USER, @PP_COMPUTER_NAME, 'FoliosScrap',
 																			@PP_TAGNO_ORIGEN, 'Transfer',
-																			@VP_DETAIL, @VP_PIEL_TBL
-
-										-- /////////////////////////SI DESEA IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS////////////////////////////////////////////
-										IF @PP_PRT_FORM_DEV_EXT = 1 -- SI
-											BEGIN
-												-- /////////////////VALIDA ESTATUS FOLIO ORIGEN////////////////////////////////////////////////////
-												DECLARE	@VP_ESTATUS	VARCHAR(5)
-												SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
-																	FROM RP_Folios
-																	WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
-
-												IF @VP_ESTATUS <> 'B' --AND @PP_LOCACION_ORIGEN <> 'MHI'
-													BEGIN
-														EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																							@PP_TAGNO_ORIGEN, 5
-													END
-												ELSE
-													BEGIN
-														EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																									@PP_TAGNO_ORIGEN, 'D'
-													END
-
-											END	
-										ELSE
-											BEGIN
-												-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
-												EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																							@PP_TAGNO_ORIGEN, 'D'
-
-												-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
-												SET @VP_DETAIL = 'Delete hides por SCRAP (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
-												EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_USER, @PP_COMPUTER_NAME, 'FolioScrap',
-																					@PP_TAGNO_ORIGEN, 'Delete hides',
-																					@VP_DETAIL, @VP_PIEL_TBL
-											
-											END
-											-- ///////////////////////////////////////////
+																			@VP_DETAIL, @VP_PIEL_TBL																													
 									END
 
 								FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_TBL
@@ -454,6 +413,49 @@ AS
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@VP_TAGNO_DESTINO, 0, @VP_LOCACION_DESTINO, 0
 
+					-- /////////////////////SE IMPRIME EL FOLIO NUEVO////////////////////////////////////////////////
+					EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+												@VP_TAGNO_DESTINO, 1
+
+					-- /////////////////////////SI DESEA IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS////////////////////////////////////////////
+					IF @VP_N_PIEL > 1
+						BEGIN
+							IF @PP_PRT_FORM_DEV_EXT = 1 -- SI
+								BEGIN
+									-- /////////////////VALIDA ESTATUS FOLIO ORIGEN////////////////////////////////////////////////////
+									DECLARE	@VP_ESTATUS	VARCHAR(5)
+									SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
+														FROM RP_Folios
+														WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
+
+									IF @VP_ESTATUS <> 'B' --AND @PP_LOCACION_ORIGEN <> 'MHI'
+										BEGIN
+											EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_TAGNO_ORIGEN, 5
+										END
+									ELSE
+										BEGIN
+											EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																						@PP_TAGNO_ORIGEN, 'D'
+										END
+
+								END	
+							ELSE
+								BEGIN
+									-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
+									EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_TAGNO_ORIGEN, 'D'
+
+									-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
+									SET @VP_DETAIL = 'Delete hides por SCRAP (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
+									EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																		@PP_USER, @PP_COMPUTER_NAME, 'FolioScrap',
+																		@PP_TAGNO_ORIGEN, 'Delete hides',
+																		@VP_DETAIL, @VP_PIEL_TBL
+								
+								END
+						END
+
 					-- //////////////SE ENVIA CORREO A RESPONSABLES DE MFP CON DATOS DE LA TRANSAACION///////////////////////////////////////////////////////
 					DECLARE @VP_TOTAL_SQF_MFP  DECIMAL(8,4) = 0
 					IF @VP_N_PIEL = 1 AND (CAST(@VP_SQF_TBL AS DECIMAL(13,2)) <> @PP_TB_SQF)
@@ -473,9 +475,7 @@ AS
 					EXECUTE [dbo].[PG_CONFIGURAR_CORREO_MFP_ENTRADA_PIEL]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 																			@PP_LOCACION_ORIGEN, @PP_CB_COLOR, @VP_TAGNO_DESTINO, 
 																			@VP_TOTAL_SQF_MFP, @PP_COMENTARIO, @PP_USER
-																				
-					
-								
+																								
 			COMMIT TRANSACTION 
 			END TRY
 	
