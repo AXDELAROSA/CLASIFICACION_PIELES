@@ -112,7 +112,6 @@ AS
 									  N'</tr>' + 
 									N'</thead>' + 
 									N'<tbody>' + 
-									  N'<tr>' + 
 										CAST ( ( SELECT td = RTRIM(LTRIM(TAGNO)),'',  
 								                td = RTRIM(LTRIM(COLOUR)), '',  
 								                td = RTRIM(LTRIM(LOT)), '',  
@@ -125,7 +124,6 @@ AS
 										 WHERE RTRIM(LTRIM(TAGNO)) = @PP_FOLIO_ORIGEN
 								          FOR XML PATH('tr'), TYPE   
 										) AS NVARCHAR(MAX) ) +  
-								  N'</tr>' + 
 									N'</tbody>' + 
 								N'</table>' ; 
 					SET ROWCOUNT 0

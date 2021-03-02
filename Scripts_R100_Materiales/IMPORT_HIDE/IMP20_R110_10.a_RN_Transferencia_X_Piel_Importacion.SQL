@@ -273,7 +273,7 @@ AS
 	FROM HIDESHDR_SQL 
 	WHERE FILENO = @PP_FILE_NO
 
-	IF @PP_FILE_NO <> 'MIT'
+	IF @VP_LOCACION <> 'MIT'
 		SET @VP_RESULTADO = 'El Ticket no se encientra en MIT.'
 	
 	IF @VP_RESULTADO = ''

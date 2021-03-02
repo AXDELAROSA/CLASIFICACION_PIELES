@@ -22,7 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_MIT_A_MHI_O_MRD]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_MIT_A_MHI_O_MRD]	0,0,  '210226074936T1000002' , 'MHI' , 'franciscoe'
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_MIT_A_MHI_O_MRD]	0, 144, '210226074936T1000002' , 'MHI' , 'franciscoe' 
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_MIT_A_MHI_O_MRD]
 	@PP_K_SISTEMA_EXE						INT,
@@ -57,7 +57,7 @@ AS
 					RAISERROR ('NO fue posible actualizar la locación en [HIDESHDR_SQL].', 16, 1 ) --MENSAJE - Severity -State.		
 
 				-- ////////SE OBTIENE EL COLOR DONDE DEL TICKET IMPORTADO///////////////////////////////////
-				DECLARE @VP_COLOR VARCHAR(5) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0;
+				DECLARE @VP_COLOR VARCHAR(20) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0;
 				
 				SELECT	@VP_COLOR = LTRIM(RTRIM(PCOLOR)),
 						@VP_LOTE = LTRIM(RTRIM(PLOT)),
@@ -99,7 +99,8 @@ AS
 								)
 							SELECT	GETDATE(), @VP_COLOR, @VP_LOTE, HIDE, [SQF],  @VP_FOLIO, NULL, NULL, NULL, 'C', @PP_LOCACION_DESTINO, 0 
 							FROM	HIDESLIN_SQL 							
-				
+							WHERE FILENO = @PP_FILE_NO
+
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible agregar las pieles del ticket en [RP_SC]', 16, 1 ) --MENSAJE - Severity -State.		
                                                          
@@ -117,13 +118,14 @@ AS
 									-- ===========================
 									@PP_K_USUARIO_ACCION, GETDATE(), @PP_K_USUARIO_ACCION, GETDATE(),
 									0, NULL, NULL
-							FROM	HIDESLIN_SQL 
+							FROM	HIDESLIN_SQL
+							WHERE FILENO = @PP_FILE_NO 
 				
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible agregar las pieles del ticket en [PIEL_LOG]', 16, 1 ) --MENSAJE - Severity -State.		
                       
 				-- /////////////SE TRANSFIEREN LOS PIES CUADRADOS A LA LOCACION DESTINO///////////////////////////////////////////////////////	
-				DECLARE @VP_TRANSACCION_DOC	INT = 0
+				DECLARE @VP_TRANSACCION_DOC	VARCHAR(10) = ''
 
 				SELECT	TOP 1
 						@VP_TRANSACCION_DOC  = RIGHT('00000000' + CONVERT(VARCHAR(10),Ltrim(Rtrim(NEXT_DOC_NO))), 8)
@@ -211,7 +213,7 @@ AS
 		
 		END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @VP_LOTE AS CLAVE
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_FILE_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
 

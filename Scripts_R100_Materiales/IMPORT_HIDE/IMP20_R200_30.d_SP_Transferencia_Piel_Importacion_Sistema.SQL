@@ -295,7 +295,16 @@ AS
 				--///////SE ENVIA CORREO A CALIDAD PARA QUE REALIZE LA INSPECCION////////////////////////////////////////////
 				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx' --;monicag@pearlleather.com.mx'
 				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Entrada a inventario MIT en espera de inspección...'
-				DECLARE @VP_BODY		NVARCHAR(MAX) 
+				DECLARE @VP_BODY		NVARCHAR(MAX)  = ''
+
+				--SELECT  @VP_RECIPIENTS	=	@VP_RECIPIENTS + ';' + CORREO_USUARIO_PEARL
+				--				FROM	BD_GENERAL.dbo.USUARIO_PEARL AS USERS
+				--				INNER	JOIN	BD_GENERAL.dbo.GRUPO_APROBADOR GP_APROB ON GP_APROB.K_USUARIO=USERS.K_USUARIO_PEARL
+				--				WHERE   GP_APROB.S_GRUPO_APROBADOR = 'RECIBI_BPO'
+				--				AND		GP_APROB.K_TIPO_GRUPO_APROBADOR = 7900
+				--				AND		K_ESTATUS_GRUPO_APROBADOR = 1
+
+				--SET @VP_RECIPIENTS = SUBSTRING(@VP_RECIPIENTS,2,LEN(@VP_RECIPIENTS))
 
 				SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
 									N'<thead>' + 
@@ -303,7 +312,7 @@ AS
 									    N'<th colspan="7">Entrada a inventario MIT en espera de inspección...</th>' + 
 									  N'</tr>' + 
 									  N'<tr BGCOLOR="#48D1CC">' + 
-									    N'<th>File No</th><th>Color</th><th>Lote</th><th>Total Piel</th><th>Total SQF</th><th>Packing</th><th>Usuario</th>' + 
+									    N'<th>File No</th><th>Color</th><th>Lote</th><th>Total Piel</th><th>Total SQF</th><th>Packing No.</th><th>Usuario</th>' + 
 									  N'</tr>' + 
 									N'</thead>' + 
 									N'<tbody>' + 
