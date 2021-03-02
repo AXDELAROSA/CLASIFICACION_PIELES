@@ -29,13 +29,14 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_MIT_A_MHI_O_MRD]
 	@PP_K_USUARIO_ACCION					INT,
 	-- ===========================
 	@PP_FILE_NO								VARCHAR(50),
-	@PP_LOCACION_DESTINO					VARCHAR(50),
+	@PP_LOCACION_DESTINO					VARCHAR(5),
 	-- ===========================
 	@PP_USER								VARCHAR(25)
 AS
 
 	-- ///////////////////////////////////////////
-	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
+	DECLARE @VP_LOCACION_ORIGEN	VARCHAR(5) = 'MIT'
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
 	EXECUTE [dbo].[PG_RN_VALIDA_LOCACION_TICKET_IMPORTADO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -56,10 +57,11 @@ AS
 					RAISERROR ('NO fue posible actualizar la locación en [HIDESHDR_SQL].', 16, 1 ) --MENSAJE - Severity -State.		
 
 				-- ////////SE OBTIENE EL COLOR DONDE DEL TICKET IMPORTADO///////////////////////////////////
-				DECLARE @VP_COLOR VARCHAR(5) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0
+				DECLARE @VP_COLOR VARCHAR(5) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0;
 				
 				SELECT	@VP_COLOR = LTRIM(RTRIM(PCOLOR)),
-						@VP_LOTE = LTRIM(RTRIM(PLOT))
+						@VP_LOTE = LTRIM(RTRIM(PLOT)),
+						@VP_TOTAL_SQF = TAREA
 				FROM HIDESHDR_SQL 
 				WHERE FILENO = @PP_FILE_NO
 
@@ -76,6 +78,11 @@ AS
 				-- /////////SI NO EXISTE UN FOLIO BASE PARA EL COLOR NUEVO SE CREA///////////////////////////////////////////////////////////	
 				IF @VP_FOLIO IS NULL OR @VP_FOLIO = 0
 					BEGIN
+						DECLARE @VP_TIPO_FOLIO VARCHAR(5) = 'B'
+
+						IF @PP_LOCACION_DESTINO = 'MRD'
+							SET @VP_TIPO_FOLIO = 'A'
+												
 						EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
 																			--'DATA_02', 
 																			'DATA_02PRUEBAS', 
@@ -83,7 +90,7 @@ AS
 																			@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
 
 						EXECUTE [dbo].[PG_IN_RP_FOLIOS]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-														@VP_FOLIO, 'B', '', '', ''
+														@VP_FOLIO, @VP_TIPO_FOLIO, '', '', ''
 					END
 
 				-- /////////SE INGRESA LA PIEL AL FOLIO BASE DEL COLOR NUEVO///////////////////////////////////////////////////////////	
@@ -105,7 +112,7 @@ AS
 									[K_USUARIO_ALTA], [F_ALTA], [K_USUARIO_CAMBIO], [F_CAMBIO],
 									[L_BORRADO], [K_USUARIO_BAJA], [F_BAJA]  )	
 									-- ===========================
-							SELECT	2, 0, @VP_COLOR, @VP_LOTE, HIDE, 'MIT', 0, 
+							SELECT	2, 0, @VP_COLOR, @VP_LOTE, HIDE, @VP_LOCACION_ORIGEN, 0, 
 									@VP_FOLIO, @PP_LOCACION_DESTINO, 0, [SQF], GETDATE(),
 									-- ===========================
 									@PP_K_USUARIO_ACCION, GETDATE(), @PP_K_USUARIO_ACCION, GETDATE(),
@@ -122,8 +129,8 @@ AS
 						@VP_TRANSACCION_DOC  = RIGHT('00000000' + CONVERT(VARCHAR(10),Ltrim(Rtrim(NEXT_DOC_NO))), 8)
 				-- =====================
 				FROM	IMCTLFIL_SQL
-				-- ///////////////////////////////////////////
 
+				-- ///////////////////////////////////////////
 				EXECUTE [dbo].[PG_UP_IMCTLFIL_SQL_NEXT_DOC_NO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	1 
 				-- ///////////////////////////////////////////
@@ -131,10 +138,16 @@ AS
 				DECLARE @VP_COMENTARIO VARCHAR(255) = 'MIT to ' + @PP_LOCACION_DESTINO
 				DECLARE @VP_INDICE	VARCHAR(10) = '0'
 				SET @VP_LOTE_TBL	= RIGHT( '000000' + @VP_LOTE, 6)					
+				DECLARE @VP_ORDERNO VARCHAR (50) =  '00000'
+
+				-- ///////////////////////////////////////////
+				EXECUTE [dbo].[PG_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_QUITAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																					@VP_LOCACION_ORIGEN, @VP_COLOR,
+																					@VP_LOTE_TBL, @VP_TOTAL_SQF
 				
 				-- ///////////////////////////////////////////
 				EXECUTE [dbo].[PG_IN_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_AGREGAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					'MIT', @PP_LOCACION_DESTINO, @VP_COLOR,
+																					@VP_LOCACION_ORIGEN, @PP_LOCACION_DESTINO, @VP_COLOR,
 																					@VP_LOTE_TBL, @VP_TOTAL_SQF, @VP_TRANSACCION_DOC
 
 				-- ///////////////////////////////////////////
@@ -143,19 +156,34 @@ AS
 														@VP_TRANSACCION_DOC, @VP_INDICE, 0
 
 				-- ///////////////////////////////////////////
+				EXECUTE [dbo].[PG_IN_IMLSTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@VP_COLOR, @VP_LOTE_TBL, @VP_TOTAL_SQF, 
+														@VP_TRANSACCION_DOC, @VP_INDICE, 1
+				
+				-- ///////////////////////////////////////////
+				EXECUTE [dbo].[PG_UP_IMINVLOC_SQL_X_LOCACION_COLOR_QUITAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@VP_LOCACION_ORIGEN, @VP_COLOR, @VP_TOTAL_SQF
+
+				-- ///////////////////////////////////////////
 				EXECUTE [dbo].[PG_IN_UP_IMINVLOC_SQL_X_LOCACION_COLOR_AGREGAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_LOCACION_DESTINO, @VP_COLOR, @VP_TOTAL_SQF
-
+																								
 				-- ////////////////////////////////////////////////////////////////////
 				DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
-				DECLARE @VP_ORDERNO VARCHAR (50) =  '00000'
+				
+				EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR, 
+														@VP_LOCACION_ORIGEN, @VP_TOTAL_SQF, @VP_ORDERNO, 
+														@PP_USER, @VP_COMENTARIO, 0, @VP_INDICE,
+														'T', 'M', @VP_TOTAL_SQF
 
+				-- ////////////////////////////////////////////////////////////////////
 				SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
 
 				EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR, 
 														@PP_LOCACION_DESTINO, @VP_TOTAL_SQF, @VP_ORDERNO, 
-														@PP_USER, @VP_COMENTARIO, 0, @VP_INDICE,
+														@PP_USER, @VP_COMENTARIO, 1, @VP_INDICE,
 														'T', 'M', @VP_TOTAL_SQF
 
 				-- ///////////////////////////////////////////

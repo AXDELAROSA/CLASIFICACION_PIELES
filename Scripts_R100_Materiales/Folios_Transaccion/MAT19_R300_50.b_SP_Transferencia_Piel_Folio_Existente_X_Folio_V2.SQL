@@ -577,8 +577,8 @@ AS
 
 
 					-- ///////////////SE ACTUALIZA LA LOCACION AL FOLIO DESTINO////////SE COMENTO PORQUE LOS REGISTROS SE INGRESAN CON LA LOCACION FEG/////////////////////////////////////////////
-					--EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-					--													@PP_TAGNO_DESTINO, 0, @PP_LOCACION_DESTINO, 0
+					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																		@PP_TAGNO_DESTINO, 0, @PP_LOCACION_DESTINO, 0
 																							
 					-- ///////////////SE BORRA LA TRANSACCION//////////////////////////////////////////////////////
 					DELETE	FROM	[PIEL_A_TRANSFERIR]
@@ -603,7 +603,7 @@ AS
 														FROM RP_Folios
 														WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
 										
-									-- /////////////////SE AGREGO EL IF DE ARRIBA Y SE COMENTO LO DE ABAJO POR FEG////////////////////////////////////////////////////
+									-- /////////////////////////////////////////////////////////////////////
 									IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
 										BEGIN
 											EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -621,7 +621,7 @@ AS
 														FROM RP_Folios
 														WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_DESTINO
 
-									-- /////////////////SE AGREGO EL IF DE ARRIBA Y SE COMENTO LO DE ABAJO POR FEG////////////////////////////////////////////////////
+									-- /////////////////////////////////////////////////////////////////////
 									IF @VP_ESTATUS <> 'B'
 										BEGIN
 											EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,

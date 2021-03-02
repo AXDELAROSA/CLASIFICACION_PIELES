@@ -51,7 +51,6 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA]
 AS
 
 	-- ///////////////////////////////////////////
-
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	DECLARE @VP_LOCACION_DESTINO VARCHAR(255) = 'MIT'
 
@@ -81,7 +80,7 @@ AS
 					)
 				SET NOCOUNT ON
 				
-				DECLARE @VP_POSICION_SQF	 INT
+				DECLARE @VP_POSICION_SQF	 INT = 0
 				DECLARE @VP_SQF_VALOR		VARCHAR(20) = ''
 								
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
@@ -140,10 +139,9 @@ AS
 				FETCH NEXT FROM CU_TICKET_A_IMPORTAR INTO @VP_SQF
 				
 				WHILE @@FETCH_STATUS = 0
-					BEGIN			
-						DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
-
+					BEGIN	
 						-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
+						DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
 						EXECUTE [dbo].[PG_RN_CONSECUTIVO_PIEL_X_LOTE_A_IMPORTAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_LOTE,
 																					@OU_RESULTADO_VALIDACION = @VP_NUMERO_PIEL		OUTPUT
@@ -217,9 +215,7 @@ AS
 				-- ////////////////////////////////////////////////////////////////////
 				DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
 				DECLARE @VP_ORDERNO VARCHAR (50) =  '00000'
-
-				SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
-
+				
 				EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@VP_TRXIDNO, @VP_TRANSACCION_DOC, @PP_PEARL_COLOR, 
 														@VP_LOCACION_DESTINO, @PP_TOTAL_SQF_LOTE, @VP_ORDERNO, 
