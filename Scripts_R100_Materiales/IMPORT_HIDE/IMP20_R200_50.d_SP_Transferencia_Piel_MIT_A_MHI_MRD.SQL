@@ -9,7 +9,7 @@
 -- // Fecha creación:	26/FEB/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02PRUEBAS] 
+USE [DATA_02] 
 GO
 
 
@@ -84,8 +84,8 @@ AS
 							SET @VP_TIPO_FOLIO = 'A'
 												
 						EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																			--'DATA_02', 
-																			'DATA_02PRUEBAS', 
+																			'DATA_02', 
+																			--'DATA_02PRUEBAS', 
 																			'RP_FOLIOS', 'TAG',
 																			@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
 
@@ -125,7 +125,7 @@ AS
 					RAISERROR ('NO fue posible agregar las pieles del ticket en [PIEL_LOG]', 16, 1 ) --MENSAJE - Severity -State.		
                       
 				-- /////////////SE TRANSFIEREN LOS PIES CUADRADOS A LA LOCACION DESTINO///////////////////////////////////////////////////////	
-				DECLARE @VP_TRANSACCION_DOC	VARCHAR(10) = ''
+				DECLARE @VP_TRANSACCION_DOC	INT = 0
 
 				SELECT	TOP 1
 						@VP_TRANSACCION_DOC  = RIGHT('00000000' + CONVERT(VARCHAR(10),Ltrim(Rtrim(NEXT_DOC_NO))), 8)
