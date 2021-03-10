@@ -71,44 +71,6 @@ GO
 
 
 
-
--- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SELECT / STOCK STATUS PDF
--- //////////////////////////////////////////////////////////////
--- USE DATA_02
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF]
-GO
-
-/*
- EXEC	[dbo].[PG_FORMATO_FOLIO_ENCABEZADO_PDF] 0,0, 3813669
- EXEC	[dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF] 0,0, 3813669
- EXEC	[dbo].[PG_FORMATO_FOLIO_DETALLE_PDF]	0,0, 3813669
-*/
-
-CREATE PROCEDURE [dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF]
-	@PP_K_SISTEMA_EXE					INT,
-	@PP_K_USUARIO_ACCION				INT,
-	-- ===========================
-	@PP_FOLIO							INT
-AS
-	-- //////////////////////////////////////////////////////////////
-	
-	SELECT	LTRIM(RTRIM(LOT))	AS LOTE, 
-			LTRIM(RTRIM(HIDE))	AS PIEL, 
-			CONVERT(DECIMAL(13,2),LTRIM(RTRIM(SQF)))	AS SQF 
-	FROM	RP_SC 
-	WHERE	TAGNO = @PP_FOLIO
-	ORDER BY LOT, HIDE
-
-	-- //////////////////////////////////////////////////////////////
-GO
-
-
-
-
-
-
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / STOCK STATUS PDF
 -- //////////////////////////////////////////////////////////////
@@ -118,6 +80,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_FOR
 GO
 
 /*
+ EXEC	[dbo].[PG_FORMATO_FOLIO_DEV_EXTRA_PDF] 0,0, 3794597
  EXEC	[dbo].[PG_FORMATO_FOLIO_DEV_EXTRA_PDF] 0,0, 3813669
 */
 
@@ -129,222 +92,216 @@ CREATE PROCEDURE [dbo].[PG_FORMATO_FOLIO_DEV_EXTRA_PDF]
 AS
 
 	-- //////////////////////////////////////////////////////////////
-	DECLARE @VP_TBL_FOLIO AS TABLE(
-		ID INTEGER IDENTITY(1,1),
-		D_TIPO_PIEL_LOG	VARCHAR(100),
-		LOTE			VARCHAR(20),
-		PIEL			VARCHAR(10),
-		SQF				DECIMAL(13,2)
-	)
+	DECLARE @VP_LOCACION	VARCHAR(5) = '', @VP_TIPO VARCHAR(5) = ''
 
-	INSERT INTO @VP_TBL_FOLIO
-	SELECT	'ACTUAL',
-			LTRIM(RTRIM(LOT))	AS LOTE, 
-			LTRIM(RTRIM(HIDE))	AS PIEL, 
-			CONVERT(DECIMAL(13,2),LTRIM(RTRIM(SQF)))	AS SQF 
-	FROM	RP_SC 
-	WHERE	TAGNO = @PP_FOLIO
-	ORDER BY LOT, HIDE
+	SELECT	@VP_TIPO = ISNULL(STATUS, ''),
+			@VP_LOCACION = ISNULL(MACHINE, '') 
+	FROM RP_Folios WHERE TAG = @PP_FOLIO
 
-	-- //////////////////////////////////////////////////////////////
+	IF @VP_TIPO <> 'B'
+		BEGIN
+			-- //////////////////////////////////////////////////////////////
+			DECLARE @VP_TBL_FOLIO AS TABLE(
+				ID INTEGER IDENTITY(1,1),
+				D_TIPO_PIEL_LOG	VARCHAR(100),
+				LOTE			VARCHAR(20),
+				PIEL			VARCHAR(10),
+				SQF				DECIMAL(13,2)
+			)
 
-	DECLARE @VP_TBL_FOLIO_MOVIMINETO_ORDEN AS TABLE(
-		ID INTEGER IDENTITY(1,1),
-		D_TIPO_PIEL_LOG	VARCHAR(100),
-		LOTE			VARCHAR(20),
-		PIEL			VARCHAR(10),
-		SQF				DECIMAL(13,2)
-	)
+			INSERT INTO @VP_TBL_FOLIO
+			SELECT	'ACTUAL',
+					LTRIM(RTRIM(LOT))	AS LOTE, 
+					LTRIM(RTRIM(HIDE))	AS PIEL, 
+					CONVERT(DECIMAL(13,2),LTRIM(RTRIM(SQF)))	AS SQF 
+			FROM	RP_SC 
+			WHERE	TAGNO = @PP_FOLIO
+			ORDER BY LOT, HIDE
 
-	INSERT INTO @VP_TBL_FOLIO_MOVIMINETO_ORDEN
-	SELECT TOP 1000
-		-- ===========================
-		( CASE WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A FOLIO' AND FOLIO_ORIGEN <>  @PP_FOLIO THEN 'EXTRAS'
-					WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A FOLIO' AND FOLIO_ORIGEN =  @PP_FOLIO THEN 'DEVOLUCION'
-					WHEN D_TIPO_PIEL_LOG = 'FOLIO SCRAP' AND FOLIO_ORIGEN =  @PP_FOLIO THEN 'DEVOLUCION'
-				ELSE D_TIPO_PIEL_LOG END ) AS D_TIPO_PIEL_LOG,
-		-- ===========================
-		--FOLIO_ORIGEN,
-		--LOCACION_ORIGEN,
-		--ORDEN_ORIGEN,
-		-- ===========================
-		--( CASE WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A ORDEN' AND FOLIO_DESTINO = 0 THEN FOLIO_ORIGEN
-		--		ELSE FOLIO_DESTINO END ) AS FOLIO_DESTINO,
-		-- ===========================
-		--LOCACION_DESTINO,
-		--ORDEN_DESTIDO AS ORDEN_DESTINO,
-		--COLOR,
-		LOTE,
-		RIGHT('0000' + CONVERT(VARCHAR(4), PIEL), 4) AS PIEL, 
-		CONVERT(DECIMAL(13,2), SQF) AS SQF
-		--F_LOG,
-		--D_USUARIO_PEARL
-	FROM PIEL_LOG 
-	--INNER JOIN BD_GENERAL.dbo.USUARIO_PEARL  ON PIEL_LOG.K_USUARIO_ALTA = USUARIO_PEARL.K_USUARIO_PEARL
-	INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-	WHERE (FOLIO_ORIGEN = @PP_FOLIO OR FOLIO_DESTINO = @PP_FOLIO)
-	AND PIEL_LOG.K_TIPO_PIEL_LOG IN (5, 6, 9) -- #5	TRANSFERENCIA A FOLIO	#6 DEVOLUCION	#9 FOLIO SCRAP
-	--ORDER BY  LOTE, PIEL 
-	ORDER BY K_PIEL_LOG, LOTE, PIEL ASC
-	
-	-- //////////////////////////////////////////////////////////////
-	INSERT INTO @VP_TBL_FOLIO
-	SELECT D_TIPO_PIEL_LOG, LOTE, PIEL, SQF  FROM @VP_TBL_FOLIO_MOVIMINETO_ORDEN ORDER BY D_TIPO_PIEL_LOG DESC
+			-- //////////////////////////////////////////////////////////////
+			DECLARE @VP_TBL_FOLIO_MOVIMIENTO_ORDEN AS TABLE(
+				ID INTEGER IDENTITY(1,1),
+				D_TIPO_PIEL_LOG	VARCHAR(100),
+				LOTE			VARCHAR(20),
+				PIEL			VARCHAR(10),
+				SQF				DECIMAL(13,2)
+			)
 
-	
-	-- //////////////////////////////////////////////////////////////
-	SELECT * FROM @VP_TBL_FOLIO ORDER BY ID
-	-- //////////////////////////////////////////////////////////////
+			-- //////////////////////////////////////////////////////////////
+			IF SUBSTRING(@VP_LOCACION, 1,1) IN ('T', 'G')
+				BEGIN
+					INSERT INTO @VP_TBL_FOLIO_MOVIMIENTO_ORDEN
+					SELECT TOP 1000
+						-- ===========================
+						( CASE WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A FOLIO' AND FOLIO_ORIGEN <>  @PP_FOLIO THEN 'EXTRAS'
+									WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A FOLIO' AND FOLIO_ORIGEN =  @PP_FOLIO THEN 'DEVOLUCION'
+									WHEN D_TIPO_PIEL_LOG = 'FOLIO SCRAP' AND FOLIO_ORIGEN =  @PP_FOLIO THEN 'DEVOLUCION'
+								ELSE D_TIPO_PIEL_LOG END ) AS D_TIPO_PIEL_LOG,
+						-- ===========================
+						LOTE,
+						RIGHT('0000' + CONVERT(VARCHAR(4), PIEL), 4) AS PIEL, 
+						CONVERT(DECIMAL(13,2), SQF) AS SQF
+					FROM PIEL_LOG 
+					INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
+					WHERE (FOLIO_ORIGEN = @PP_FOLIO OR FOLIO_DESTINO = @PP_FOLIO)
+					AND PIEL_LOG.K_TIPO_PIEL_LOG IN (5, 6, 9) -- #5	TRANSFERENCIA A FOLIO	#6 DEVOLUCION	#9 FOLIO SCRAP
+					ORDER BY K_PIEL_LOG, LOTE, PIEL ASC
+				END
+			ELSE
+				BEGIN
+					INSERT INTO @VP_TBL_FOLIO_MOVIMIENTO_ORDEN
+					SELECT TOP 1000
+						-- ===========================
+						( CASE WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A FOLIO' AND FOLIO_ORIGEN <>  @PP_FOLIO THEN 'EXTRAS'
+									WHEN D_TIPO_PIEL_LOG = 'TRANSFERENCIA A FOLIO' AND FOLIO_ORIGEN =  @PP_FOLIO THEN 'DEVOLUCION'
+									WHEN D_TIPO_PIEL_LOG = 'FOLIO SCRAP' AND FOLIO_ORIGEN =  @PP_FOLIO THEN 'DEVOLUCION'
+								ELSE D_TIPO_PIEL_LOG END ) AS D_TIPO_PIEL_LOG,
+						-- ===========================
+						LOTE,
+						RIGHT('0000' + CONVERT(VARCHAR(4), PIEL), 4) AS PIEL, 
+						CONVERT(DECIMAL(13,2), SQF) AS SQF
+					FROM PIEL_LOG 
+					INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
+					WHERE (FOLIO_ORIGEN = @PP_FOLIO OR FOLIO_DESTINO = @PP_FOLIO)
+					--AND PIEL_LOG.K_TIPO_PIEL_LOG IN (5, 6, 9) -- #5	TRANSFERENCIA A FOLIO	#6 DEVOLUCION	#9 FOLIO SCRAP
+					--ORDER BY  LOTE, PIEL 
+					ORDER BY K_PIEL_LOG, LOTE, PIEL ASC
+				END
+
+			-- //////////////////////////////////////////////////////////////
+			INSERT INTO @VP_TBL_FOLIO
+			SELECT D_TIPO_PIEL_LOG, LOTE, PIEL, SQF  FROM @VP_TBL_FOLIO_MOVIMIENTO_ORDEN ORDER BY D_TIPO_PIEL_LOG DESC
+
+			
+			-- //////////////////////////////////////////////////////////////
+			SELECT * FROM @VP_TBL_FOLIO ORDER BY ID
+			-- //////////////////////////////////////////////////////////////
+		END
 GO
 
 
 
 
-
-
--- //////////////////////////////////////////////////////////////
--- // STORED PROCEDURE ---> SK LOT_COMP, PARA OBTENER TODOS LOS 
--- //						LOTES COMPATIBLES CON @PP_LOTE
--- // SE UTILIZA EN:
--- //	1) LOT_COMP
 -- //////////////////////////////////////////////////////////////
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PDF]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PEDF]
+	DROP PROCEDURE [dbo].[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PDF]
 GO
---		 EXECUTE [dbo].[[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PDF]	0,139,	'401031','401071'
+/*
+		 EXECUTE [dbo].[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PDF]	0,144,	3813773
+		  EXECUTE [dbo].[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PDF]	0,144,	3813669
+*/
 CREATE PROCEDURE [dbo].[PG_FORMATO_FOLIO_LOTE_COMPATIBLE_PDF]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_LOTE					VARCHAR(10),
-	@PP_LOTE_02					VARCHAR(10)
+	@PP_FOLIO					INT
 
 AS	
+	
+	-- //////////////////////////////////////////////////////////////
+	DECLARE @VP_TBL_FOLIO_LOTE AS TABLE(
+		ID INTEGER IDENTITY(1,1),
+		LOTE			VARCHAR(20)
+	)
 
-	SET	@PP_LOTE	= RIGHT('000000' + CONVERT(VARCHAR(10),Ltrim(Rtrim(@PP_LOTE))), 6)
-	SET	@PP_LOTE_02	= RIGHT('000000' + CONVERT(VARCHAR(10),Ltrim(Rtrim(@PP_LOTE_02))), 6)
+	INSERT INTO @VP_TBL_FOLIO_LOTE
+	SELECT DISTINCT	 RIGHT('000000' + LTRIM(RTRIM(LOT)), 6)
+	FROM	RP_SC 
+	WHERE	TAGNO = @PP_FOLIO
 
-	DECLARE	@PP_TABLA_LOTES				AS TABLE
-			(	 TA_LOTE_ID				INT
-				,TA_LOTE_SERIE			VARCHAR(10)
-				,TA_LOTE_L				INT
-				,TA_LOTE_AUTORIZA_01	VARCHAR(250)
-				,TA_LOTE_K_USUARIO_01	VARCHAR(250)
-				,TA_LOTE_AUTORIZA_02	VARCHAR(250)
-				,TA_LOTE_K_USUARIO_02	VARCHAR(250)
-				,TA_LOTE_C				VARCHAR(250)
-				,TA_L_COMENTARIO		INT
-			)
----===================================================================================================================================================
----===================================================================================================================================================
----===================================================================================================================================================
----===================================================================================================================================================	
-	DECLARE	 @VP_CU_ID_LOTE_COMPATIBLE			INT
-			-- =====================================================
-			,@VP_CU_D_ITEM						VARCHAR(25)
-			-- =====================================================
-			,@VP_CU_S_LOTE_COMPATIBLE_01		VARCHAR(10)
-			,@VP_CU_S_LOTE_COMPATIBLE_02		VARCHAR(10)
-			-- =====================================================
-			,@VP_CU_L_LOTE_COMPATIBLE			VARCHAR(10)
-			,@VP_CU_A_LOTE_COMPATIBLE_01		VARCHAR(250)
-			,@VP_CU_A_LOTE_COMPATIBLE_02		VARCHAR(250)
-			,@VP_CU_K_LOTE_COMPATIBLE_01		INT
-			,@VP_CU_K_LOTE_COMPATIBLE_02		INT
-			-- =====================================================
-			,@VP_CU_C_LOTE_COMPATIBLE			VARCHAR(250)
+	-- //////////////////////////////////////////////////////////////
 
+	INSERT INTO @VP_TBL_FOLIO_LOTE
+	SELECT	DISTINCT RIGHT('000000' + CONVERT(VARCHAR(10),LTRIM(RTRIM(LOTE))), 6)
+	FROM PIEL_LOG 
+	WHERE (FOLIO_ORIGEN = @PP_FOLIO OR FOLIO_DESTINO = @PP_FOLIO)
+	--AND PIEL_LOG.K_TIPO_PIEL_LOG IN (5, 6, 9) -- #5	TRANSFERENCIA A FOLIO	#6 DEVOLUCION	#9 FOLIO SCRAP
+	AND LOTE NOT IN (SELECT LOTE FROM  @VP_TBL_FOLIO_LOTE)
+	
+	-- //////////////////////////////////////////////////////////////
+	--SELECT * FROM @VP_TBL_FOLIO_LOTE ORDER BY ID
+	-- //////////////////////////////////////////////////////////////
+	DECLARE @VP_TBL_FOLIO_LOTE_COMPATIBLES AS TABLE(
+		ID INTEGER IDENTITY(1,1),
+		LOTE			VARCHAR(20),
+		COMPATIBLE		VARCHAR(20),
+		NO_COMPATIBLE	VARCHAR(20)
+	)
 
-	DECLARE CU_COMPATIBLES CURSOR FOR  
-		SELECT	 ID										--AS K_LOTE_COMPATIBLE		
-				,LTRIM(RTRIM(ITEM_NO))					--AS D_ITEM
-				,LTRIM(RTRIM(SER_LOT_NO1))				--AS S_LOTE_COMPATIBLE_01
-				,LTRIM(RTRIM(SER_LOT_NO2))				--AS S_LOTE_COMPATIBLE_02
-				,(CASE
-					WHEN	LTRIM(RTRIM(COMP))	= 'Y'	THEN	1
-					ELSE	0
-				END)									--AS L_LOTE_COMPATIBLE
-				,LTRIM(RTRIM(Aut1))						--AS A_LOTE_COMPATIBLE_01
-				,LTRIM(RTRIM(Aut2))						--AS A_LOTE_COMPATIBLE_02
-				,K_USUARIO_PEARL_01
-				,K_USUARIO_PEARL_02
-				,LTRIM(RTRIM(Comments))					--AS C_LOTE_COMPATIBLE
-		-- ===============================================================
-		FROM	SER_LOT_COMP_SQL
-		-- ===============================================================
-		WHERE	(		LTRIM(RTRIM(SER_LOT_NO1))	= @PP_LOTE  
-					OR	LTRIM(RTRIM(SER_LOT_NO2))	= @PP_LOTE 		)
-		--AND		(		LTRIM(RTRIM(SER_LOT_NO1))	= @PP_LOTE  
-		--			OR	LTRIM(RTRIM(SER_LOT_NO2))	= @PP_LOTE_02 		)
-		---- ===============================================================
-	OPEN			CU_COMPATIBLES;  
-	FETCH NEXT FROM CU_COMPATIBLES INTO		@VP_CU_ID_LOTE_COMPATIBLE		,@VP_CU_D_ITEM
-											,@VP_CU_S_LOTE_COMPATIBLE_01	,@VP_CU_S_LOTE_COMPATIBLE_02
-											,@VP_CU_L_LOTE_COMPATIBLE			
-											,@VP_CU_A_LOTE_COMPATIBLE_01	,@VP_CU_A_LOTE_COMPATIBLE_02		
-											,@VP_CU_K_LOTE_COMPATIBLE_01	,@VP_CU_K_LOTE_COMPATIBLE_02		
-											,@VP_CU_C_LOTE_COMPATIBLE		
+	DECLARE @VP_LOTE_PRINCIPAL VARCHAR(20) = ''
+	DECLARE CU_LOTES_ASIGNADOS_FOLIO CURSOR FOR 
+		SELECT LOTE FROM @VP_TBL_FOLIO_LOTE ORDER BY ID
+
+	OPEN	CU_LOTES_ASIGNADOS_FOLIO  
+	FETCH NEXT FROM CU_LOTES_ASIGNADOS_FOLIO	INTO	@VP_LOTE_PRINCIPAL
+
 	WHILE @@FETCH_STATUS = 0  
 	   BEGIN
-			DECLARE	 @VP_IN_LOTE_SERIE		VARCHAR(10)	= ''
-			
+			DECLARE @VP_LOTE_1 VARCHAR(20) = '',  @VP_LOTE_2 VARCHAR(20) = '', @VP_COMPATIBLE VARCHAR(5) = ''
 
-			IF @PP_LOTE	= @VP_CU_S_LOTE_COMPATIBLE_01
-			BEGIN
-				SET	@VP_IN_LOTE_SERIE	= @VP_CU_S_LOTE_COMPATIBLE_02
-			END
-			ELSE IF @PP_LOTE	= @VP_CU_S_LOTE_COMPATIBLE_02
-			BEGIN
-				SET	@VP_IN_LOTE_SERIE	= @VP_CU_S_LOTE_COMPATIBLE_01
-			END
+			DECLARE CU_COMPATIBLES_X_LOTE CURSOR FOR 
+			SELECT	LTRIM(RTRIM(SER_LOT_NO1)),				
+					LTRIM(RTRIM(SER_LOT_NO2)),				
+					LTRIM(RTRIM(COMP))
+			-- ===============================================================
+			FROM	SER_LOT_COMP_SQL
+			-- =============================================================== 
+			WHERE	(		LTRIM(RTRIM(SER_LOT_NO1)) = @VP_LOTE_PRINCIPAL 
+					OR	LTRIM(RTRIM(SER_LOT_NO2)) = @VP_LOTE_PRINCIPAL  		)
+			ORDER BY COMP DESC
 
-			-- /////////////////////////////////////////////////////////////////////				
-				INSERT INTO @PP_TABLA_LOTES	(
-					TA_LOTE_ID		
-					,TA_LOTE_SERIE	
-					,TA_LOTE_L
-					,TA_LOTE_AUTORIZA_01
-					,TA_LOTE_K_USUARIO_01
-					,TA_LOTE_AUTORIZA_02
-					,TA_LOTE_K_USUARIO_02
-					,TA_LOTE_C
-					,TA_L_COMENTARIO						
-				)	VALUES	(
-					@VP_CU_ID_LOTE_COMPATIBLE
-					,@VP_IN_LOTE_SERIE
-					,@VP_CU_L_LOTE_COMPATIBLE
-					,@VP_CU_A_LOTE_COMPATIBLE_01
-					,@VP_CU_K_LOTE_COMPATIBLE_01
-					,@VP_CU_A_LOTE_COMPATIBLE_02
-					,@VP_CU_K_LOTE_COMPATIBLE_02
-					,@VP_CU_C_LOTE_COMPATIBLE
-					,0
-				)
-			-- /////////////////////////////////////////////////////////////////////
 
-		FETCH NEXT FROM CU_COMPATIBLES INTO		 @VP_CU_ID_LOTE_COMPATIBLE		,@VP_CU_D_ITEM
-												,@VP_CU_S_LOTE_COMPATIBLE_01	,@VP_CU_S_LOTE_COMPATIBLE_02
-												,@VP_CU_L_LOTE_COMPATIBLE			
-												,@VP_CU_A_LOTE_COMPATIBLE_01	,@VP_CU_A_LOTE_COMPATIBLE_02		
-												,@VP_CU_K_LOTE_COMPATIBLE_01	,@VP_CU_K_LOTE_COMPATIBLE_02		
-												,@VP_CU_C_LOTE_COMPATIBLE
-	   END;  
-	CLOSE		CU_COMPATIBLES;  
-	DEALLOCATE	CU_COMPATIBLES;  
+			OPEN	CU_COMPATIBLES_X_LOTE  
+			FETCH NEXT FROM CU_COMPATIBLES_X_LOTE	INTO	@VP_LOTE_1, @VP_LOTE_2, @VP_COMPATIBLE
 
-	SELECT
-		 TA_LOTE_ID				AS	K_LOTE_COMPATIBLE
-		,TA_LOTE_SERIE			AS	S_LOTE_COMPATIBLE
-		,TA_LOTE_L				AS	L_LOTE_COMPATIBLE
-		,TA_LOTE_AUTORIZA_01	AS	A_LOTE_COMPATIBLE_01
-		,TA_LOTE_K_USUARIO_01	AS	K_LOTE_USUARIO_01		
-		,TA_LOTE_AUTORIZA_02	AS	A_LOTE_COMPATIBLE_02
-		,TA_LOTE_K_USUARIO_02	AS	K_LOTE_USUARIO_02		
-		,TA_LOTE_C				AS	C_LOTE_COMPATIBLE
-		,TA_L_COMENTARIO		AS	L_COMENTARIO
-	FROM @PP_TABLA_LOTES	
-	WHERE	(		LTRIM(RTRIM(TA_LOTE_SERIE))	<> @PP_LOTE_02	)
-	ORDER	BY		TA_LOTE_SERIE	DESC
+			WHILE @@FETCH_STATUS = 0  
+			   BEGIN
+					DECLARE @VP_LOTE_COMPATIBLE VARCHAR(20) = ''
+					DECLARE @VP_LOTE_NO_COMPATIBLE VARCHAR(20) = ''
+
+					IF @VP_LOTE_1 <> @VP_LOTE_PRINCIPAL
+						BEGIN
+							IF @VP_COMPATIBLE = 'Y'
+								SET @VP_LOTE_COMPATIBLE = @VP_LOTE_1
+							ELSE
+								SET @VP_LOTE_NO_COMPATIBLE = @VP_LOTE_1
+						END
+
+					IF @VP_LOTE_2 <> @VP_LOTE_PRINCIPAL
+						BEGIN
+							IF @VP_COMPATIBLE = 'Y'
+								SET @VP_LOTE_COMPATIBLE = @VP_LOTE_2
+							ELSE
+								SET @VP_LOTE_NO_COMPATIBLE = @VP_LOTE_2
+						END
+
+					INSERT INTO @VP_TBL_FOLIO_LOTE_COMPATIBLES
+					SELECT @VP_LOTE_PRINCIPAL, @VP_LOTE_COMPATIBLE, @VP_LOTE_NO_COMPATIBLE
+
+					FETCH NEXT FROM CU_COMPATIBLES_X_LOTE	INTO	@VP_LOTE_1, @VP_LOTE_2, @VP_COMPATIBLE
+				END  
+			CLOSE		CU_COMPATIBLES_X_LOTE;  
+			DEALLOCATE	CU_COMPATIBLES_X_LOTE; 
+
+
+			FETCH NEXT FROM CU_LOTES_ASIGNADOS_FOLIO	INTO	@VP_LOTE_PRINCIPAL
+		END  
+	CLOSE		CU_LOTES_ASIGNADOS_FOLIO;  
+	DEALLOCATE	CU_LOTES_ASIGNADOS_FOLIO; 
+
+	-- ////////////////////////////////////////////////////////////////////
+	SELECT ( CASE WHEN SUBSTRING(LTRIM(RTRIM(LOTE)),1,1) = '0' THEN SUBSTRING(LTRIM(RTRIM(LOTE)),2, 10) ELSE LTRIM(RTRIM(LOTE)) END )  AS LOTE,
+			( CASE WHEN SUBSTRING(LTRIM(RTRIM(COMPATIBLE)),1,1) = '0' THEN SUBSTRING(LTRIM(RTRIM(COMPATIBLE)),2, 10) ELSE LTRIM(RTRIM(COMPATIBLE)) END )  AS COMPATIBLE,
+			( CASE WHEN SUBSTRING(LTRIM(RTRIM(NO_COMPATIBLE)),1,1) = '0' THEN SUBSTRING(LTRIM(RTRIM(NO_COMPATIBLE)),2, 10) ELSE LTRIM(RTRIM(NO_COMPATIBLE)) END )  AS NO_COMPATIBLE
+	FROM @VP_TBL_FOLIO_LOTE_COMPATIBLES
+	-- ////////////////////////////////////////////////////////////////////
+
+	--SELECT	*
+	--		-- ===============================================================
+	--		FROM	SER_LOT_COMP_SQL
+	--		-- =============================================================== 034331
+	--		WHERE	(		LTRIM(RTRIM(SER_LOT_NO1)) = '034331' 
+	--				OR	LTRIM(RTRIM(SER_LOT_NO2)) = '034331'  		)
 		-- ===============================================================
 		-- ===============================================================
 	-- ////////////////////////////////////////////////////////////////////
@@ -406,3 +363,38 @@ AS
 	-- //////////////////////////////////////////////////////////////
 GO
 
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / STOCK STATUS PDF
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02
+--IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF]') AND type in (N'P', N'PC'))
+--	DROP PROCEDURE [dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF]
+--GO
+
+/*
+ EXEC	[dbo].[PG_FORMATO_FOLIO_ENCABEZADO_PDF] 0,0, 3813669
+ EXEC	[dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF] 0,0, 3813669
+ EXEC	[dbo].[PG_FORMATO_FOLIO_DETALLE_PDF]	0,0, 3813669
+*/
+
+--CREATE PROCEDURE [dbo].[PG_FORMATO_FOLIO_PIEL_CARGADA_PDF]
+--	@PP_K_SISTEMA_EXE					INT,
+--	@PP_K_USUARIO_ACCION				INT,
+--	-- ===========================
+--	@PP_FOLIO							INT
+--AS
+--	-- //////////////////////////////////////////////////////////////
+	
+--	SELECT	LTRIM(RTRIM(LOT))	AS LOTE, 
+--			LTRIM(RTRIM(HIDE))	AS PIEL, 
+--			CONVERT(DECIMAL(13,2),LTRIM(RTRIM(SQF)))	AS SQF 
+--	FROM	RP_SC 
+--	WHERE	TAGNO = @PP_FOLIO
+--	ORDER BY LOT, HIDE
+
+--	-- //////////////////////////////////////////////////////////////
+--GO
