@@ -13,6 +13,99 @@ USE [DATA_02]
 GO
 
 
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+																	
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_TICKET_A_IMPORTAR]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_LI_TICKET_A_IMPORTAR]
+GO
+
+/*
+ EXEC [PG_LI_TICKET_A_IMPORTAR] 0 ,0, '' 
+ EXEC [PG_LI_TICKET_A_IMPORTAR] 0 ,0, '210201044555T1000002'
+*/
+
+CREATE PROCEDURE [dbo].[PG_LI_TICKET_A_IMPORTAR]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FILE_NO					VARCHAR(50)
+AS
+
+
+	-- ///////////////////////////////////////////
+	SELECT DISTINCT
+			0 AS [CHECK],
+			[FILE_NO]		AS	FileN,
+			[FECHA_TICKET]	AS F_TICKET,	
+			[CLIENTE],		
+			[D_COLOR]		AS Color,		
+			[CRUST_LOT],	
+			[LOTE]			AS Lot,			
+			(SELECT COUNT(K_TICKET_A_IMPORTAR) FROM TICKET_A_IMPORTAR WHERE [FILE_NO] =  TICKET.FILE_NO) AS THide,
+			(SELECT SUM(SQF) FROM TICKET_A_IMPORTAR WHERE [FILE_NO] =  TICKET.FILE_NO) AS SQF
+			-- ===========================
+    FROM	TICKET_A_IMPORTAR AS TICKET
+    WHERE	FILE_NO = ( CASE	WHEN @PP_FILE_NO = '' THEN FILE_NO
+							ELSE @PP_FILE_NO END )
+	AND L_BORRADO = 0 -- #0 NO IMPORTADO #1 IMPORTADO 
+
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+																	
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_TICKET_A_IMPORTAR]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_TICKET_A_IMPORTAR]
+GO
+
+/*
+ EXEC [PG_SK_TICKET_A_IMPORTAR] 0 ,0, '210201044555T1000002'
+*/
+
+CREATE PROCEDURE [dbo].[PG_SK_TICKET_A_IMPORTAR]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FILE_NO					VARCHAR(50)
+AS
+
+
+	-- ///////////////////////////////////////////
+	SELECT	[FILE_NO],		
+			[BUNDLE_NO],	
+			[CLIENTE],		
+			[COLOR],		
+			[D_COLOR],		
+			[CRUST_LOT],	
+			[LOTE]			AS Lot,			
+			[TOTAL_PIEL],
+			[AVG_AREA],		
+			[TOTAL_SQF],	
+			[CONSECUTIVO]	AS Hide,
+			[SQF],		
+			[UOM]
+			-- ===========================
+    FROM	TICKET_A_IMPORTAR 
+    WHERE	FILE_NO =  @PP_FILE_NO 
+	AND L_BORRADO = 0 --#0 NO IMPORTADO #1 IMPORTADO
+
+
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////

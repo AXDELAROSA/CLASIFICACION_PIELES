@@ -217,7 +217,7 @@ AS
 	IF @VP_MENSAJE<>''
 		BEGIN
 		
-		SET		@VP_MENSAJE = 'No es posible transferir el [FOLIO]: '+CONVERT(VARCHAR(10),@PP_TAGNO_ORIGEN)+']' + @VP_MENSAJE 
+		SET		@VP_MENSAJE = 'No es posible transferir el [FOLIO]: '+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']' + @VP_MENSAJE 
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
 		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
 		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'

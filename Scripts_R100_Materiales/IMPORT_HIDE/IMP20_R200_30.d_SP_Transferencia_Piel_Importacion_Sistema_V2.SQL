@@ -9,7 +9,7 @@
 -- // Fecha creación:	25/FEB/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02PRUEBAS] 
+USE [DATA_02] 
 GO
 
 
@@ -18,100 +18,96 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
-IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA]') AND type in (N'P', N'PC'))
-	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA]
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]
 GO
 
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA]	0,0, '02/24/2021' , 'DX9 CAPRI' , 'BLACK' , 'F5531TC' , '15' , 'K-10761 P-3484' , '107611' , 43 , 32.80 , 1409.10 , 'RU-021921' , '210224043653T1000002' , 
-'35.60/32.40/28.10/31.20/32.70/34.90/29.80/42.10/27.40/34.70/39.30/32.00/27.30/33.70/29.00/31.40/31.80/35.50/34.00/29.90/29.10/39.90/36.30/31.40/26.90/41.20/32.10/31.50/32.90/31.70/32.30/37.00/34.00/29.90/30.70/28.50/27.20/31.90/36.10/30.30/31.60/34.30/39.50' , 
-'franciscoe' 
+	EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]	0,0,  '210201044555T1000002' ,  'TEST-031221', 'F5531TC', 'franciscoe'
 */
 
-CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA]
+CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]
 	@PP_K_SISTEMA_EXE						INT,
 	@PP_K_USUARIO_ACCION					INT,
 	-- ===========================
-	@PP_F_TICKET							VARCHAR(10),
-	@PP_D_COLOR								VARCHAR(50),
-	@PP_COLOR								VARCHAR(50),
-	@PP_PEARL_COLOR							VARCHAR(50),
-	@PP_CLIENTE								VARCHAR(50),
-	@PP_CRUST_LOT							VARCHAR(50),
-	@PP_LOTE								VARCHAR(50),
-	@PP_TOTAL_PIEL_LOTE						INT,
-	@PP_TOTAL_AVG_AREA						DECIMAL(13,2),
-	@PP_TOTAL_SQF_LOTE						DECIMAL(13,2),
-	@PP_PACKING_NO							VARCHAR(50),
-	-- ===========================
 	@PP_FILE_NO								VARCHAR(50),
-	@PP_SQF_ARRAY							NVARCHAR(MAX),
+	@PP_PACKING_NO							VARCHAR(50),
+	@PP_PEARL_COLOR							VARCHAR(50),
 	-- ===========================
 	@PP_USER								VARCHAR(25)
 AS
 
-	-- ///////////////////////////////////////////
+	-- /////////VARIABLES//////////////////////////////////
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
-	DECLARE @VP_LOCACION_DESTINO VARCHAR(255) = 'MIT'
-
-	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
-	DECLARE @VP_N_CABALLO_IMPORTADO INT = 0
-	SELECT	@VP_N_CABALLO_IMPORTADO = COUNT(ID) 
-	FROM	HIDESHDR_SQL 
-	WHERE	PLOT = @PP_LOTE
-	AND		THIDES = @PP_TOTAL_PIEL_LOTE
-	AND		TAREA = @PP_TOTAL_SQF_LOTE
+	DECLARE @VP_LOCACION_DESTINO VARCHAR(255) = 'MIT', @VP_N_TICKET_A_IMPORTAR INT = 0
 	
-	IF @VP_N_CABALLO_IMPORTADO IS NULL
-		SET @VP_N_CABALLO_IMPORTADO = 0
+	DECLARE @PP_F_TICKET VARCHAR(10), @PP_D_COLOR VARCHAR(50), @PP_COLOR VARCHAR(50)
+	DECLARE @PP_CLIENTE VARCHAR(50), @PP_CRUST_LOT VARCHAR(50), @PP_LOTE VARCHAR(50)
+	DECLARE @PP_TOTAL_PIEL_LOTE INT, @PP_TOTAL_AVG_AREA DECIMAL(13,2), @PP_TOTAL_SQF_LOTE DECIMAL(13,2)
+	
+	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO
+	-- /////////SE OBTIENE EL LOTE DEL TICKET//////////////////////////////////
+	SELECT	TOP 1	
+			@PP_LOTE = LOTE
+	FROM	TICKET_A_IMPORTAR 
+	WHERE	FILE_NO = @PP_FILE_NO
+	AND L_BORRADO = 0 --#0 NO IMPORTADO #1 IMPORTADO
 
-	IF @VP_N_CABALLO_IMPORTADO > 0
-		SET @VP_MENSAJE = 'El caballo ya fue importado anteriormente...'
+	IF ( @PP_LOTE IS NULL OR @PP_LOTE = '' )
+		SET @VP_MENSAJE = 'No fue posible obtener el Lote del Ticket.'
+
+	-- /////////SE OBTIENE EL TOTAL DE PIEL Y SQF DEL TICKET//////////////////////////////////
+	SELECT  @PP_TOTAL_PIEL_LOTE = COUNT(K_TICKET_A_IMPORTAR),
+			@PP_TOTAL_SQF_LOTE = SUM(SQF)
+	FROM	TICKET_A_IMPORTAR
+	WHERE	FILE_NO = @PP_FILE_NO
+	AND L_BORRADO = 0 --#0 NO IMPORTADO #1 IMPORTADO
+
+	IF ( @PP_TOTAL_SQF_LOTE IS NULL OR @PP_TOTAL_SQF_LOTE = 0 )
+		SET @VP_MENSAJE = 'Tikect No cuenta con SQF.'	
+			 	
+	IF ( @PP_TOTAL_PIEL_LOTE IS NULL OR @PP_TOTAL_PIEL_LOTE = 0 )
+		SET @VP_MENSAJE = 'Tikect No encontrado.'	
+
+	IF @VP_MENSAJE = ''
+		BEGIN
+			-- /////////SE VALIDA QUE EL TICKET NO ALLA SIDO IMPORTADO ANTERIORMENTE//////////////////////////////////
+			DECLARE @VP_N_CABALLO_IMPORTADO INT = 0
+			SELECT	@VP_N_CABALLO_IMPORTADO = COUNT(ID) 
+			FROM	HIDESHDR_SQL 
+			WHERE	PLOT = @PP_LOTE
+			AND		THIDES = @PP_TOTAL_PIEL_LOTE
+			AND		TAREA = @PP_TOTAL_SQF_LOTE
+			
+			IF @VP_N_CABALLO_IMPORTADO IS NULL
+				SET @VP_N_CABALLO_IMPORTADO = 0
+
+			IF @VP_N_CABALLO_IMPORTADO > 0
+				SET @VP_MENSAJE = 'El caballo ya fue importado anteriormente...'
+		END
 
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
 			BEGIN TRANSACTION 
 			BEGIN TRY
-				-- /////////SE OBTIENE DE LOS ARRAY DE SQF INGRESADOS///////////////////////////////////////////////////////////	
-				DECLARE @TBL_PIEL_A_IMPORTAR TABLE (
-						K_PIEL_A_IMPORTAR INT IDENTITY(1,1),
-						SQF			DECIMAL(13,2)
-					)
-				SET NOCOUNT ON
-				
-				DECLARE @VP_POSICION_SQF	 INT = 0
-				DECLARE @VP_SQF_VALOR		VARCHAR(20) = ''
-								
-				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
-				SET	@PP_SQF_ARRAY	= @PP_SQF_ARRAY		+ '/'			
-			
-				--Hacemos un bucle que se repite mientras haya separadores, patindex busca un patron en una cadena y nos devuelve su posicion
-				WHILE patindex('%/%' , @PP_SQF_ARRAY) <> 0
-					BEGIN
-						SELECT @VP_POSICION_SQF		=	patindex('%/%' , @PP_SQF_ARRAY)
-						
-						--Buscamos la posicion de la primera y obtenemos los caracteres hasta esa posicion
-						SELECT @VP_SQF_VALOR	= LEFT(@PP_SQF_ARRAY, @VP_POSICION_SQF - 1)						
-						
-						-- /////////INSERTAMOS LA PIEL EN UNA TABLA TEMPORAL////////////////////////////////////////////////////////////
-						INSERT	INTO	@TBL_PIEL_A_IMPORTAR VALUES	( @VP_SQF_VALOR )
-
-						--Reemplazamos lo procesado con nada con la funcion stuff
-						SELECT @PP_SQF_ARRAY	= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION_SQF, '')
-					END
-				
-				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////			
-				DECLARE @VP_N_PIEL INT = 0
-				SELECT @VP_N_PIEL = COUNT(K_PIEL_A_IMPORTAR) FROM @TBL_PIEL_A_IMPORTAR
-								
-				IF @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0
-					RAISERROR ('NO hay pieles para importar', 16, 1 ) --MENSAJE - Severity -State.
-				
+				-- /////////ASIGNACION DE VALOR A LAS VARIABLES//////////////////////////////////
+				SELECT TOP 1
+						@PP_F_TICKET	= [FECHA_TICKET],	
+						@PP_CLIENTE		= [CLIENTE],
+						@PP_COLOR		= [COLOR],
+						@PP_D_COLOR		= [D_COLOR],		
+						@PP_CRUST_LOT	= [CRUST_LOT]
+						-- ===========================
+				FROM	TICKET_A_IMPORTAR
+				WHERE	FILE_NO = @PP_FILE_NO
+				AND L_BORRADO = 0											
+					
 				-- /////////SE INGRESA LOS DATOS DE LA IMPORTACION EN HIDESHDR_SQL///////////////////////////////////////////////////////////	
-				DECLARE @VP_FECHA	INT = [dbo].[CONVERT_DATE_TO_INT](GETDATE(),'yyyyMMdd')	--FORMAT(CAST(GETDATE() AS DATE), N'yyyyMMdd');
+				DECLARE @VP_FECHA	INT = [dbo].[CONVERT_DATE_TO_INT](GETDATE(),'yyyyMMdd')	
 				DECLARE @VP_HORA	INT =  FORMAT(CAST(GETDATE() AS TIME(0)), N'hhmmss');
 				DECLARE @VP_F_TICKET_INT INT = [dbo].[CONVERT_DATE_TO_INT](@PP_F_TICKET,'yyyyMMdd')
+				SET @PP_TOTAL_AVG_AREA = @PP_TOTAL_SQF_LOTE / @PP_TOTAL_PIEL_LOTE
 
 				INSERT INTO HIDESHDR_SQL (
 											FILENO, LDATE, TDATE, CUSTOMER, TYPE, 
@@ -127,28 +123,30 @@ AS
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible agregar el emcabezado del Ticket en [HIDESHDR_SQL].', 16, 1 ) --MENSAJE - Severity -State.		
 
+				-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
+				DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
+				EXECUTE [dbo].[PG_RN_CONSECUTIVO_PIEL_X_LOTE_A_IMPORTAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@PP_LOTE,
+																			@OU_RESULTADO_VALIDACION = @VP_NUMERO_PIEL		OUTPUT
+
+				IF @VP_NUMERO_PIEL = ''
+					RAISERROR ('NO fue posible obtener el consecutivo de piel para el lote', 16, 1 ) --MENSAJE - Severity -State.
+
 				-- ////////////////////SE RECORREN LAS PIELES DEL TICKET PARA AGREGARLAS A LAS TABLAS//////////////////////////	
 				DECLARE @VP_SQF DECIMAL(13,2) = 0
 
 				DECLARE CU_TICKET_A_IMPORTAR CURSOR 
-				FOR SELECT SQF
-					FROM @TBL_PIEL_A_IMPORTAR
-					ORDER BY K_PIEL_A_IMPORTAR ASC
+				FOR SELECT	SQF
+					FROM	TICKET_A_IMPORTAR
+					WHERE	FILE_NO = @PP_FILE_NO
+					AND		L_BORRADO = 0
+					ORDER BY CONSECUTIVO ASC
 				
 				OPEN CU_TICKET_A_IMPORTAR
 				FETCH NEXT FROM CU_TICKET_A_IMPORTAR INTO @VP_SQF
 				
 				WHILE @@FETCH_STATUS = 0
 					BEGIN	
-						-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
-						DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
-						EXECUTE [dbo].[PG_RN_CONSECUTIVO_PIEL_X_LOTE_A_IMPORTAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_LOTE,
-																					@OU_RESULTADO_VALIDACION = @VP_NUMERO_PIEL		OUTPUT
-
-						IF @VP_NUMERO_PIEL = ''
-							RAISERROR ('NO fue posible obtener el consecutivo de piel para el lote', 16, 1 ) --MENSAJE - Severity -State.
-
 						-- /////////SE INGRESAN LAS PIELES IMPORTADAS EN HIDESLIN_SQL///////////////////////////////////////////////////////////	
 						INSERT INTO HIDESLIN_SQL (
 												FILENO, HIDE, SQF, PRINTED
@@ -177,12 +175,24 @@ AS
 						IF @@ROWCOUNT = 0
 							RAISERROR ('NO fue posible agregar el log de la piel en [PIEL_LOG].', 16, 1 ) --MENSAJE - Severity -State.   
 
+						DECLARE @VP_CONSECUTIVO INT = CONVERT(INT, @VP_NUMERO_PIEL)
+						SET @VP_CONSECUTIVO = @VP_CONSECUTIVO + 1
+
+						SET @VP_NUMERO_PIEL = RIGHT('0000' + CONVERT(VARCHAR(4), @VP_CONSECUTIVO), 4) 
 						FETCH NEXT FROM CU_TICKET_A_IMPORTAR INTO @VP_SQF							
 					END
 
 				CLOSE CU_TICKET_A_IMPORTAR
 				DEALLOCATE CU_TICKET_A_IMPORTAR
-			
+				
+				-- /////////SE ACTUALIZA EL EL TICKET EN TICKET_A_IMPORTAR//////////////////////////////////
+				UPDATE	TICKET_A_IMPORTAR
+					SET L_BORRADO = 1
+				WHERE	FILE_NO = @PP_FILE_NO
+
+				IF @@ROWCOUNT = 0
+					RAISERROR ('NO fue posible actualizar el Ticket en [TICKET_A_IMPORTAR].', 16, 1 ) --MENSAJE - Severity -State.	
+
 				--/////////////SE TRANSFIEREN LOS PIES CUADRADOS A LA LOCACION Y LOTE DESTINO///////////////////////////////////////////////////////	
 				DECLARE @VP_TRANSACCION_DOC	INT = 0
 
