@@ -43,6 +43,29 @@ AS
 															@PP_FILE_NO,
 															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 	
+	-- ////////SE OBTIENE EL COLOR DONDE DEL TICKET IMPORTADO///////////////////////////////////
+	DECLARE @VP_COLOR VARCHAR(20) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0;
+	
+	SELECT	@VP_COLOR = LTRIM(RTRIM(PCOLOR)),
+			@VP_LOTE = LTRIM(RTRIM(PLOT)),
+			@VP_TOTAL_SQF = TAREA
+	FROM HIDESHDR_SQL 
+	WHERE FILENO = @PP_FILE_NO
+
+	IF @VP_MENSAJE = ''
+		BEGIN
+			DECLARE @VP_N_PIEL_EXISTE INT = 0
+			SELECT @VP_N_PIEL_EXISTE = COUNT(ID) 
+			FROM RP_SC 
+			WHERE LOT = @VP_LOTE
+			AND HIDE IN (	SELECT HIDE 
+							FROM  HIDESLIN_SQL 
+							WHERE FILENO = @PP_FILE_NO )
+
+			IF @VP_N_PIEL_EXISTE > 0
+				SET @VP_MENSAJE = 'La piel ya existe en [RP_SC].'
+		END
+
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
@@ -55,16 +78,7 @@ AS
 				
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible actualizar la locación en [HIDESHDR_SQL].', 16, 1 ) --MENSAJE - Severity -State.		
-
-				-- ////////SE OBTIENE EL COLOR DONDE DEL TICKET IMPORTADO///////////////////////////////////
-				DECLARE @VP_COLOR VARCHAR(20) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0;
-				
-				SELECT	@VP_COLOR = LTRIM(RTRIM(PCOLOR)),
-						@VP_LOTE = LTRIM(RTRIM(PLOT)),
-						@VP_TOTAL_SQF = TAREA
-				FROM HIDESHDR_SQL 
-				WHERE FILENO = @PP_FILE_NO
-
+					
 				-- /////////SE OBTIENE EL FOLIO BASE DEL COLOR///////////////////////////////////////////////////////////	
 				DECLARE @VP_FOLIO	INT = 0
 

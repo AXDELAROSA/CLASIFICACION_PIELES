@@ -122,7 +122,7 @@ AS
 				
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible agregar el emcabezado del Ticket en [HIDESHDR_SQL].', 16, 1 ) --MENSAJE - Severity -State.		
-
+								
 				-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
 				DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
 				EXECUTE [dbo].[PG_RN_CONSECUTIVO_PIEL_X_LOTE_A_IMPORTAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -187,7 +187,9 @@ AS
 				
 				-- /////////SE ACTUALIZA EL EL TICKET EN TICKET_A_IMPORTAR//////////////////////////////////
 				UPDATE	TICKET_A_IMPORTAR
-					SET L_BORRADO = 1
+					SET L_BORRADO = 1,
+						[K_USUARIO_CAMBIO] = @PP_K_USUARIO_ACCION, 
+						[F_CAMBIO] = GETDATE()
 				WHERE	FILE_NO = @PP_FILE_NO
 
 				IF @@ROWCOUNT = 0

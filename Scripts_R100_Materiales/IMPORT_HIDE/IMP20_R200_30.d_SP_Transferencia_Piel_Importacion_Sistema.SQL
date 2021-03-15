@@ -9,7 +9,7 @@
 -- // Fecha creación:	25/FEB/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02PRUEBAS] 
+USE [DATA_02] 
 GO
 
 
@@ -127,6 +127,15 @@ AS
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible agregar el emcabezado del Ticket en [HIDESHDR_SQL].', 16, 1 ) --MENSAJE - Severity -State.		
 
+				-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
+				DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
+				EXECUTE [dbo].[PG_RN_CONSECUTIVO_PIEL_X_LOTE_A_IMPORTAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@PP_LOTE,
+																			@OU_RESULTADO_VALIDACION = @VP_NUMERO_PIEL		OUTPUT
+
+				IF @VP_NUMERO_PIEL = ''
+					RAISERROR ('NO fue posible obtener el consecutivo de piel para el lote', 16, 1 ) --MENSAJE - Severity -State.
+
 				-- ////////////////////SE RECORREN LAS PIELES DEL TICKET PARA AGREGARLAS A LAS TABLAS//////////////////////////	
 				DECLARE @VP_SQF DECIMAL(13,2) = 0
 
@@ -139,16 +148,7 @@ AS
 				FETCH NEXT FROM CU_TICKET_A_IMPORTAR INTO @VP_SQF
 				
 				WHILE @@FETCH_STATUS = 0
-					BEGIN	
-						-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
-						DECLARE @VP_NUMERO_PIEL VARCHAR(5) = ''
-						EXECUTE [dbo].[PG_RN_CONSECUTIVO_PIEL_X_LOTE_A_IMPORTAR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_LOTE,
-																					@OU_RESULTADO_VALIDACION = @VP_NUMERO_PIEL		OUTPUT
-
-						IF @VP_NUMERO_PIEL = ''
-							RAISERROR ('NO fue posible obtener el consecutivo de piel para el lote', 16, 1 ) --MENSAJE - Severity -State.
-
+					BEGIN							
 						-- /////////SE INGRESAN LAS PIELES IMPORTADAS EN HIDESLIN_SQL///////////////////////////////////////////////////////////	
 						INSERT INTO HIDESLIN_SQL (
 												FILENO, HIDE, SQF, PRINTED
@@ -176,6 +176,11 @@ AS
 						
 						IF @@ROWCOUNT = 0
 							RAISERROR ('NO fue posible agregar el log de la piel en [PIEL_LOG].', 16, 1 ) --MENSAJE - Severity -State.   
+
+						DECLARE @VP_CONSECUTIVO INT = CONVERT(INT, @VP_NUMERO_PIEL)
+						SET @VP_CONSECUTIVO = @VP_CONSECUTIVO + 1
+
+						SET @VP_NUMERO_PIEL = RIGHT('0000' + CONVERT(VARCHAR(4), @VP_CONSECUTIVO), 4)
 
 						FETCH NEXT FROM CU_TICKET_A_IMPORTAR INTO @VP_SQF							
 					END
