@@ -51,6 +51,10 @@ AS
 
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	
+	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
+	IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
+		SET @VP_MENSAJE = 'Movimiento no permitido con folios asignados a Mesa/Gerber.'
+
 	IF @VP_MENSAJE=''
 		BEGIN
 			BEGIN TRANSACTION 
