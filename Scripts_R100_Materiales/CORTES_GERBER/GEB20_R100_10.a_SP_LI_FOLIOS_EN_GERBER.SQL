@@ -9,7 +9,7 @@
 -- // Fecha creación:	27/AGO/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -25,7 +25,7 @@ GO
 --3793219
 --2137674
 /*
- EXEC PG_LI_FOLIO_EN_GERBER 0 ,0, 3788388
+ EXEC PG_LI_FOLIO_EN_GERBER 0 ,0, 3806956
 */
 
 CREATE PROCEDURE [dbo].[PG_LI_FOLIO_EN_GERBER]
@@ -36,55 +36,84 @@ CREATE PROCEDURE [dbo].[PG_LI_FOLIO_EN_GERBER]
 AS
 
 	-- ///////////////////////////////////////////
+	DECLARE @VP_ORDEN_FOLIO VARCHAR(10)
 
-	SELECT DISTINCT  ROW_NUMBER() OVER(ORDER BY RP_SC.ID ASC) AS [ROW],
-			ISNULL(RP_SC.CDATE, '')					AS CDATE,
-			ISNULL(LTRIM(RTRIM(RP_SC.COLOUR)), '')	AS COLOR,
-			ISNULL(LTRIM(RTRIM(LOT)), '')			AS LOTE,
-			ISNULL(LTRIM(RTRIM(HIDE)), '')			AS PIEL,
-			ISNULL(LTRIM(RTRIM(SQF)), '')			AS SQF,
-			CONVERT(DECIMAL(13,2),ISNULL(hidesqm, 0.0000))	AS SQF_CORTADO_ORIGINAL,
-			CONVERT(DECIMAL(13,2),ISNULL(hidesqm, 0.0000))	AS SQF_CORTADO,
-			ISNULL(TAGNO, 0)						AS FOLIO,
-			ISNULL(YARDAS, '')						AS YARDAS,
-			ISNULL(YLB, '')							AS YLB,
-			ISNULL(PESO, '')						AS PESO,
-			ISNULL(LTRIM(RTRIM(RP_SC.TYPE)), '')	AS TYPE,
-			LTRIM(RTRIM(MOVEMENT))					AS LOCACION,
-			--(CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
-			--													-- ===================== 
-			--											FROM	IMLSTRX_SQL, IMINVTRX_SQL 
-			--													-- =====================
-			--											WHERE	(IMLSTRX_SQL.Source	= IMINVTRX_SQL.Source 
-			--											AND		IMLSTRX_SQL.Ord_No	= IMINVTRX_SQL.Ord_No)
-			--											AND		IMLSTRX_SQL.Ctl_No	= IMINVTRX_SQL.Ctl_No 
-			--											AND		IMLSTRX_SQL.Line_No	= IMINVTRX_SQL.Line_No 
-			--											AND		IMLSTRX_SQL.Lev_No	= IMINVTRX_SQL.Lev_No 
-			--											AND		IMLSTRX_SQL.Seq_No	= IMINVTRX_SQL.Seq_No 
-			--											AND		IMINVTRX_SQL.ord_no	= MOVEMENT
-			--											-- =====================
-			--											AND		((IMLSTRX_SQL.lev_no	= '0' AND doc_type	= 'R') 
-			--													OR  (IMLSTRX_SQL.lev_no	= '1' AND doc_type	= 'T'))
-			--											)
-			--	ELSE	LTRIM(RTRIM(MOVEMENT)) END ) AS LOCACION,
-				S_PIEL_CLASIFICACION,
-				(CASE	WHEN RP_Folios.JOBNO IS NULL THEN 'SN/EVENT'
-						WHEN RP_Folios.JOBNO = '-' THEN 'SN/EVENT'
-						WHEN RP_Folios.JOBNO = '' THEN 'SN/EVENT'
-						ELSE	LTRIM(RTRIM(RP_Folios.JOBNO)) END) AS EVENTO
-	FROM	RP_SC 
-	-- =======================
-	INNER	JOIN	PIEL_CLASIFICACION ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
-	INNER	JOIN	RP_Folios ON RP_SC.TAGNO = RP_Folios.TAG
-	LEFT	JOIN	cccuthst_sql	ON ISNULL(RP_Folios.JOBNO,'00000') = cccuthst_sql.jobno
-		AND		LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(cccuthst_sql.COLOUR))    
-		AND	LTRIM(RTRIM(cccuthst_sql.lotno)) = 	RIGHT('000000' + Ltrim(Rtrim(RP_SC.LOT)), 6) 
-		AND LTRIM(RTRIM(cccuthst_sql.hideno)) =  LTRIM(RTRIM(RP_SC.HIDE))
-	WHERE	TAGNO = @PP_FOLIO
-	AND		SUBSTRING(MOVEMENT, 1,2) = 'GT'
-	AND RP_Folios.STATUS <> 'XX'
-	-- =======================
-	--ORDER BY HIDE ASC
+	SELECT @VP_ORDEN_FOLIO = LTRIM(RTRIM(JOBNO))
+	FROM RP_FOLIOS 
+	WHERE TAG = @PP_FOLIO
+
+	IF ( @VP_ORDEN_FOLIO IS NULL OR @VP_ORDEN_FOLIO = '' OR  @VP_ORDEN_FOLIO = '-' )
+		BEGIN
+			SELECT DISTINCT  ROW_NUMBER() OVER(ORDER BY RP_SC.ID ASC) AS [ROW],
+					RP_SC.CDATE					AS CDATE,
+					LTRIM(RTRIM(RP_SC.COLOUR))	AS COLOR,
+					LTRIM(RTRIM(LOT))			AS LOTE,
+					LTRIM(RTRIM(HIDE))			AS PIEL,
+					LTRIM(RTRIM(SQF))			AS SQF,
+					-- =======================
+					0.00	AS SQF_CORTADO_ORIGINAL,
+					0.00	AS SQF_CORTADO,
+					-- =======================
+					TAGNO					AS FOLIO,
+					LTRIM(RTRIM(RP_SC.TYPE))	AS TYPE,
+					LTRIM(RTRIM(MOVEMENT))					AS LOCACION,
+						S_PIEL_CLASIFICACION,
+						(CASE	WHEN RP_Folios.JOBNO IS NULL THEN 'SN/EVENT'
+								WHEN RP_Folios.JOBNO = '-' THEN 'SN/EVENT'
+								WHEN RP_Folios.JOBNO = '' THEN 'SN/EVENT'
+								ELSE	LTRIM(RTRIM(RP_Folios.JOBNO)) END) AS EVENTO
+			FROM	RP_SC 
+			-- =======================
+			INNER	JOIN	PIEL_CLASIFICACION ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
+			INNER	JOIN	RP_Folios ON RP_SC.TAGNO = RP_Folios.TAG
+			WHERE	TAGNO = @PP_FOLIO
+			AND		SUBSTRING(MOVEMENT, 1,2) = 'GT'
+			AND RP_Folios.STATUS <> 'XX'
+		END
+	ELSE
+		BEGIN 
+			DECLARE @TBL_CORTES_PIEL_FOLIO TABLE(
+				ID INT		IDENTITY (1,1),
+				ORDEN		VARCHAR(10),
+				LOTE		VARCHAR(50),
+				PIEL		VARCHAR(20),
+				SQF_CORTE	DECIMAL(13,2)
+			)
+
+			INSERT INTO @TBL_CORTES_PIEL_FOLIO
+			SELECT JOBNO, LTRIM(RTRIM(LOTNO)), hideno, hidesqm
+			FROM cccuthst_sql 
+			WHERE jobno = @VP_ORDEN_FOLIO
+			
+			SELECT DISTINCT  ROW_NUMBER() OVER(ORDER BY RP_SC.ID ASC) AS [ROW],
+					RP_SC.CDATE					AS CDATE,
+					LTRIM(RTRIM(RP_SC.COLOUR))	AS COLOR,
+					LTRIM(RTRIM(LOT))			AS LOTE,
+					LTRIM(RTRIM(HIDE))			AS PIEL,
+					LTRIM(RTRIM(SQF))			AS SQF,
+					-- =======================
+					CONVERT(DECIMAL(13,2),ISNULL(SQF_CORTE, 0.0000))	AS SQF_CORTADO_ORIGINAL,
+					CONVERT(DECIMAL(13,2),ISNULL(SQF_CORTE, 0.0000))	AS SQF_CORTADO,
+					TAGNO					AS FOLIO,
+					LTRIM(RTRIM(RP_SC.TYPE))	AS TYPE,
+					LTRIM(RTRIM(MOVEMENT))					AS LOCACION,
+						S_PIEL_CLASIFICACION,
+						(CASE	WHEN RP_Folios.JOBNO IS NULL THEN 'SN/EVENT'
+								WHEN RP_Folios.JOBNO = '-' THEN 'SN/EVENT'
+								WHEN RP_Folios.JOBNO = '' THEN 'SN/EVENT'
+								ELSE	LTRIM(RTRIM(RP_Folios.JOBNO)) END) AS EVENTO
+			FROM	RP_SC 
+			-- =======================
+			INNER	JOIN	PIEL_CLASIFICACION ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
+			INNER	JOIN	RP_Folios ON RP_SC.TAGNO = RP_Folios.TAG
+			LEFT	JOIN	@TBL_CORTES_PIEL_FOLIO AS PIEL_CORTE ON PIEL_CORTE.LOTE = RIGHT('000000' + LTRIM(RTRIM(RP_SC.LOT)), 6) 
+							AND LTRIM(RTRIM(PIEL_CORTE.PIEL)) = LTRIM(RTRIM(HIDE))
+							AND LTRIM(RTRIM(PIEL_CORTE.ORDEN)) = LTRIM(RTRIM(JOBNO))
+			WHERE	TAGNO = @PP_FOLIO
+			AND		SUBSTRING(MOVEMENT, 1,2) = 'GT'
+			AND RP_Folios.STATUS <> 'XX'
+			-- =======================
+		END
 
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
@@ -281,7 +310,7 @@ AS
 					DECLARE @VP_ORDEN	VARCHAR(10) = 0
 					SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(JOBNO)))
 					FROM	CCJOBHDR_SQL 
-					WHERE	JOBNO < '26379'
+					WHERE	JOBNO < '50000'
 					ORDER BY JOBNO DESC
 
 					IF @VP_ORDEN IS NULL
