@@ -15,6 +15,58 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> RN_EXISTE
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_TRACKING_VALIDA_COLOR_X_LOTE]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_TRACKING_VALIDA_COLOR_X_LOTE]
+GO
+/*
+	EXEC [dbo].[PG_RN_TRACKING_VALIDA_COLOR_X_LOTE] 0,0, '402041'
+*/
+
+CREATE PROCEDURE [dbo].[PG_RN_TRACKING_VALIDA_COLOR_X_LOTE]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================	
+	@PP_LOTE					VARCHAR(20)
+	-- ===========================		
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
+	-- /////////////////////////////////////////////////////
+	DECLARE @VP_COLOR VARCHAR(20) = ''
+
+	SELECT	TOP 1 
+			@VP_COLOR = LTRIM(RTRIM(PCOLOR))
+	FROM	HIDESHDR_SQL
+	WHERE	PLOT = @PP_LOTE
+
+	IF @VP_COLOR IS NULL OR @VP_COLOR = ''
+		SET @VP_RESULTADO = 'El Lote no encontrado en registro de importación [HIDESHDR_SQL].'
+	
+	IF @VP_RESULTADO = ''
+		BEGIN
+			DECLARE @VP_N_COLOR INT = 0
+
+			SELECT @VP_N_COLOR = COUNT(ID)
+			FROM COLORES_CONTROLADOS
+			WHERE COLOR = @VP_COLOR
+
+			IF @VP_N_COLOR IS NULL OR @VP_N_COLOR = 0
+				SET @VP_RESULTADO = 'El Lote pertenece a un color No Controlado.'
+		END	
+	-- /////////////////////////////////////////////////////
+
+	
+	SELECT @VP_RESULTADO AS MENSAJE
+		
+	-- /////////////////////////////////////////////////////
+GO
+
+
+
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
