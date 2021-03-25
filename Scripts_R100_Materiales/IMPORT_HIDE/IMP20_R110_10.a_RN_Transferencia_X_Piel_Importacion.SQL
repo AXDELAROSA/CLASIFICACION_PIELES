@@ -43,31 +43,43 @@ AS
 	DECLARE @VP_RESULTADO			VARCHAR(300) = '' 
 	DECLARE @VP_N_IMPRESION			INT = 0
 	DECLARE @VP_N_IMPRESION_LOG		INT = 0
-
-	-- /////////////////////////////////////////////////////
-	SELECT	@VP_N_IMPRESION = COUNT(ID)
-	FROM	HIDESLIN_SQL
-	WHERE	FILENO = @PP_FILE_NO
-	AND		HIDE = @PP_PIEL
-	AND		PRINTED = 1
-
-	IF @VP_N_IMPRESION IS NULL
-		SET @VP_N_IMPRESION = 0
-
-	-- /////////////////////////////////////////////////////
-	SELECT	@VP_N_IMPRESION_LOG = COUNT(K_PIEL_LOG)
-	FROM	PIEL_LOG
-	WHERE	LOTE = @PP_LOTE
-	AND		PIEL = @PP_PIEL
-	AND		K_TIPO_PIEL_LOG = 8 --#REIMPRESION
+	DECLARE @VP_LOCACION VARCHAR(5) = ''
 	
-	IF @VP_N_IMPRESION_LOG IS NULL
-		SET @VP_N_IMPRESION_LOG = 0
+	-- /////////////////////////////////////////////////////
+	SELECT @VP_LOCACION = LTRIM(RTRIM([STATUS]))
+	FROM HIDESHDR_SQL 
+	WHERE FILENO = @PP_FILE_NO
+
+	IF @VP_LOCACION = 'MIT'
+		SET @VP_RESULTADO = 'El Ticket se encuentra en MIT.'
 
 	-- /////////////////////////////////////////////////////
-	IF @VP_N_IMPRESION > 0 AND @VP_N_IMPRESION_LOG > 0
-		SET @VP_RESULTADO = 'La piel ya se reimprimio una vez.'
-	
+	IF @VP_RESULTADO = ''
+		BEGIN
+			SELECT	@VP_N_IMPRESION = COUNT(ID)
+			FROM	HIDESLIN_SQL
+			WHERE	FILENO = @PP_FILE_NO
+			AND		HIDE = @PP_PIEL
+			AND		PRINTED = 1
+
+			IF @VP_N_IMPRESION IS NULL
+				SET @VP_N_IMPRESION = 0
+
+			-- /////////////////////////////////////////////////////
+			SELECT	@VP_N_IMPRESION_LOG = COUNT(K_PIEL_LOG)
+			FROM	PIEL_LOG
+			WHERE	LOTE = @PP_LOTE
+			AND		PIEL = @PP_PIEL
+			AND		K_TIPO_PIEL_LOG = 8 --#REIMPRESION
+			
+			IF @VP_N_IMPRESION_LOG IS NULL
+				SET @VP_N_IMPRESION_LOG = 0
+
+			-- /////////////////////////////////////////////////////
+			IF @VP_N_IMPRESION > 0 AND @VP_N_IMPRESION_LOG > 0
+				SET @VP_RESULTADO = 'La piel ya se reimprimio una vez.'
+		END
+
 	-- /////////////////////////////////////////////////////
 	IF @VP_RESULTADO = ''
 		BEGIN
@@ -247,7 +259,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> 
 -- //////////////////////////////////////////////////////////////
---  USE [DATA_02Pruebas] 
+--  USE DATA_02
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDA_LOCACION_TICKET_IMPORTADO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_VALIDA_LOCACION_TICKET_IMPORTADO]
 GO
@@ -274,7 +286,7 @@ AS
 	WHERE FILENO = @PP_FILE_NO
 
 	IF @VP_LOCACION <> 'MIT'
-		SET @VP_RESULTADO = 'El Ticket no se encientra en MIT.'
+		SET @VP_RESULTADO = 'El Ticket no se encuentra en MIT.'
 	
 	IF @VP_RESULTADO = ''
 		BEGIN

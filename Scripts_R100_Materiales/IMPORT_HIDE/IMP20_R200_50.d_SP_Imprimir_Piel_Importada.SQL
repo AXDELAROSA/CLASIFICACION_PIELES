@@ -36,10 +36,16 @@ AS
 	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
-	--EXECUTE [dbo].[PG_RN_VALIDA_PIEL_A_REIMPRIMIR]			@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--														@PP_FILE_NO, @PP_LOTE, @PP_PIEL,
-	--														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+	-- ////////SE OBTIENE LA LOCACION DONDE SE ENCUENTRAN LAS PIELES DEL TICKET IMPORTADO///////////////////////////////////
+	DECLARE @VP_LOCACION VARCHAR(5) = ''
 	
+	SELECT @VP_LOCACION = LTRIM(RTRIM([STATUS]))
+	FROM HIDESHDR_SQL 
+	WHERE FILENO = @PP_FILE_NO
+
+	IF @VP_LOCACION = 'MIT'
+		SET @VP_MENSAJE = 'El Ticket se encuentra en MIT.'
+
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
