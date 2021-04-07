@@ -21,9 +21,9 @@ WHERE LOT = '402091'
 --and MOVEMENT = 'mhi'
 order by hide asc
 
-SELECT * FROM HIDESHDR_SQL  WHERE PLOT =  '402181' and FILENO = '210310181706T1000002'
+SELECT * FROM HIDESHDR_SQL  WHERE PLOT =  '108041' and FILENO = '210326083506T1000001'
 
-select * from HIDESLIN_SQL where FILENO = '210304190548T1000001'
+select * from HIDESLIN_SQL where FILENO = '210326083506T1000001'
 
 
 SELECT * FROM HIDESHDR_SQL   
@@ -40,10 +40,10 @@ WHERE	LTRIM(RTRIM(PLOT)) = '34581'
   select * from HIDESLIN_SQL where FILENO = '210311172623T1000001'
 
 
-SELECT TOP 100	* FROM	IncInsp_sql ORDER BY Date DESC
+SELECT TOP 100	* FROM	IncInsp_sql --ORDER BY Date DESC
 WHERE --	LTRIM(RTRIM([Date])) = 20201221
 ----AND		
-LTRIM(RTRIM(Lot)) = '034451' 
+LTRIM(RTRIM(Lot)) = '501471' 
 
 select ID,Date,Lot,Description,Lot_size,Sample_size,Status,Accepted,Thickness,Defecto from IncInsp_sql where status<>'C' order by id desc
 

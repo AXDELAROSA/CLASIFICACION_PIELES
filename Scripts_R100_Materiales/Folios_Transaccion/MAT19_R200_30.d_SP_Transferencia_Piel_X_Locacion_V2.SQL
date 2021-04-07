@@ -79,7 +79,6 @@ AS
 				
 			WHILE @@FETCH_STATUS = 0
 				BEGIN
-					
 					UPDATE	RP_SC
 						SET	SQF = @VP_SQF_RECIBIR
 					WHERE	LTRIM(RTRIM(TAGNO))	= @PP_TAGNO_ORIGEN
@@ -110,10 +109,22 @@ AS
 				SET @VP_MENSAJE_TRANSACCION = 'No fue posible borrar la transaccion: ' + CONVERT(VARCHAR(10), @PP_K_PIEL_A_TRANSFERIR_TRANSACCION)
 				RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 			END
-			-- ////////////////////////////////////////////////////////////////////	
 
+			-- ////////////////////////////////////////////////////////////////////	
 			IF SUBSTRING(@PP_LOCACION_DESTINO, 1, 1) IN ('T', 'G') AND @PP_ORDEN_DESTINO <> '' AND  @PP_CARGAR_ORDEN = 1
 				BEGIN
+					DECLARE @VP_N_FOLIO_ASIGNADO INT = 0
+
+					SELECT @VP_N_FOLIO_ASIGNADO = folio
+					FROM	ccjobhdr_sql 
+					WHERE	LTRIM(RTRIM(jobno)) = @PP_ORDEN_DESTINO
+
+					IF @VP_N_FOLIO_ASIGNADO IS NOT NULL OR @VP_N_FOLIO_ASIGNADO > 0
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'La Orden ya tiene un Folio asignado: ' + @PP_ORDEN_DESTINO
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END
+						
 					DECLARE @VP_ORDEN_ASIGNADA VARCHAR(15) = ''
 
 					SELECT @VP_ORDEN_ASIGNADA = RTRIM(LTRIM(JOBNO)) 
@@ -178,7 +189,7 @@ AS
 				ROLLBACK TRANSACTION
 				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
 				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
-				SET @VP_MENSAJE = 'ERROR: // TRANS: [PG_PM_TRANSFER_PIEL_X_LOCACION] // ' + @VP_ERROR_TRANS
+				SET @VP_MENSAJE = 'ERROR: // TRANS: [PG_PM_TRANSFER_PIEL_X_LOCACION_V2] // ' + @VP_ERROR_TRANS
 			END CATCH
 			
 		END

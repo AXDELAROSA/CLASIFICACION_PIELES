@@ -23,7 +23,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 GO
 
 /*
-	EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]	0,0,  '210201044555T1000002' ,  'TEST-031221', 'F5531TC', 'franciscoe'
+	EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]	0,144,  '210402200432T1000001' ,  'C-(15)-040221', 'FCNPDX9', 'franciscoe'
 */
 
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_IMPORTAR_X_SISTEMA_V2]
@@ -152,7 +152,7 @@ AS
 												FILENO, HIDE, SQF, PRINTED
 												) 
 										VALUES (
-												@PP_FILE_NO, @VP_NUMERO_PIEL, @VP_SQF, 0
+												@PP_FILE_NO, @VP_NUMERO_PIEL, CONVERT(VARCHAR(10),@VP_SQF), 0
 												)
 						                             
 						IF @@ROWCOUNT = 0
