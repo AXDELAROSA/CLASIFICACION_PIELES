@@ -82,12 +82,13 @@ AS
 				-- /////////SE OBTIENE EL FOLIO BASE DEL COLOR///////////////////////////////////////////////////////////	
 				DECLARE @VP_FOLIO	INT = 0
 
-				SELECT	TOP 1 @VP_FOLIO = TAG
-				FROM	RP_Folios  
-				INNER JOIN RP_SC ON TAG = TAGNO
-				AND RTRIM(LTRIM(STATUS)) = 'B' 
-				AND COLOUR = @VP_COLOR
-				GROUP BY TAG, COLOUR
+				IF @PP_LOCACION_DESTINO = 'MHI'
+					SELECT	TOP 1 @VP_FOLIO = TAG
+					FROM	RP_Folios  
+					INNER JOIN RP_SC ON TAG = TAGNO
+					AND RTRIM(LTRIM(STATUS)) = 'B' 
+					AND COLOUR = @VP_COLOR
+					GROUP BY TAG, COLOUR
 				
 				-- /////////SI NO EXISTE UN FOLIO BASE PARA EL COLOR NUEVO SE CREA///////////////////////////////////////////////////////////	
 				IF @VP_FOLIO IS NULL OR @VP_FOLIO = 0

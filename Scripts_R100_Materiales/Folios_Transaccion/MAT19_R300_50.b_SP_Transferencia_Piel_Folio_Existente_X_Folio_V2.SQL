@@ -216,9 +216,16 @@ AS
 				-- =======================
 
 				IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR
-					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
-																			
+					BEGIN
+						EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+																@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+						
+						-- ///////ACTUALIZA QUITA EL FOLIO DE LA ORDEN//////////////////////////////////////////////////////////////////////////////
+						UPDATE ccjobhdr_sql 
+						 SET FOLIO = NULL
+						WHERE FOLIO = @PP_TAGNO_ORIGEN
+					END		
+															
 				-- ///////SE DECLARAN VARIABLES A USAR//////////////////////////////////////////////////////////////////////////////
 				DECLARE @VP_COLOR_TBL			VARCHAR(10)
 				DECLARE @VP_LOTE_TBL			VARCHAR(10)
