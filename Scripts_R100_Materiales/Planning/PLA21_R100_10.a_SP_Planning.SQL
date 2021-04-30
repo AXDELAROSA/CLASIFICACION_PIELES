@@ -22,7 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_
 GO
 
 /*
-	 EXEC [PG_LI_PART_NO_X_CLIENTE_COLOR] 0 ,0, 'MAGN03' , 'FCNPJRR' , '( TODOS )' , '' , 0
+	 EXEC [PG_LI_PART_NO_X_CLIENTE_COLOR] 0 ,0, 'MAGN02' , 'FWLNPX7' , '( TODOS )' , '' , 0
 	 EXEC [PG_LI_PART_NO_X_CLIENTE_COLOR] 0 ,0, 'YANG03' , 'FYCPAX7' , '( TODOS )' , '' , 0 
 */
 
@@ -64,6 +64,7 @@ AS
 		AND SUBSTRING(LTRIM(RTRIM(cccusitm_sql.item_no)) ,1 ,1)  = 'P' 
 		AND cus_item_no <> ''
 	INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = cccusitm_sql.item_no
+		AND L_ACTIVO = 1
 	INNER JOIN  IMCATFIL_SQL ON dbo.IMITMIDX_SQL.prod_cat = IMCATFIL_SQL.prod_cat 
 		AND IMCATFIL_SQL.L_BORRADO = 0
 	WHERE ccverhdr_sql.specstatus = 'U' 
@@ -72,7 +73,7 @@ AS
 	AND ccverhdr_sql.cus_no = @PP_CLIENTE 
 	ORDER BY cus_item_no
 
-	--SELECT DISTINCT COLOR FROM @TBL_ITEM_X_CLIENTE_COLOR
+	--SELECT * FROM @TBL_ITEM_X_CLIENTE_COLOR
 
 	-- ///////////SE CREA TABLA TEMPORAL////////////////////////////////
 	CREATE TABLE #ITEM_EN_MESA (
@@ -117,7 +118,9 @@ AS
 			( CASE WHEN LTRIM(RTRIM(startedflag)) = 'Y' THEN 'Y'
 					ELSE 'N' END ) AS INICIO_CORTE,
 			--==================================================
-			ISNULL(OriginalQty, 0) CANTIDAD_PROGRAMADA
+			--ISNULL(OriginalQty, 0) CANTIDAD_PROGRAMADA
+			( CASE WHEN OriginalQty IS NULL THEN '0'
+					ELSE (SELECT SUM(OriginalQty) FROM ccjoblin_sql WHERE JOBNO = ccjobhdr_sql.JOBNO AND ITEM_NO = ITEM_X_CLIENTE_COLOR.ITEM_NO) END ) AS CANTIDAD_PROGRAMADA
 	FROM @TBL_ITEM_X_CLIENTE_COLOR AS ITEM_X_CLIENTE_COLOR
 	INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = ITEM_X_CLIENTE_COLOR.item_no
 	LEFT JOIN ccjobhdr_sql ON  status='P' AND CONCAT('F', ccjobhdr_sql.colour) = ITEM_X_CLIENTE_COLOR.COLOR
@@ -255,25 +258,38 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET
 GO
 
 /*
- EXEC PG_GET_GROSS_NETO_X_KIT_PROGRAMADO 0 ,0,  'FCNPJRR' , 'PW2FDVL' , 3  
+ EXEC PG_GET_GROSS_NETO_X_KIT_PROGRAMADO 0 ,0,  'MAGN03', 'FCNPJRR', 'PW2FDVL', 3  
 */
 
 CREATE PROCEDURE [dbo].[PG_GET_GROSS_NETO_X_KIT_PROGRAMADO]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
+	@PP_CLIENTE					VARCHAR(50),
 	@PP_COLOR					VARCHAR(50),
 	@PP_KIT						VARCHAR(50),
 	@PP_CANTIDAD				INT
 AS
 
-	-- ///////////////////////////////////////////
-	DECLARE @VP_ITEM_NO VARCHAR(20) = @PP_KIT + SUBSTRING(@PP_COLOR, 2, 10)
-	
-	DECLARE @VP_CUBE_LENGTH DECIMAL(13,5) = 0, @VP_CUBE_WIDTH DECIMAL(13,5) = 0;
+	-- /////////SE OBTIENE LA UTILIDAD//////////////////////////////////
+	DECLARE @VP_UTILIDAD_MINIMA DECIMAL(13,2) = 0
+	SELECT @VP_UTILIDAD_MINIMA = User_Def_Fld_2
+	FROM arcusfil_sql 
+	WHERE CUS_NO = @PP_CLIENTE
 
-	SELECT TOP 1 @VP_CUBE_LENGTH = CUBE_LENGTH ,
-			@VP_CUBE_WIDTH = CUBE_WIDTH
+	IF @VP_UTILIDAD_MINIMA IS NULL
+		SET @VP_UTILIDAD_MINIMA = 0
+
+	SET @VP_UTILIDAD_MINIMA = @VP_UTILIDAD_MINIMA / 1000000
+
+	-- ////////SE FORMA EL ITEM_NO///////////////////////////////////
+	DECLARE @VP_ITEM_NO VARCHAR(20) = @PP_KIT + SUBSTRING(@PP_COLOR, 2, 10)
+	DECLARE @VP_CUBE_LENGTH DECIMAL(13,4) = 0, @VP_CUBE_WIDTH DECIMAL(13,4) = 0, @VP_CUBE_QTY_PER DECIMAL(13,4) = 0;
+
+	-- ////////SE OBTIENE EL GROSS, NETO Y PATRONES DEL KIT///////////////////////////////////
+	SELECT TOP 1 @VP_CUBE_LENGTH	= CUBE_LENGTH,
+			@VP_CUBE_WIDTH			= CUBE_WIDTH,
+			@VP_CUBE_QTY_PER		= CUBE_QTY_PER
 	FROM IMITMIDX_SQL   
 	WHERE	LTRIM(RTRIM(ITEM_NO)) = @VP_ITEM_NO
 
@@ -283,19 +299,153 @@ AS
 	IF @VP_CUBE_WIDTH IS NULL
 		SET @VP_CUBE_WIDTH = 0
 
-	DECLARE @VP_GROSS DECIMAL(16,5) = 0, @VP_NETO DECIMAL(16,5) = 0; 
+	IF @VP_CUBE_QTY_PER IS NULL
+		SET @VP_CUBE_QTY_PER = 0
 
-	SET @VP_GROSS = @VP_CUBE_LENGTH * @PP_CANTIDAD
-	SET @VP_NETO = @VP_CUBE_WIDTH * @PP_CANTIDAD
+	DECLARE @VP_GROSS DECIMAL(16,4) = 0, @VP_NETO DECIMAL(16,4) = 0, @VP_PATRON INT = 0; 
 
-	SELECT	@VP_GROSS	AS GROSS,
-			@VP_NETO	AS NETO
+	SET @VP_GROSS	= @VP_CUBE_LENGTH	* @PP_CANTIDAD
+	SET @VP_NETO	= @VP_CUBE_WIDTH	* @PP_CANTIDAD
+	SET @VP_PATRON	= @VP_CUBE_QTY_PER	* @PP_CANTIDAD
 
+	SELECT	@VP_UTILIDAD_MINIMA	AS UTILIDAD,
+			@VP_GROSS			AS GROSS,
+			@VP_NETO			AS NETO,
+			@VP_PATRON			AS N_PATRON
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
 GO
 
 
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]
+GO
+
+/*
+ EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '18518'
+ EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '29487'
+*/
+
+CREATE PROCEDURE [dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN					VARCHAR(50)	
+AS
+
+		-- ///////////////////////////////////////////
+	SELECT	JOBNO, 
+			(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+				FROM INVENTARIO_EMBARQUE 
+				WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+						OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  ) AS MFP,
+			-- ===========================
+			LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+			LTRIM(RTRIM(ccjoblin_sql.kitdesc))		AS KIT_DESC, 
+			ccjoblin_sql.plannedqty					AS PLANNED_QTY, 
+			ccjoblin_sql.completedqty				AS COMPLETED_QTY, 
+			CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY, 
+			ccjoblin_sql.netsqmper					AS NETSQMPER, 
+			ccjoblin_sql.stdsqmper					AS STDSQMPER, 
+			ccjoblin_sql.patternsper				AS PATTERNSPER, 
+			LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+			ccjoblin_sql.item_no					AS ITEM_NO,
+			ccjoblin_sql.Ser_No						AS SER_NO,
+			-- ===========================
+			LTRIM(RTRIM(part_no_view.cus_item_no))	AS CUS_ITEM_NO
+			-- ===========================
+	FROM ccjoblin_sql  
+	-- ===========================
+	INNER JOIN	part_no_view ON ccjoblin_sql.Item_No = part_no_view.item_no 
+		AND		ccjoblin_sql.customer = part_no_view.Customer  
+		AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+												FROM	part_no_view 
+												WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+												AND		ccjoblin_sql.customer = part_no_view.Customer	)
+		AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+	-- ===========================
+	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
+	-- ===========================
+    ORDER BY CUS_ITEM_NO
+    --ORDER BY ccjoblin_sql.Ser_No
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_KIT_DISPONIBLE_X_CLIENTE_COLOR]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_KIT_DISPONIBLE_X_CLIENTE_COLOR]
+GO
+
+/*
+ EXEC PG_GET_KIT_DISPONIBLE_X_CLIENTE_COLOR 0 ,0, 'MAGN03', 'FCNPJRR'
+*/
+
+CREATE PROCEDURE [dbo].[PG_GET_KIT_DISPONIBLE_X_CLIENTE_COLOR]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_CLIENTE					VARCHAR(50),
+	@PP_COLOR					VARCHAR(50)
+AS
+
+		-- ///////////////////////////////////////////
+		-- ///////////SE CREA TABLA TEMPORAL////////////////////////////////
+	SET NOCOUNT ON
+	DECLARE @TBL_KIT_DISPONIBLE_X_CLIENTE_COLOR AS TABLE(
+	ID			INT IDENTITY(1,1),
+	KIT			VARCHAR(50),
+	ITEM_NO		VARCHAR(100),
+	COLOR		VARCHAR(50),
+	CUS_ITEM_NO	VARCHAR(50),
+	D_ITEM_NO	VARCHAR(250),
+	CUSTOMER	VARCHAR(50),
+	VERSIONNO	VARCHAR(50),
+	MODELNO		VARCHAR(50)
+	)
+
+	-- ///////////SE INGRESAN LOS DATOS LOS NUMEROS DE PARTES VIGENTES A LA TABLA TEMPORAL////////////////////////////////
+	-- part_no_view CORRECTA
+	INSERT INTO @TBL_KIT_DISPONIBLE_X_CLIENTE_COLOR
+	SELECT	DISTINCT TOP (100) PERCENT 
+			LEFT(LTRIM(RTRIM(cccusitm_sql.ITEM_NO)),7) AS KIT,
+			 cccusitm_sql.item_no, 
+			 CONCAT('F', RIGHT(LTRIM(RTRIM(cccusitm_sql.item_no)),6)) AS COLOR, 
+			 LTRIM(RTRIM(cus_item_no)) AS cus_item_no, 
+			 LTRIM(RTRIM(item_desc_1)) D_ITEM_NO, 
+			 ccverhdr_sql.cus_no AS Customer, 
+			 ccverhdr_sql.versionno, 
+			 ccverhdr_sql.modelno
+	FROM	dbo.ccverhdr_sql
+	INNER JOIN cccusitm_sql ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
+		AND SUBSTRING(LTRIM(RTRIM(cccusitm_sql.item_no)) ,1 ,1)  = 'P' 
+		AND cus_item_no <> ''
+	INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = cccusitm_sql.item_no 
+		AND L_ACTIVO = 1
+	INNER JOIN  IMCATFIL_SQL ON dbo.IMITMIDX_SQL.prod_cat = IMCATFIL_SQL.prod_cat 
+		AND IMCATFIL_SQL.L_BORRADO = 0
+	WHERE ccverhdr_sql.specstatus = 'U' 
+	AND ccverhdr_sql.status = 'L' 
+	AND CONCAT('F', RIGHT(LTRIM(RTRIM(cccusitm_sql.item_no)),6)) = @PP_COLOR 
+	AND ccverhdr_sql.cus_no = @PP_CLIENTE 
+	ORDER BY cus_item_no
+
+	SET NOCOUNT OFF
+	SELECT * FROM @TBL_KIT_DISPONIBLE_X_CLIENTE_COLOR
+	-----////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////

@@ -58,7 +58,32 @@ AS
 
 				IF @@ROWCOUNT = 0
 					RAISERROR ('NO fue posible Actualizar la piel en [HIDESLIN_SQL].', 16, 1 ) --MENSAJE - Severity -State.   
-										
+				
+				-- ///////SE OBTIENEN VALORES REQUERIDOS PARA EL LOG DE REIMPRESION DE LA PIEL//////////////////////////////////////////////
+				DECLARE @VP_PCOLOR		VARCHAR(50) = ''
+				DECLARE @VP_PLOT		VARCHAR(50) = ''
+				DECLARE @VP_TOTAL_PIEL	VARCHAR(50) = ''
+				DECLARE @VP_TOTAL_SQF	VARCHAR(50) = ''
+
+				SELECT	@VP_PCOLOR = LTRIM(RTRIM(PCOLOR)),
+						@VP_PLOT = LTRIM(RTRIM(PLOT)),
+						@VP_TOTAL_PIEL = LTRIM(RTRIM(THIDES)),
+						@VP_TOTAL_SQF = LTRIM(RTRIM(TAREA))
+				FROM HIDESHDR_SQL 
+				WHERE 	FILENO = @PP_FILE_NO						
+
+				-- /////SE INGRESA EL LOG DE LA IMPRESION DEL TICKET////////////////////////////////////////////////
+				INSERT INTO PIEL_LOG (	[K_TIPO_PIEL_LOG], [COLOR], [LOTE],	[PIEL], [SQF], 
+										[FOLIO_ORIGEN], [LOCACION_ORIGEN], [FOLIO_DESTINO], [LOCACION_DESTINO], [F_LOG],
+										[K_USUARIO_ALTA], [F_ALTA], [K_USUARIO_CAMBIO], [F_CAMBIO], [L_BORRADO]
+									) 
+							VALUES (	13, @VP_PCOLOR, @VP_PLOT, @VP_TOTAL_PIEL, @VP_TOTAL_SQF, 
+										0, 'MHI', 0, '', GETDATE(), 
+										@PP_K_USUARIO_ACCION, GETDATE(), @PP_K_USUARIO_ACCION, GETDATE(), 0
+									)
+
+				IF @@ROWCOUNT = 0
+					RAISERROR ('NO fue posible agregar el log de la piel en [PIEL_LOG].', 16, 1 ) --MENSAJE - Severity -State.   	
 				-- ///////////////////////////////////////////
 			COMMIT TRANSACTION 
 			END TRY

@@ -1,49 +1,52 @@
 
 USE DATA_02PRUEBAS
+	
+	SELECT * FROM INVENTARIO_EMBARQUE WHERE --K_ESTATUS_INVENTARIO_EMBARQUE = 0 AND 
+	SERIAL_2 LIKE  '27037%' 
+		
+	--UPDATE  INVENTARIO_EMBARQUE 
+	--SET SERIAL_1 = 'DUPLICADO'
+	--WHERE K_ESTATUS_INVENTARIO_EMBARQUE = 0 AND SERIAL_1 = '29487008' AND K_INVENTARIO_EMBARQUE = 39746
+	
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('27037', '29886') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO IN ('27037', '29886')
+	
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('27081', '29887') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO IN ('27081', '29887')
 
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('18216') ORDER BY JOBNO, Kit
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO IN ('27081', '29813')
+	SELECT * FROM pearl_log WHERE JOBNO IN ('29812', '29813') order by cdate
+
+	select * from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('27081')) ORDER BY item_no
+	select * from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('27037'))  ORDER BY item_no
+
+	SELECT * FROM pearl_log WHERE JOBNO = '27037'
 	
-	SELECT TOP 100 * FROM ccjobhdr_sql WHERE JOBNO IN ('18216')
+	SELECT * FROM cccuthst_sql WHERE JOBNO = '18518'
+
+	SELECT TOP 100 * FROM ccjobhdr_sql WHERE JOBNO IN ( '29487')
 	
-	SELECT TOP 100 * FROM ccjobhdr_sql WHERE JOBNO < 50000 --IN ('28531', '28689') 
-	ORDER BY JOBNO DESC
-	
+	--SELECT TOP 100 * FROM ccjobhdr_sql WHERE JOBNO < 50000 order by jobno desc
+
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('29812', '29813') ORDER BY jobno, Ser_No
+
 	-- SE SACA LA DESCRIPCION DEL COLOR
-	select top 1 item_no,search_desc,last_item_revision from imitmidx_sql where item_no like 'FCNPJRR'
+	select * from imitmidx_sql where item_no IN (SELECT Item_No FROM ccjoblin_sql WHERE JOBNO IN ('29247'))
+	ORDER BY ITEM_NO
+	-- LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)
+
+	SELECT TOP 20 * from serialcam_sql where serial IN	(LTRIM(RTRIM(29247)) + RIGHT('000'+ LTRIM(RTRIM(1)),3))
+	SELECT TOP 20 * from serialcam_sql where serial IS NULL AND SERIAL2 IS NULL
 	
+	select top(1) user_def_fld_5 from ccitmidx_sql where rtrim(item_no)='PLWCFBRWLNPX7' order by versionno desc
+	
+	SELECT CUS_NAME, User_Def_Fld_2 FROM ARCUSFIL_SQL WHERE CUS_NO = 'MAGN03' -- 70000000
+
+	SELECT * FROM imlocfil_sql WHERE LOC = 'MFP'
+
 	-- part_no_view MAL
-	SELECT * FROM part_no_view WHERE COLOR = 'FCNPJRR' AND Customer = 'MAGN03'
+	SELECT * FROM part_no_view WHERE COLOR = 'FCNPJRR' AND Customer = 'MAGN03' and item_no = 'PW2RB40CNPJRR'
 	
-	select ccjoblin_sql.jobno, sum(PlannedQty) as PlannedQty, netsqmper, status, machine 
-	from ccjoblin_sql inner join ccjobhdr_sql on ccjoblin_sql.jobno=ccjobhdr_sql.jobno 
-	--and item_no='" & DG_PLANEACION.Rows(t).Cells(0).Value & Mid(CB_COLOR_ORDEN.Text, 2, 6) & "' 
-	AND  CONCAT('F', RIGHT(LTRIM(RTRIM(item_no)),6)) = 'FCNPJRR'
-	and status='P' 
-	group by ccjoblin_sql.jobno,netsqmper,status,machine 
-	order by ccjoblin_sql.jobno
-
-
-	-- ////////////////////SE OBTIENEN LOS DATOS DE LOS PACKING DINAMICAMENTE QUE SE CONVERTIRAN EN LAS COLUMNAS DE LA TABLA//////////////////////////	
-	DECLARE @cols1 AS NVARCHAR(MAX), @query1 AS NVARCHAR(MAX), @query AS NVARCHAR(MAX), @query2 AS NVARCHAR(MAX), @query3 AS NVARCHAR(MAX)
-	select @cols1 = STUFF(( SELECT ',' + QUOTENAME(LTRIM(RTRIM(ccjobhdr_sql.JOBNO))) 
-							FROM ccjobhdr_sql 
-							inner join ccjoblin_sql on ccjoblin_sql.jobno=ccjobhdr_sql.jobno 
-							WHERE  CONCAT('F', LTRIM(RTRIM(colour))) = 'FCNPJRR'
-							AND ccjobhdr_sql.customer = 'MAGN03'
-							AND status='P' 
-							GROUP BY ccjobhdr_sql.JOBNO
-							ORDER BY ccjobhdr_sql.JOBNO
-							FOR XML PATH(''), TYPE ).value('.', 'NVARCHAR(MAX)') ,1,1,'' ) 					
-
-	SELECT @cols1
-
-	--SET @query1 = N'SELECT  ''''  KIT, ''''  CUS_PART_NO, '''' DESCRIPCION, '''' CANTIDAD, ' + @cols1 + N' into [tempdb].[dbo].[MESA_X_ORDEN]  from ( SELECT  MACHINE, JOBNO  from ccjobhdr_sql) x pivot ( MAX(JOBNO) for JOBNO in (' + @cols1 + N') ) p ' 
-	--EXEC sp_executesql @query1;
-
-	--SELECT * FROM [tempdb].[dbo].[MESA_X_ORDEN]
-
-	--DROP TABLE [tempdb].[dbo].[MESA_X_ORDEN]
-
 	--========PARA LISTADO DE NUMEROS DE PARTE QUE SE PUEDEN PROGRAMAR=========================================================
 	
 	SELECT	DISTINCT TOP (100) PERCENT 
@@ -64,4 +67,21 @@ USE DATA_02PRUEBAS
 	AND ccverhdr_sql.status = 'L' 
 	AND CONCAT('F', RIGHT(LTRIM(RTRIM(cccusitm_sql.item_no)),6)) = 'FCNPJRR'
 	AND ccverhdr_sql.cus_no = 'MAGN03'
-	ORDER BY cus_item_no
+	AND cccusitm_sql.item_no = 'PW2RB40CNPJRR'
+	ORDER BY versionno DESC
+
+	select * from  ccverhdr_sql 
+	where --ccverhdr_sql.specstatus = 'U' 
+	--AND --ccverhdr_sql.status = 'L' 
+	--and 
+	modelno = 'WD2'
+
+	select Customer as cus_no,part_no_view.modelno,part_no_view.versionno as version,
+	part_no_view.item_no,cus_item_no,item_desc_1,item_desc_2,prod_cat,cube_width,cube_length,
+	concat(rtrim(modelno),rtrim(versionno)) as modver,color,cube_qty_per 
+	from part_no_view 
+	inner join IMITMIDX_SQL on part_no_view.item_no=IMITMIDX_SQL.item_no and color='FCNPJRR' and customer='MAGN03' 
+	WHERE IMITMIDX_SQL.ITEM_NO = 'PW2RB40CNPJRR'
+	order by part_no_view.item_no
+       
+	select * from imitmidx_sql where item_no = 'PW2RB40CNPJRR  ' --IN (SELECT Item_No FROM ccjoblin_sql WHERE JOBNO IN ('29812'))
