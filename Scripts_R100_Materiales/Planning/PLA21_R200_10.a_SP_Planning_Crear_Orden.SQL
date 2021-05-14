@@ -36,7 +36,7 @@ CREATE PROCEDURE [dbo].[PG_PR_PLANNING_CREAR_ORDER]
 	@PP_MESA					VARCHAR(50),
 	@PP_KIT_ARRAY				NVARCHAR(MAX),
 	@PP_CANTIDAD_ARRAY			NVARCHAR(MAX),
-	@PP_ORDEN_2_TONO			VARCHAR(50),
+	--@PP_ORDEN_2_TONO			VARCHAR(50),
 	@PP_COMENTARIO				VARCHAR(255),
 	@PP_USER					VARCHAR(25),
 	@PP_COMPUTER_NAME			VARCHAR(25)
@@ -47,10 +47,10 @@ AS
 	DECLARE @VP_ORDEN VARCHAR(10) = ''
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
-	IF @PP_ORDEN_2_TONO <> ''
-		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-															@PP_ORDEN_2_TONO,
-															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+	--IF @PP_ORDEN_2_TONO <> ''
+	--	EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--														@PP_ORDEN_2_TONO,
+	--														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
@@ -70,7 +70,9 @@ AS
 				SET @VP_ORDEN = RIGHT('00000' + @VP_ORDEN, 5)
 
 				-- ///////SE OBTIENE LA DESCRIPCION DEL COLOR//////////////////////////////////////////////
+				DECLARE @VP_COLOR_SIN_F VARCHAR(25) = SUBSTRING(@PP_COLOR, 2 , 10)
 				DECLARE @VP_D_COLOR VARCHAR(255) = ''
+
 				SELECT TOP 1 @VP_D_COLOR = LTRIM(RTRIM(ITEM_DESC_1))
 				FROM IMITMIDX_SQL   
 				WHERE	LTRIM(RTRIM(ITEM_NO)) = @PP_COLOR
@@ -94,9 +96,7 @@ AS
 				IF @VP_UTILIDAD_MINIMA IS NULL
 					SET @VP_UTILIDAD_MINIMA = 0
 
-				SET @VP_UTILIDAD_MINIMA = @VP_UTILIDAD_MINIMA / 1000000	
-						
-				DECLARE @VP_COLOR_SIN_F VARCHAR(25) = SUBSTRING(@PP_COLOR, 2 , 10)
+				SET @VP_UTILIDAD_MINIMA = @VP_UTILIDAD_MINIMA / 1000000						
 
 				-- ///////SE ACTUALIZA LA LOCACION MFP CON LA ORDEN CREADA//////////////////////////////////////////////	
 				UPDATE imlocfil_sql 
@@ -174,6 +174,7 @@ AS
 						DECLARE @VP_CUBE_LENGTH DECIMAL(13,4) = 0, @VP_CUBE_WIDTH DECIMAL(13,4) = 0, @VP_CUBE_QTY_PER DECIMAL(13,4) = 0;
 						DECLARE @VP_D_ITEM	VARCHAR(255), @VP_CHANGE_LEVEL	VARCHAR(100), @VP_MODELO	VARCHAR(50), @VP_VERSION VARCHAR(50);
 
+						-- ////////SE OBTIENE EL MODELO Y ULTIMA VERSION DEL KIT///////////////////////////////////
 						SELECT	DISTINCT TOP (1) PERCENT 
 							 @VP_VERSION = ccverhdr_sql.versionno, 
 							 @VP_MODELO = ccverhdr_sql.modelno
@@ -219,13 +220,17 @@ AS
 						SET @VP_TOTAL_NETO = @VP_TOTAL_NETO + @VP_NETO
 						SET @VP_TOTAL_PATRON = @VP_TOTAL_PATRON + @VP_PATRON
 												
+						-- ////////SE OBTIENE EL STANDARD PACK DEL KIT///////////////////////////////////
 						DECLARE @VP_STD_PACK INT = 0
 						SELECT	TOP(1) 
 								@VP_STD_PACK = user_def_fld_5 
 						FROM ccitmidx_sql WHERE LTRIM(RTRIM(item_no)) = @VP_ITEM_NO
 						ORDER BY versionno DESC
 						
+						IF @VP_STD_PACK IS NULL
+							RAISERROR ('ERROR: No fue posible obtener el Estandar Pack en [ccitmidx_sql]', 16, 1 ) --MENSAJE - Severity -State.
 
+						-- //////SE INGRESAN LOS KITS EN LA TABLA ccjoblin_sql/////////////////////////////////////
 						IF @VP_CANTIDAD > @VP_STD_PACK
 							BEGIN
 								WHILE  @VP_CANTIDAD > 0
@@ -282,21 +287,21 @@ AS
 											customer, patterns, plannedshift, plannedseq, startedflag, comments, lotno	)
                                   VALUES (	@VP_ORDEN, 'P', @VP_COLOR_SIN_F, @VP_D_COLOR, @PP_MESA, @VP_FECHA, @VP_FECHA, 
 											'2', @PP_COMENTARIO, '', @VP_TOTAL_NETO, @VP_TOTAL_GROSS, @VP_UTILIDAD_MINIMA, 
-											@PP_CLIENTE, @VP_TOTAL_PATRON, @VP_TURNO, '0', '', @PP_COMENTARIO, @PP_ORDEN_2_TONO	)
+											@PP_CLIENTE, @VP_TOTAL_PATRON, @VP_TURNO, '0', '', @PP_COMENTARIO, '' ) --, @PP_ORDEN_2_TONO	)
 
 				IF @@ROWCOUNT = 0
 					RAISERROR ('ERROR: No fue posible agregar la orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
 				
 				-- ///////SE ACTUALIZA EL REGISTRO DE LA ORDEN EN CCJOBHDR_SQL//////////////////////////////////////////////
-				IF @PP_ORDEN_2_TONO <> ''
-					BEGIN
-						UPDATE CCJOBHDR_SQL 
-							SET	LOTNO	=	@VP_ORDEN
-						WHERE jobno	= @PP_ORDEN_2_TONO
+				--IF @PP_ORDEN_2_TONO <> ''
+				--	BEGIN
+				--		UPDATE CCJOBHDR_SQL 
+				--			SET	LOTNO	=	@VP_ORDEN
+				--		WHERE jobno	= @PP_ORDEN_2_TONO
 						
-						IF @@ROWCOUNT = 0
-							RAISERROR ('ERROR: No fue posible Actualizar la orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
-					END	
+				--		IF @@ROWCOUNT = 0
+				--			RAISERROR ('ERROR: No fue posible Actualizar la orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+				--	END	
 
 				-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
 				DECLARE @VP_DETAIL VARCHAR(100) = 'Creacion de Orden: ' + @VP_ORDEN
@@ -304,6 +309,24 @@ AS
 													@PP_USER, @PP_COMPUTER_NAME, 'Planning',
 													@VP_ORDEN, 'Crear orden',
 													@VP_DETAIL, ''
+			
+			-- ///////SE VERIFICA SI LA ORDEN CREADA TIENE KITS (U) DOS TODOS//////////////////////////////////////////////
+			DECLARE @VP_N_KITS_U INT = 0
+			SELECT @VP_N_KITS_U = COUNT(A4GLIdentity) 
+			FROM imkitfil_sql 
+			WHERE comp_item_no IN ( SELECT item_no 
+									FROM ccjoblin_sql 
+									WHERE JOBNO = @VP_ORDEN )
+			
+			IF @VP_N_KITS_U IS NULL
+				SET @VP_N_KITS_U = 0
+
+			-- ///////SE SI EXISTEN KITS (U) DOS TONOS SE GENERA LA ORDEN COMPLEMENTO//////////////////////////////////////////////
+			IF @VP_N_KITS_U > 0
+				EXECUTE [dbo].[PG_PR_PLANNING_CREAR_ORDER_2_TONO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@VP_ORDEN, @PP_CLIENTE, @PP_MESA, 
+																	@PP_COMENTARIO, @PP_USER, @PP_COMPUTER_NAME
+
 			-- ///////////////////////////////////////////
 			COMMIT TRANSACTION 
 			END TRY

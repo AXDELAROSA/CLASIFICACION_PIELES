@@ -1,0 +1,377 @@
+-- //////////////////////////////////////////////////////////////
+-- // ARCHIVO:			
+-- //////////////////////////////////////////////////////////////
+-- // BASE DE DATOS:	[DATA_02Pruebas]
+-- // MODULO:			PLANNING
+-- // OPERACION:		SP
+-- //////////////////////////////////////////////////////////////
+-- // Autor:			FEG
+-- // Fecha creación:	7/MAY/2021
+-- ////////////////////////////////////////////////////////////// 
+
+USE [DATA_02] 
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
+GO
+
+/*
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '29678' --NORMAL
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30088' --NORMAL
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30089' -- U
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30659' -- FAUR
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '28432' -- WPI003
+*/
+
+CREATE PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN					VARCHAR(50)	
+AS
+	
+	-- /////SE OBTIENE EL TURNO EN QUE SE REALIZA LA IMPRESION//////////////////////////////////////
+	DECLARE @VP_HORA	INT = FORMAT(CAST(GETDATE() AS TIME(0)), N'hhmmss');
+	DECLARE @VP_TURNO	VARCHAR(5) = '2'
+	
+	IF @VP_HORA > 2000 AND @VP_HORA < 60002
+		SET @VP_TURNO = '3'
+	ELSE IF @VP_HORA > 60001 AND @VP_HORA < 153001
+		SET @VP_TURNO = '1'
+
+	-- /////SE VALIDA SI LA ORDEN VA LIGADA CON OTRA//////////////////////////////////////
+	DECLARE @VP_ORDEN_LIGADA VARCHAR(50) = '' 
+	SELECT @VP_ORDEN_LIGADA = LTRIM(RTRIM(LOTNO))
+	FROM ccjobhdr_sql (NOLOCK)
+	WHERE jobno = @PP_ORDEN
+
+	IF @VP_ORDEN_LIGADA IS NULL
+		SET @VP_ORDEN_LIGADA = ''
+
+	IF @VP_ORDEN_LIGADA <> ''
+		BEGIN
+			-- /////SE OBTIENE EL GROSS DE LAS DOS ORDENES//////////////////////////////////////
+			DECLARE @VP_GROSS_1 DECIMAL(13,4) = 0
+			DECLARE @VP_GROSS_2 DECIMAL(13,4) = 0
+
+			SELECT @VP_GROSS_1 = STANDARDSQM 
+			FROM ccjobhdr_sql (NOLOCK)
+			WHERE jobno = @PP_ORDEN
+
+			SELECT @VP_GROSS_2 = STANDARDSQM 
+			FROM ccjobhdr_sql (NOLOCK)
+			WHERE jobno = @VP_ORDEN_LIGADA
+
+			-- /////SE VALIDA EL GROSS DE LAS DOS ORDENES PARA DEFINIR CUAL ES LA ORDEN PRINCIPAL Y LA SECUNDARIA//////////////////////////////////////
+			DECLARE @VP_ORDEN_PRINCIPAL VARCHAR(50) = @VP_ORDEN_LIGADA
+			DECLARE @VP_ORDEN_COMPLEMENTO VARCHAR(50) = @PP_ORDEN
+
+			IF @VP_GROSS_1 > @VP_GROSS_2
+				BEGIN
+					SET @VP_ORDEN_PRINCIPAL = @PP_ORDEN
+					SET @VP_ORDEN_COMPLEMENTO = @VP_ORDEN_LIGADA
+				END
+
+			SELECT	1							AS IMPRIMIR,
+					JOBNO						AS ORDEN_PRINCIPAL, 
+					-- ===========================
+					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ''
+							ELSE @VP_ORDEN_COMPLEMENTO END ) AS JOBNO_COMPLEMENTO,
+					LTRIM(RTRIM(ccjoblin_sql.customer))	AS CUSTOMER, 
+					-- ===========================
+					(	SELECT	LTRIM(RTRIM(MACHINE)) 
+						FROM	ccjobhdr_sql (NOLOCK)
+						WHERE	JOBNO = ccjoblin_sql.JOBNO )	AS MESA,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
+																		FROM IMITMIDX_SQL (NOLOCK)
+																		WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+							ELSE '' END ) AS REF_PO,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+							ELSE '' END ) AS SUPPLIER,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
+							ELSE '' END ) AS SHIP_TO,
+					-- ===========================
+					LTRIM(RTRIM(part_no_view.cus_item_no))	AS CUS_ITEM_NO,
+					LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+					-- ===========================
+					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ccjoblin_sql.item_no	
+							ELSE imkitfil_sql.item_no END ) AS ITEM_NO,
+					-- ===========================
+					LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
+					-- ===========================
+					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
+																			FROM IMITMIDX_SQL 
+																			WHERE item_no = ccjoblin_sql.item_no )	
+							ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
+									FROM IMITMIDX_SQL 
+									WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_1_IMPRIMIR,
+					-- ===========================
+					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
+																			FROM IMITMIDX_SQL 
+																			WHERE item_no = ccjoblin_sql.item_no )	
+							ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
+									FROM IMITMIDX_SQL 
+									WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_2_IMPRIMIR,
+					-- ===========================
+					ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+					-- ===========================
+					CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
+					CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
+					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
+					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+					-- ===========================
+					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+						FROM INVENTARIO_EMBARQUE (NOLOCK)
+						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+						AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+					-- ===========================
+					@VP_TURNO	AS TURNO
+					-- ===========================
+			FROM ccjoblin_sql  (NOLOCK)
+			LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
+			-- ===========================
+			INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
+				AND		ccjoblin_sql.customer = part_no_view.Customer  
+				AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+														FROM	part_no_view (NOLOCK)
+														WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+														AND		ccjoblin_sql.customer = part_no_view.Customer	)
+				AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+			-- ===========================
+			WHERE	ccjoblin_sql.jobno = @VP_ORDEN_PRINCIPAL 
+			-- ===========================
+			ORDER BY ccjoblin_sql.Ser_No
+		END
+	ELSE
+		BEGIN
+			SELECT	1										AS IMPRIMIR,
+					LTRIM(RTRIM(JOBNO))						AS ORDEN_PRINCIPAL, 
+					''										AS JOBNO_COMPLEMENTO,
+					LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+					-- ===========================
+					(	SELECT LTRIM(RTRIM(MACHINE)) 
+						FROM	ccjobhdr_sql (NOLOCK)
+						WHERE	JOBNO = ccjoblin_sql.JOBNO )				AS MESA,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
+																		FROM IMITMIDX_SQL (NOLOCK)
+																		WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+							ELSE '' END ) AS REF_PO,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+							ELSE '' END ) AS SUPPLIER,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
+							ELSE '' END ) AS SHIP_TO,
+					-- ===========================
+					LTRIM(RTRIM(part_no_view.cus_item_no))	AS CUS_ITEM_NO,
+					LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+					ccjoblin_sql.item_no					AS ITEM_NO,
+					-- ===========================
+					LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
+					-- ===========================
+					(	SELECT LTRIM(RTRIM(ITEM_DESC_1))
+						FROM IMITMIDX_SQL 
+						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
+					-- ===========================
+					(	SELECT  LTRIM(RTRIM(ITEM_DESC_2))
+						FROM IMITMIDX_SQL 
+						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_2_IMPRIMIR,
+					-- ===========================
+					ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+					-- ===========================
+					CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
+					CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
+					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
+					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+					-- ===========================
+					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+						FROM INVENTARIO_EMBARQUE (NOLOCK)
+						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+						AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+					-- ===========================
+					@VP_TURNO	AS TURNO
+					-- ===========================
+			FROM ccjoblin_sql  (NOLOCK)
+			-- ===========================
+			INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
+				AND		ccjoblin_sql.customer = part_no_view.Customer  
+				AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+														FROM	part_no_view (NOLOCK)
+														WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+														AND		ccjoblin_sql.customer = part_no_view.Customer	)
+				AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+			-- ===========================
+			WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
+			-- ===========================
+			ORDER BY ccjoblin_sql.Ser_No
+	END
+		-----////////////////////////////////////////////////////////////////
+		-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
+GO
+
+/*
+	 EXEC [PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL] 0 ,144,  '30088' , '' , 004 , '30088004' 
+*/
+
+CREATE PROCEDURE [dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN_PRINCIPAL			VARCHAR(50),
+	@PP_ORDEN_COMPLEMENTO		VARCHAR(50),
+	@PP_POS_KIT					INT,
+	@PP_SERIAL					VARCHAR(50)
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
+	DECLARE @VP_CODIGO_CAMARA  VARCHAR(255) = ''
+
+	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
+	DECLARE	@VP_CODIGO_ASIGNADO INT = 0
+	SELECT	@VP_CODIGO_ASIGNADO = COUNT(ID)
+	FROM	SERIALCAM_SQL (NOLOCK)
+	WHERE	SERIAL = @PP_SERIAL
+
+	IF @VP_CODIGO_ASIGNADO IS NULL
+		SET @VP_CODIGO_ASIGNADO = 0
+
+	IF @VP_CODIGO_ASIGNADO > 1
+		SET @VP_MENSAJE = 'El serial tiene mas de un codigo Asignado!'
+
+	-- //////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE=''
+		BEGIN
+			BEGIN TRANSACTION 
+			BEGIN TRY
+				-- ///////SE ACTUALIZA LA TABLA ccjoblin_sql PARA ESPECIFICAR QUE YA SE IMPRIMIO LA ETIQUETA DEL KIT//////////////////////////////////////////////
+				UPDATE ccjoblin_sql
+					SET User_def_Fld1 = 'Y'
+				WHERE JOBNO = @PP_ORDEN_PRINCIPAL
+				AND Ser_No = @PP_POS_KIT
+
+				IF @@ROWCOUNT = 0
+					RAISERROR ('ERROR: No fue posible Actualizar el kit en [ccjoblin_sql]', 16, 1 ) --MENSAJE - Severity -State.
+
+				IF @VP_CODIGO_ASIGNADO = 1
+					BEGIN
+						-- ///////SE OBTIENE EL CODIGO ASIGNADO AL SERIAL//////////////////////////////////////////////
+						SELECT @VP_CODIGO_CAMARA = LTRIM(RTRIM(CODE))
+						FROM SERIALCAM_SQL (NOLOCK)
+						WHERE SERIAL = @PP_SERIAL
+
+						IF @VP_CODIGO_CAMARA IS NULL OR @VP_CODIGO_CAMARA = ''
+							RAISERROR ('ERROR: No fue posible Obtener el codigo asignado en [SERIALCAM_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+					END
+				ELSE
+					BEGIN
+						-- ///////SE OBTIENE UN CODIGO QUE AUN NO ESTE ASIGNADO//////////////////////////////////////////////
+						SELECT TOP 1 @VP_CODIGO_CAMARA = LTRIM(RTRIM(CODE)) 
+						FROM	SERIALCAM_SQL (NOLOCK)
+						WHERE	SERIAL IS NULL 
+						ORDER BY ID
+
+						IF @VP_CODIGO_CAMARA IS NULL OR @VP_CODIGO_CAMARA = ''
+							RAISERROR ('ERROR: No fue posible Obtener el codigo asignado en [SERIALCAM_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+
+						IF @PP_ORDEN_COMPLEMENTO = ''
+							BEGIN
+								UPDATE SERIALCAM_SQL
+									SET SERIAL = @PP_SERIAL
+								WHERE CODE = @VP_CODIGO_CAMARA
+
+								IF @@ROWCOUNT = 0
+									RAISERROR ('ERROR: No fue posible Asignar el Serial en [SERIALCAM_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+
+							END
+						ELSE
+							BEGIN
+								UPDATE SERIALCAM_SQL
+									SET SERIAL = @PP_SERIAL,
+										SERIAL2 = @PP_ORDEN_COMPLEMENTO
+								WHERE CODE = @VP_CODIGO_CAMARA
+
+								IF @@ROWCOUNT = 0
+									RAISERROR ('ERROR: No fue posible Asignar el Serial en [SERIALCAM_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+							END
+					END
+			-- ///////////////////////////////////////////
+			COMMIT TRANSACTION 
+			END TRY
+	
+			BEGIN CATCH
+				/* Ocurrió un error, deshacemos los cambios*/ 
+				ROLLBACK TRANSACTION
+				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
+				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
+				SET @VP_MENSAJE = 'ERROR: // TRANS: [PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL] // ' + @VP_ERROR_TRANS
+			END CATCH
+			
+		END
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible imprimir la Etiqueta del Serial: ' + '[' + @PP_POS_KIT +'] ' + @VP_MENSAJE 
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @VP_CODIGO_CAMARA AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'PROCESO',
+													'',
+													-- ===========================================
+													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_POS_KIT, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////

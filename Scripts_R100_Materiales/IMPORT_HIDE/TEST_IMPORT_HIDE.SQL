@@ -35,15 +35,19 @@ WHERE	LTRIM(RTRIM(PLOT)) = '34581'
  --AND HIDESHDR_SQL.FILENO IN ( '210115135525T1000001')
  ORDER BY HIDE DESC
 
-  SELECT * FROM HIDESHDR_SQL WHERE PLOT =  '402091' and FILENO = '210311172623T1000001'
 
-  select * from HIDESLIN_SQL where FILENO = '210311172623T1000001'
+  SELECT * FROM HIDESHDR_SQL WHERE PLOT =  '750131' --and FILENO = '210311172623T1000001'
 
-
+ --select * from HIDESLIN_SQL where FILENO = '20210322150141      '
+  
 SELECT TOP 100	* FROM	IncInsp_sql --ORDER BY Date DESC
 WHERE --	LTRIM(RTRIM([Date])) = 20201221
 ----AND		
-LTRIM(RTRIM(Lot)) = '501471' 
+LTRIM(RTRIM(Lot)) = '750131' 
+
+--UPDATE IncInsp_sql
+--	SET Lot_size = 100
+--WHERE ID = 6397
 
 select ID,Date,Lot,Description,Lot_size,Sample_size,Status,Accepted,Thickness,Defecto from IncInsp_sql where status<>'C' order by id desc
 
