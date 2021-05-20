@@ -329,6 +329,7 @@ GO
 /*
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '18518'
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '29487'
+ EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '25493'
 */
 
 CREATE PROCEDURE [dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]
@@ -357,17 +358,24 @@ AS
 			ccjoblin_sql.item_no					AS ITEM_NO,
 			ccjoblin_sql.Ser_No						AS SER_NO,
 			-- ===========================
-			LTRIM(RTRIM(part_no_view.cus_item_no))	AS CUS_ITEM_NO
+			LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO
 			-- ===========================
 	FROM ccjoblin_sql  
 	-- ===========================
-	INNER JOIN	part_no_view ON ccjoblin_sql.Item_No = part_no_view.item_no 
-		AND		ccjoblin_sql.customer = part_no_view.Customer  
-		AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
-												FROM	part_no_view 
-												WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
-												AND		ccjoblin_sql.customer = part_no_view.Customer	)
-		AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+	--INNER JOIN	part_no_view ON ccjoblin_sql.Item_No = part_no_view.item_no 
+	--	AND		ccjoblin_sql.customer = part_no_view.Customer  
+	--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+	--											FROM	part_no_view 
+	--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+	--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
+	--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+	-- ===========================
+	INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+	AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+	AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+													FROM	cccusitm_sql (NOLOCK)
+													WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
 	-- ===========================
 	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
 	-- ===========================

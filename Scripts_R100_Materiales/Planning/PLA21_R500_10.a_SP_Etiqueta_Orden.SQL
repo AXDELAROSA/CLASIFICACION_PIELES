@@ -29,6 +29,10 @@ GO
  EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30089' -- U
  EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30659' -- FAUR
  EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '28432' -- WPI003
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30761' -- IRVI02
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30555' -- YANG03
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30901' -- MAGN02
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30902' -- GRAM04
 */
 
 CREATE PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
@@ -104,7 +108,7 @@ AS
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
 							ELSE '' END ) AS SHIP_TO,
 					-- ===========================
-					LTRIM(RTRIM(part_no_view.cus_item_no))	AS CUS_ITEM_NO,
+					LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
 					LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
 					-- ===========================
 					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ccjoblin_sql.item_no	
@@ -145,13 +149,20 @@ AS
 			FROM ccjoblin_sql  (NOLOCK)
 			LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
 			-- ===========================
-			INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
-				AND		ccjoblin_sql.customer = part_no_view.Customer  
-				AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
-														FROM	part_no_view (NOLOCK)
-														WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
-														AND		ccjoblin_sql.customer = part_no_view.Customer	)
-				AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+			--INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
+			--	AND		ccjoblin_sql.customer = part_no_view.Customer  
+			--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+			--											FROM	part_no_view (NOLOCK)
+			--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+			--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
+			--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+			-- ===========================
+			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+															FROM	cccusitm_sql (NOLOCK)
+															WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+															AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
 			-- ===========================
 			WHERE	ccjoblin_sql.jobno = @VP_ORDEN_PRINCIPAL 
 			-- ===========================
@@ -181,7 +192,7 @@ AS
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
 							ELSE '' END ) AS SHIP_TO,
 					-- ===========================
-					LTRIM(RTRIM(part_no_view.cus_item_no))	AS CUS_ITEM_NO,
+					LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
 					LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
 					ccjoblin_sql.item_no					AS ITEM_NO,
 					-- ===========================
@@ -213,13 +224,20 @@ AS
 					-- ===========================
 			FROM ccjoblin_sql  (NOLOCK)
 			-- ===========================
-			INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
-				AND		ccjoblin_sql.customer = part_no_view.Customer  
-				AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
-														FROM	part_no_view (NOLOCK)
-														WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
-														AND		ccjoblin_sql.customer = part_no_view.Customer	)
-				AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+			--INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
+			--	AND		ccjoblin_sql.customer = part_no_view.Customer  
+			--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+			--											FROM	part_no_view (NOLOCK)
+			--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+			--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
+			--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+			-- ===========================
+			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+															FROM	cccusitm_sql (NOLOCK)
+															WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+															AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
 			-- ===========================
 			WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
 			-- ===========================
@@ -303,7 +321,7 @@ AS
 						ORDER BY ID
 
 						IF @VP_CODIGO_CAMARA IS NULL OR @VP_CODIGO_CAMARA = ''
-							RAISERROR ('ERROR: No fue posible Obtener el codigo asignado en [SERIALCAM_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+							RAISERROR ('ERROR: No fue posible Obtener el codigo para el serial en [SERIALCAM_SQL]', 16, 1 ) --MENSAJE - Severity -State.
 
 						IF @PP_ORDEN_COMPLEMENTO = ''
 							BEGIN

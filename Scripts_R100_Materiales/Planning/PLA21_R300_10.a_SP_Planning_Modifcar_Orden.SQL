@@ -218,7 +218,7 @@ AS
 						IF @@ROWCOUNT > 50
 							RAISERROR ('ERROR: Verifique el numero de Kits a eliminar en [ccjoblin_sql].', 16, 1 ) --MENSAJE - Severity -State
 
-						SELECT @VP_CONSECUTIVO = Ser_No
+						SELECT TOP 1 @VP_CONSECUTIVO = Ser_No
 						FROM ccjoblin_sql
 						WHERE JOBNO = @PP_ORDEN 
 						ORDER BY Ser_No DESC
