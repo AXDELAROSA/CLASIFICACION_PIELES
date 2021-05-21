@@ -4,9 +4,9 @@
 
 	SELECT * FROM HIDESHDR_SQL   
 	 inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-	WHERE	LTRIM(RTRIM(PLOT)) IN ('401051')
+	WHERE	LTRIM(RTRIM(PLOT)) IN ('401631')
 	--and HIDESLIN_SQL.fileno = '210310181706T1000002'
-	--AND CONVERT(INT, LTRIM(RTRIM(HIDE))) IN (153 )
+	--AND CONVERT(INT, LTRIM(RTRIM(HIDE))) IN (88)
 	----AND
 	 --PCOLOR = 'FCPRHL1'
 	 --AND SQF < 1
@@ -30,7 +30,7 @@
 	delete HIDESHDR_SQL where id = 9759
 	
 	SELECT * --SUM(SQF) 
-	FROM  HIDESLIN_SQL WHERE FILENO IN ( '20210505170957' ) --AND PRINTED = 1 
+	FROM  HIDESLIN_SQL WHERE FILENO IN ( '2021052083708' ) --AND PRINTED = 1 
 	ORDER BY HIDE ASC 
 
 	--UPDATE  HIDESLIN_SQL 
@@ -42,14 +42,12 @@
 	WHERE 
 	--COLOUR = 'FWSPAX7' 
 	--AND
-	LOT = '33741'
-	--and movement = 'mhi'
+	LOT = '700231'
+	and movement = 'mhi'
 	--AND convert(int, LTRIM(RTRIM(hide)))  IN (592)
 	--and convert(int, LTRIM(RTRIM(hide))) between 814 and 1020
 	ORDER  BY HIDE asc
 	---3827585
-
-	delete RP_SC where ID = 6062867
 
 	SELECT * FROM RP_Folios WHERE TAG IN (3827614)
 	
@@ -60,9 +58,9 @@
 	WHERE -- ( FOLIO_ORIGEN = 3826735 OR  FOLIO_DESTINO = 3826735 )
 	--(ORDEN_ORIGEN = 30195 OR  ORDEN_DESTIDO = 30195 )
 	--AND 
-	LOTE IN (33741)    
+	LOTE IN (750242)    
 	AND          
-	PIEL   IN (592)
+	PIEL   IN (382)
 	----PIEL  BETWEEN 217 and 218
 	--AND 
 	--PIEL_LOG.K_TIPO_PIEL_LOG IN (2)
@@ -83,18 +81,26 @@
 	
 	SELECT * FROM RP_SC_PRT
 
-	SELECT * FROM RP_SC WHERE TAGNO  in (3793146) AND COLOUR  in ('FWLNPT5') order by TAGNO
+	SELECT * FROM RP_SC WHERE TAGNO  in (3826289)  --AND COLOUR  in ('FWLNPT5') 
+	order by hide
 
-	SELECT * FROM RP_Folios WHERE TAG IN (3778556)
+	SELECT * FROM RP_Folios WHERE jobno = '30474' --TAG IN (3778556)
 
-	SELECT * FROM pearl_log WHERE jobno = '25731' order by ckey
+	SELECT * FROM pearl_log (NOLOCK) WHERE jobno = '26778' order by ckey
 
-	SELECT *  FROM ccjobhdr_sql WHERE JOBNO IN ('16089')
+	SELECT *  FROM ccjobhdr_sql (NOLOCK) WHERE JOBNO IN ('26778')
+	SELECT *  FROM ccjoblin_sql (NOLOCK) WHERE JOBNO IN ('26778')
 
-	SELECT * FROM cccuthst_sql WHERE jobno IN ('30943')
+	--UPDATE ccjobhdr_sql 
+	--SET INSTRUCT2 = ''
+	--WHERE JOBNO IN ('30943')
+
+	SELECT *  FROM ccjobhdr_sql WHERE LTRIM(RTRIM(comments)) <> ''
+
+	SELECT * FROM cccuthst_sql WHERE --jobno IN ('30943')
 	--AND 
 	LTRIM(RTRIM(LOTNO)) = '033741' 
-	AND hideno IN (	'0592'
+	AND hideno IN (	'0088'
 				)
 	order by hideno
 		

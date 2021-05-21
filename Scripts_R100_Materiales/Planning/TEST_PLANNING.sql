@@ -8,98 +8,37 @@ USE DATA_02PRUEBAS
 	--SET SERIAL_1 = 'DUPLICADO'
 	--WHERE K_ESTATUS_INVENTARIO_EMBARQUE = 0 AND SERIAL_1 = '29487008' AND K_INVENTARIO_EMBARQUE = 39746
 
-	SELECT Kit, IMKITFIL_SQL.Item_No, ccjoblin_sql.item_no, OriginalQty
-	FROM IMKITFIL_SQL
-	INNER JOIN ccjoblin_sql ON   ccjoblin_sql.Item_No = comp_item_no
-	WHERE JOBNO = 30932
-	ORDER BY Ser_No
+	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Crear orden'  ORDER BY ckey DESC
+	SELECT * FROM pearl_log WHERE movement = 'REVERSE' AND user_name = 'RAFAELF' ORDER BY ckey DESC
 
-	 --=====revisar con alex
-	SELECT * --@VP_N_KITS_U = COUNT(A4GLIdentity) 
-			FROM imkitfil_sql 
-			WHERE comp_item_no IN ( SELECT item_no 
-									FROM ccjoblin_sql 
-									WHERE JOBNO = 30932 )
-
+	SELECT * FROM pearl_log WHERE JOBNO = '29426'  ORDER BY ckey DESC
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('30905') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '29426'
+	SELECT TOP 20 * from serialcam_sql where SUBSTRING(serial, 1,5) IN	('30905')
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO > '30900' ORDER BY JOBNO 
 	
-	SELECT * FROM imkitfil_sql where item_no = 'UWLDFCLWLCPX7'
+	SELECT * FROM ccjobhdr_sql WHERE customer = 'YANG03' AND DATECREATED = '20210506' ORDER BY jobno
+	
+	select imkitfil_sql.* from imkitfil_sql where comp_item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8') -- IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('30958')) ORDER BY item_no
+	SELECT * FROM imkitfil_sql where item_no = 'UMDL3CRSNODY3'
 
 	select * from imkitfil_sql where comp_item_no='PWLDFCLWLCPX7'
-
-	SELECT * FROM pearl_log WHERE JOBNO = '25493'
-
-	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Modificar orden' and jobno > 30100 ORDER BY ckey DESC
-
-		SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31042') ORDER BY jobno, Ser_No
-		SELECT * FROM ccjobhdr_sql WHERE JOBNO IN ('25493')
-
-	SELECT * FROM ccjobhdr_sql WHERE lotno IS NOT NULL ORDER BY JOBNO DESC
-
-	select imkitfil_sql.* from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('30958')) ORDER BY item_no
-
-	
-
 	SELECT CONCAT('F', RIGHT(LTRIM(RTRIM('PWD2TBLCNPDX9')),6))
-	SELECT * FROM pearl_log WHERE JOBNO = '30643'
-	
-	SELECT * FROM cccuthst_sql WHERE JOBNO = '18518'
 
-	SELECT TOP 100 * FROM ccjobhdr_sql WHERE CUSTOMER = 'FAUR01' AND STATUS = 'p' ORDER BY JOBNO DESC
-		
-	select * from imitmidx_sql where user_def_fld_1 LIKE 'WPI%' AND item_no LIKE 'P%'
-	
-	--CLIENTES Y direcciones
-	SELECT * FROM arcusfil_sql where cus_no LIKE ('WPI%')
-	ORDER BY CUS_NO 
-	
-	SELECT * FROM arcusfil_address where A4GLIdentity in (51)
+	select TOP 10 * from IMCATFIL_SQL WHERE PROD_CAT = 'PDS'
+	select TOP 10 * from IMITMIDX_SQL WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
+	select TOP 10 * from cccusitm_sql WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
+	select TOP 10 * from OECUSITM_SQL WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
 
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('30323') ORDER BY jobno, Ser_No
+	--UPDATE IMITMIDX_SQL
+	--SET L_ACTIVO = 1
+	-- WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
 
-	select top(1) user_def_fld_5 from ccitmidx_sql where rtrim(item_no)='PWD2TBLCNPJRR' order by versionno desc
-
-
-	SELECT TOP 100 * FROM pearl_log WHERE JOBNO = '28432' 
-
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('30659') ORDER BY jobno, Ser_No
-
-	select * from imitmidx_sql where item_no IN ('PWSSC20WSPAA6') --(SELECT Item_No FROM ccjoblin_sql WHERE JOBNO IN ('30080'))
-
-	SELECT * FROM part_no_view WHERE item_no = 'PWSSC20WSPAA6'
-	-- SE SACA LA DESCRIPCION DEL COLOR
-
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('28955') ORDER BY Item_No
-	select * from imitmidx_sql where item_no IN (SELECT Item_No FROM ccjoblin_sql WHERE JOBNO IN ('28955'))
-	ORDER BY item_no
-	-- LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)
-
-	SELECT TOP 20 * from serialcam_sql where SUBSTRING(serial, 1,5) IN	('30088', '30089', '30659', '28432')
-
-	SELECT  TOP 1 Ser_No
-						FROM ccjoblin_sql
-						WHERE JOBNO = '30643'
-						ORDER BY Ser_No DESC
-
-	SELECT TOP 20 * from ccjoblin_sql where JOBNO = '30643' ORDER BY Ser_No
-
-		SELECT * --COUNT(K_INVENTARIO_EMBARQUE) 
-						FROM INVENTARIO_EMBARQUE (NOLOCK)
-						WHERE SERIAL_1 LIKE '30643%'
-
-	SELECT TOP 20 * from serialcam_sql where serial like	('30643%')
-	SELECT TOP 20 * from ccjoblin_sql where JOBNO = '30089' -- AND Ser_No = 4
-
-	SELECT CODE from serialcam_sql where serial IS NOT NULL AND SERIAL2 IS NULL
-	
+	-- standar pack
 	select top(1) user_def_fld_5 from ccitmidx_sql where rtrim(item_no)='PWD2TBLCNPJRR' order by versionno desc
 	
-	SELECT CUS_NAME, User_Def_Fld_2 FROM ARCUSFIL_SQL WHERE CUS_NO = 'MAGN03' -- 70000000
+	SELECT * FROM part_no_view WHERE item_no = 'PMDL3CRSNODY3'
 
-	SELECT * FROM imlocfil_sql WHERE LOC = 'MFP'
-
-	-- part_no_view VISTA MAL
-	SELECT * FROM part_no_view WHERE COLOR = 'FCNPJRR' AND Customer = 'MAGN03' and item_no = 'PW2RB40CNPJRR'
-	
 	--========PARA LISTADO DE NUMEROS DE PARTE QUE SE PUEDEN PROGRAMAR=========================================================
 	SELECT	DISTINCT TOP (100) PERCENT 
 		 cccusitm_sql.item_no, 
@@ -121,13 +60,6 @@ USE DATA_02PRUEBAS
 	--AND ccverhdr_sql.cus_no = 'FAUR01'
 	--AND cccusitm_sql.item_no = 'PWSSC20WSPAA6'
 	ORDER BY versionno DESC
-
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('25493') ORDER BY jobno, Ser_No
-    SELECT * FROM IMITMIDX_SQL    where    item_no    = 'PWSSC20WSPAA6'
-	SELECT * FROM [DATA_02].[DBO].cccusitm_sql    where    item_no    = 'PWSSC20WSPAA6'
-	SELECT * FROM data_02.dbo.OECUSITM_SQL        where    item_no    = 'PWSSC20WSPAA6'                               
-	SELECT * FROM part_no_view    where    item_no    = 'PWSSC20WSPAA6'
-
 
 	   -- part_no_view CONSULTA MAL
 	--SELECT        item_no, 
