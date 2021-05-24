@@ -50,8 +50,8 @@ AS
 	D_COLOR				VARCHAR(150),
 	CLIENTE				VARCHAR(100),
 	MESA				VARCHAR(50),
-	F_CREACION			INT,
-	F_PLANEADA			INT,
+	F_CREACION			DATE,
+	F_PLANEADA			DATE,
 	NETO_REQUERIDO		DECIMAL(13,2),
 	STAND_SQM_REQUERIDO	DECIMAL(13,2),
 	PATTERNS_REQUERIDO	INT,
@@ -66,9 +66,15 @@ AS
 	
 	SET NOCOUNT ON	
 	INSERT INTO @TBL_ORDENES_ABIERTAS
-	SELECT DISTINCT jobno, status, CONCAT('F', ccjobhdr_sql.colour) COLOR, colourdesc, customer, machine, datecreated, dateplanned, netsqm, standardsqm, 
+	SELECT DISTINCT jobno, status, CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.colour))),
+					LTRIM(RTRIM(colourdesc)), 
+					LTRIM(RTRIM(customer)), 
+					LTRIM(RTRIM(machine)), 
+					[dbo].[CONVERT_INT_TO_DATE](datecreated), 
+					[dbo].[CONVERT_INT_TO_DATE](dateplanned), 
+					netsqm, standardsqm, 
 					patterns,
-					ISNULL((	SELECT TOP 1 LOT 
+					ISNULL((	SELECT TOP 1 LTRIM(RTRIM(LOT)) 
 								FROM RP_SC (NOLOCK)
 								WHERE TAGNO = ISNULL(FOLIO, 0) 
 								GROUP BY LOT 
@@ -98,7 +104,7 @@ AS
 	AND startedflag = 'Y'
 	AND FOLIO IS NOT NULL
 	AND LTRIM(RTRIM(INSTRUCT2)) = 'A'
-	ORDER BY datecreated DESC
+	--ORDER BY datecreated DESC
 
 	-- //////////////////////////////////////////////////////////////////////////////////////
 	SET NOCOUNT OFF
@@ -122,7 +128,7 @@ AS
 		   ( CASE WHEN PATTERNS_CORTADO > 0 AND PATTERNS_REQUERIDO > 0 THEN (PATTERNS_CORTADO * 100) / PATTERNS_REQUERIDO 
 				ELSE 0 END ) AS PORC_PATRON_COMPLETADO,
 			--=============================================
-			( CASE WHEN (PIELES_FOLIO - PIELES_CORTADA) = 0 AND PATTERNS_CORTADO < PATTERNS_REQUERIDO THEN 1
+			( CASE WHEN (PIELES_FOLIO - PIELES_CORTADA) <= 0 AND PATTERNS_CORTADO < PATTERNS_REQUERIDO THEN 1
 					WHEN (PIELES_FOLIO - PIELES_CORTADA) = 1 AND PATTERNS_CORTADO < PATTERNS_REQUERIDO THEN 2
 					WHEN (PIELES_FOLIO - PIELES_CORTADA) = 2 AND PATTERNS_CORTADO < PATTERNS_REQUERIDO THEN 3
 					WHEN (PIELES_FOLIO - PIELES_CORTADA) = 3 AND PATTERNS_CORTADO < PATTERNS_REQUERIDO THEN 4
