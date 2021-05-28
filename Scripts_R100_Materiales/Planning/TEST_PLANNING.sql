@@ -1,7 +1,9 @@
 
 USE DATA_02PRUEBAS
 	
-	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Eliminar orden'  ORDER BY ckey DESC
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO  in ( SELECT jobno FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Crear orden' )
+	AND status = 'P' AND FOLIO IS NOT NULL ORDER BY JOBNO
+
 
 	SELECT * FROM pearl_log WHERE JOBNO = '30851'  ORDER BY ckey DESC
 	SELECT * FROM pearl_log WHERE JOBNO = '09309'  ORDER BY ckey DESC

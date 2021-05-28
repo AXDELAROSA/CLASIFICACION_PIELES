@@ -22,15 +22,13 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 	DROP PROCEDURE [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]
 GO
 /*
-	EXECUTE  [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]	0, 144, 3789698, 'MQU', 'FRANCISCOE', 'IT-010'
+	EXECUTE  [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]	0, 144,  3789698 , 'franciscoe' , 'IT-010' 
 */
 CREATE PROCEDURE [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]
 	@PP_K_SISTEMA_EXE						INT,
 	@PP_K_USUARIO_ACCION					INT,
 	-- ===========================
 	@PP_FOLIO_DETALLADO						INT,
-	-- ===========================
-	@PP_LOCACION_ORIGEN						VARCHAR(20),
 	-- ===========================
 	@PP_USER								VARCHAR(25),
 	@PP_COMPUTER_NAME						VARCHAR(25)
@@ -39,6 +37,19 @@ AS
 	-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	DECLARE @VP_MENSAJE_TRANSACCION VARCHAR(255) = ''
+	DECLARE @VP_LOCACION_ORIGEN VARCHAR(20) = 'MQU'
+
+	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
+	DECLARE @VP_N_FOLIO_DETALLADO INT = 0
+	SELECT @VP_N_FOLIO_DETALLADO = COUNT(ID)
+	FROM RP_SC_FOLIO_TYPE_2
+	WHERE TAGNO = @PP_FOLIO_DETALLADO
+	AND	COLOUR IN  ( SELECT COLOR
+					 FROM COLORES_CONTROLADOS )
+
+	IF @VP_N_FOLIO_DETALLADO IS NULL OR @VP_N_FOLIO_DETALLADO = 0
+		SET @VP_MENSAJE = 'Folio detallado no encontrado o sin pieles de colores controlados.'
+
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
@@ -71,8 +82,8 @@ AS
 								-- ///////////SE OBTIENE EL CONSECUTIVO DEL FOLIO///////////////////////////////////////////////////
 								DECLARE @VP_TAGNO_DESTINO		INT = 0
 								EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																					'DATA_02', 
 																					--'DATA_02Pruebas', -- PARA PRUEBAS
+																					'DATA_02', 
 																					'RP_FOLIOS', 'TAG',
 																					@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
 								
@@ -92,7 +103,7 @@ AS
 								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
 								DECLARE @VP_SUBJECT		VARCHAR(255) = 'Creacion de Folio con Detallado'
 								DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
-								DECLARE @VP_COMENTARIO		VARCHAR(255) = 'Folio creado apartir de un detallado'
+								DECLARE @VP_COMENTARIO		VARCHAR(255) = 'Folio creado apartir del Folio detallado: ' + CONVERT(VARCHAR(10),@PP_FOLIO_DETALLADO) 
 								DECLARE @VP_BODY		NVARCHAR(MAX) 
 								
 								SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
@@ -106,7 +117,7 @@ AS
 													N'</thead>' + 
 													N'<tbody>' + 
 													  N'<tr>' + 
-													  N'<td>'+ @VP_FECHA +'</td><td>'+ @PP_LOCACION_ORIGEN +'</td><td>'+ @VP_COLOR +'</td><td>'+ CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO) +'</td><td>'+ @VP_COMENTARIO+'</td><td>'+ @PP_USER +'</td>' + 
+													  N'<td>'+ @VP_FECHA +'</td><td>'+ @VP_LOCACION_ORIGEN +'</td><td>'+ @VP_COLOR +'</td><td>'+ CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO) +'</td><td>'+ @VP_COMENTARIO+'</td><td>'+ @PP_USER +'</td>' + 
 													  N'</tr>' + 
 													N'</tbody>' + 
 												N'</table>' ;
@@ -124,7 +135,7 @@ AS
 						AND LOT = @VP_LOTE 
 						AND HIDE = @VP_PIEL
 						AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
-						AND MOVEMENT = @PP_LOCACION_ORIGEN --'MQU'
+						AND MOVEMENT = @VP_LOCACION_ORIGEN --'MQU'
 
 						IF @VP_N_PIEL IS NULL OR  @VP_N_PIEL = 0
 							BEGIN
@@ -146,7 +157,7 @@ AS
 						AND LOT = @VP_LOTE 
 						AND HIDE = @VP_PIEL
 						AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
-						AND MOVEMENT = @PP_LOCACION_ORIGEN --'MQU'
+						AND MOVEMENT = @VP_LOCACION_ORIGEN --'MQU'
 
 						IF @VP_FOLIO_ORIGEN IS NULL OR  @VP_FOLIO_ORIGEN = 0
 							BEGIN
@@ -162,7 +173,7 @@ AS
 						AND LOT = @VP_LOTE 
 						AND HIDE = @VP_PIEL
 						AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
-						AND MOVEMENT = @PP_LOCACION_ORIGEN --'MQU'
+						AND MOVEMENT = @VP_LOCACION_ORIGEN --'MQU'
 
 						IF @@ROWCOUNT = 0
 							BEGIN
@@ -174,8 +185,8 @@ AS
 						EXECUTE [dbo].[PG_IN_PIEL_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														3, @VP_FOLIO_ORIGEN, @VP_COLOR,
 														@VP_LOTE, @VP_PIEL, @VP_SQF_FOLIO, 
-														@PP_LOCACION_ORIGEN, 0, 
-														@VP_TAGNO_DESTINO, @PP_LOCACION_ORIGEN, 0
+														@VP_LOCACION_ORIGEN, 0, 
+														@VP_TAGNO_DESTINO, @VP_LOCACION_ORIGEN, 0
 
 						-- ////////SE INGRESA EL LOG DE LA PIEL EN LA TABLA PIEL_LOG/////////////////////////////////////////////////////////////
 						DECLARE @VP_DETAIL VARCHAR(255) = 'Transfer hide: ' + @VP_PIEL + ' to: ' + CONVERT(VARCHAR(20),@VP_TAGNO_DESTINO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE)), 6)
