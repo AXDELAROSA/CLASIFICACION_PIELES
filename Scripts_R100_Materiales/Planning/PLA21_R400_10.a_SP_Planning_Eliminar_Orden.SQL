@@ -22,7 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 GO
 
 /*
-	 EXEC [PG_PR_PLANNING_ELIMINAR_ORDER] 0 ,144,  '29487' , 'FCNPJRR' , '38' , 'franciscoe' , 'IT-010'  
+	 EXEC [PG_PR_PLANNING_ELIMINAR_ORDER] 0 ,144,  '31617' , 'FCPRHL1' , 'Table 71' , 'franciscoe' , 'IT-010'  
 */
 
 CREATE PROCEDURE [dbo].[PG_PR_PLANNING_ELIMINAR_ORDER]
@@ -87,6 +87,9 @@ AS
 				SELECT	@VP_LOCACION = LTRIM(RTRIM(LOC))
 				FROM	imlocfil_sql 
 				WHERE	loc_desc = @PP_MESA
+
+				IF @VP_LOCACION IS NULL OR @VP_LOCACION = ''
+					RAISERROR ('ERROR: No fue posible obtener la Locacion en [imlocfil_sql].', 16, 1 ) --MENSAJE - Severity -State
 
 				-- //////////SE OBTIENE LAS TRANSACCIONES A LA ORDEN/////////////////////////////////
 					DECLARE @VP_LOTE VARCHAR(20) = '', @VP_LEVEL VARCHAR(20) = '', @VP_DOC_TYPE VARCHAR(5) = '', @VP_DOC_ORD_NO	VARCHAR(10) = '';

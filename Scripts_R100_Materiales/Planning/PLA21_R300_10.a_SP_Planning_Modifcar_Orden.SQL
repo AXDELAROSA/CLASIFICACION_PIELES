@@ -22,11 +22,10 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 GO
 
 /*
-	 EXEC [PG_PR_PLANNING_MODIFICAR_ORDER] 0 ,144,  '29487' , 'MAGN03' , 'FCNPJRR' , 'Table 38' , 
-										'PWD2TBL/PWD2TCR/PWD2TCL/PW2WQBR/PW2WQBL/PW2WQCR/PW2WQCR/PW2WQCL' , 
-										'30/30/30/30/30/30/10/30' , '2/3/4/5/6/7/8/9' , '0/0/0/0/0/0/1/0' , 
-										'GENERA POR SISTEMAS PARA PRUEBAS' , 'franciscoe' , 'IT-010' 
-	 
+	 EXEC [PG_PR_PLANNING_MODIFICAR_ORDER] 0 ,144,  '09309' , 'IRVI02' , 'FMCKTX7' , 'Table 06' , 
+										'PJL2RC6/PJL2RC4/PJLFCRL/PJLFCRL/PJLSFBR/PJLSFBL/PJL2RB4/PJL2RB6' , 
+										'30/30/30/30/30/30/30/30' , '4/3/5/6/8/7/1/2' , '0/0/0/0/0/0/0/0' , 
+										'' , '' , 'franciscoe' , 'IT-010' 
 */
 
 CREATE PROCEDURE [dbo].[PG_PR_PLANNING_MODIFICAR_ORDER]
@@ -65,6 +64,37 @@ AS
 		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@PP_ORDEN,
 															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+	
+	-- /////////////SI SE MODIFICO LA LOCACION SE VALIDA QUE NO TENGA SQF EN LA LOCACION ANTERIOR/////////////////////////////////////////////////
+	IF @VP_MENSAJE=''
+		BEGIN
+			DECLARE @VP_LOCACION_ANTERIOR VARCHAR(50) = ''
+			SELECT @VP_LOCACION_ANTERIOR = LTRIM(RTRIM(MACHINE))
+			FROM ccjobhdr_sql 
+			WHERE JOBNO = @PP_ORDEN
+
+			IF @VP_LOCACION_ANTERIOR IS NULL OR @VP_LOCACION_ANTERIOR = ''
+				SET @VP_MENSAJE = 'ERROR: No fue posible obtener la Locacion de la orden en [ccjobhdr_sql].'
+
+			IF @VP_MENSAJE = ''
+				BEGIN
+					IF @PP_MESA <> @VP_LOCACION_ANTERIOR
+						BEGIN
+							DECLARE @VP_LOCACION VARCHAR(50) = ''
+							SELECT	@VP_LOCACION = LTRIM(RTRIM(LOC))
+							FROM	imlocfil_sql 
+							WHERE	loc_desc = @VP_LOCACION_ANTERIOR
+
+							IF @VP_LOCACION IS NULL OR @VP_LOCACION = ''
+								SET @VP_MENSAJE = 'ERROR: No fue posible obtener la Locacion en [imlocfil_sql].'
+								
+							IF @VP_MENSAJE = ''
+								EXECUTE [dbo].[PG_RN_PLANNING_VALIDA_SQF_TRANSFERIDO_A_LOCACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																									@PP_ORDEN, @PP_COLOR, @VP_LOCACION,
+																									@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+						END
+				END 
+		END
 
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
@@ -357,7 +387,9 @@ AS
 						netsqm		=	@VP_TOTAL_NETO,
 						standardsqm	=	@VP_TOTAL_GROSS,
 						patterns	=	@VP_TOTAL_PATRON,
-						LOTNO		=	@PP_ORDEN_2_TONO
+						LOTNO		=	@PP_ORDEN_2_TONO,
+						instruct1	=	@PP_COMENTARIO,
+						comments	=	@PP_COMENTARIO
 				WHERE jobno	= @PP_ORDEN
 				
 				IF @@ROWCOUNT = 0

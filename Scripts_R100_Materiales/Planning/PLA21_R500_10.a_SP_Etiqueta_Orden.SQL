@@ -32,7 +32,7 @@ GO
  EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30761' -- IRVI02
  EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30555' -- YANG03
  EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30901' -- MAGN02
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30902' -- GRAM04
+ EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '31504' -- MAG02
 */
 
 CREATE PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
@@ -83,6 +83,81 @@ AS
 					SET @VP_ORDEN_PRINCIPAL = @PP_ORDEN
 					SET @VP_ORDEN_COMPLEMENTO = @VP_ORDEN_LIGADA
 				END
+
+			--SELECT	1							AS IMPRIMIR,
+			--		JOBNO						AS ORDEN_PRINCIPAL, 
+			--		-- ===========================
+			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ''
+			--				ELSE @VP_ORDEN_COMPLEMENTO END ) AS JOBNO_COMPLEMENTO,
+			--		LTRIM(RTRIM(ccjoblin_sql.customer))	AS CUSTOMER, 
+			--		-- ===========================
+			--		(	SELECT	LTRIM(RTRIM(MACHINE)) 
+			--			FROM	ccjobhdr_sql (NOLOCK)
+			--			WHERE	JOBNO = ccjoblin_sql.JOBNO )	AS MESA,
+			--		-- ===========================
+			--		( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
+			--															FROM IMITMIDX_SQL (NOLOCK)
+			--															WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
+			--				WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+			--				ELSE '' END ) AS REF_PO,
+			--		-- ===========================
+			--		( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
+			--				WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+			--				ELSE '' END ) AS SUPPLIER,
+			--		-- ===========================
+			--		( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
+			--				ELSE '' END ) AS SHIP_TO,
+			--		-- ===========================
+			--		LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
+			--		LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+			--		-- ===========================
+			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ccjoblin_sql.item_no	
+			--				ELSE imkitfil_sql.item_no END ) AS ITEM_NO,
+			--		-- ===========================
+			--		LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
+			--		-- ===========================
+			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
+			--																FROM IMITMIDX_SQL 
+			--																WHERE item_no = ccjoblin_sql.item_no )	
+			--				ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
+			--						FROM IMITMIDX_SQL 
+			--						WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_1_IMPRIMIR,
+			--		-- ===========================
+			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
+			--																FROM IMITMIDX_SQL 
+			--																WHERE item_no = ccjoblin_sql.item_no )	
+			--				ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
+			--						FROM IMITMIDX_SQL 
+			--						WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_2_IMPRIMIR,
+			--		-- ===========================
+			--		ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+			--		-- ===========================
+			--		CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
+			--		CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
+			--		CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+			--		RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
+			--		LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+			--		-- ===========================
+			--		(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+			--			FROM INVENTARIO_EMBARQUE (NOLOCK)
+			--			WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+			--					OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+			--			AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+			--		-- ===========================
+			--		@VP_TURNO	AS TURNO
+			--		-- ===========================
+			--FROM ccjoblin_sql  (NOLOCK)
+			--LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
+			--INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			--AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+			--AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+			--												FROM	cccusitm_sql (NOLOCK)
+			--												WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+			--												AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
+			---- ===========================
+			--WHERE	ccjoblin_sql.jobno = @VP_ORDEN_PRINCIPAL 
+			---- ===========================
+			--ORDER BY ccjoblin_sql.Ser_No
 
 			SELECT	1							AS IMPRIMIR,
 					JOBNO						AS ORDEN_PRINCIPAL, 
@@ -149,14 +224,6 @@ AS
 			FROM ccjoblin_sql  (NOLOCK)
 			LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
 			-- ===========================
-			--INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
-			--	AND		ccjoblin_sql.customer = part_no_view.Customer  
-			--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
-			--											FROM	part_no_view (NOLOCK)
-			--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
-			--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
-			--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
-			-- ===========================
 			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
 			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
@@ -166,7 +233,76 @@ AS
 			-- ===========================
 			WHERE	ccjoblin_sql.jobno = @VP_ORDEN_PRINCIPAL 
 			-- ===========================
-			ORDER BY ccjoblin_sql.Ser_No
+			UNION
+			-- ===========================
+			SELECT	1										AS IMPRIMIR,
+					LTRIM(RTRIM(JOBNO))						AS ORDEN_PRINCIPAL, 
+					''										AS JOBNO_COMPLEMENTO,
+					LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+					-- ===========================
+					(	SELECT LTRIM(RTRIM(MACHINE)) 
+						FROM	ccjobhdr_sql (NOLOCK)
+						WHERE	JOBNO = ccjoblin_sql.JOBNO )				AS MESA,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
+																		FROM IMITMIDX_SQL (NOLOCK)
+																		WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+							ELSE '' END ) AS REF_PO,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+							ELSE '' END ) AS SUPPLIER,
+					-- ===========================
+					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
+							ELSE '' END ) AS SHIP_TO,
+					-- ===========================
+					LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
+					LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+					ccjoblin_sql.item_no					AS ITEM_NO,
+					-- ===========================
+					LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
+					-- ===========================
+					(	SELECT LTRIM(RTRIM(ITEM_DESC_1))
+						FROM IMITMIDX_SQL 
+						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
+					-- ===========================
+					(	SELECT  LTRIM(RTRIM(ITEM_DESC_2))
+						FROM IMITMIDX_SQL 
+						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_2_IMPRIMIR,
+					-- ===========================
+					ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+					-- ===========================
+					CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
+					CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
+					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
+					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+					-- ===========================
+					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+						FROM INVENTARIO_EMBARQUE (NOLOCK)
+						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+						AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+					-- ===========================
+					@VP_TURNO	AS TURNO
+					-- ===========================
+			FROM ccjoblin_sql  (NOLOCK)
+			-- ===========================
+			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+															FROM	cccusitm_sql (NOLOCK)
+															WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+															AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
+			-- ===========================
+			WHERE	ccjoblin_sql.jobno = @VP_ORDEN_COMPLEMENTO 
+			AND ccjoblin_sql.ITEM_NO NOT IN (	SELECT comp_item_no 
+												FROM imkitfil_sql	
+												WHERE comp_item_no IN ( SELECT item_no 
+																		FROM ccjoblin_sql 
+																		WHERE JOBNO = @VP_ORDEN_COMPLEMENTO ) )
+			ORDER BY jobno, SER_NO
 		END
 	ELSE
 		BEGIN
@@ -223,14 +359,6 @@ AS
 					@VP_TURNO	AS TURNO
 					-- ===========================
 			FROM ccjoblin_sql  (NOLOCK)
-			-- ===========================
-			--INNER JOIN	part_no_view (NOLOCK) ON ccjoblin_sql.Item_No = part_no_view.item_no 
-			--	AND		ccjoblin_sql.customer = part_no_view.Customer  
-			--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
-			--											FROM	part_no_view (NOLOCK)
-			--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
-			--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
-			--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
 			-- ===========================
 			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no

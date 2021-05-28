@@ -74,28 +74,43 @@ AS
 					[dbo].[CONVERT_INT_TO_DATE](dateplanned), 
 					netsqm, standardsqm, 
 					patterns,
+					--=============================================
 					ISNULL((	SELECT TOP 1 LTRIM(RTRIM(LOT)) 
 								FROM RP_SC (NOLOCK)
 								WHERE TAGNO = ISNULL(FOLIO, 0) 
 								GROUP BY LOT 
-								ORDER BY SUM(CONVERT(DECIMAL(13,2), ISNULL(LTRIM(RTRIM(SQF)), 0))) DESC
+								ORDER BY SUM( (CASE WHEN ISNUMERIC(LTRIM(RTRIM(SQF))) = 0 THEN 0 ELSE CONVERT(DECIMAL(13,2), ISNULL(LTRIM(RTRIM(SQF)), 0)) END )) DESC
 								), '') AS LOTE,
+
+					--ISNULL((	SELECT TOP 1 LTRIM(RTRIM(LOT)) 
+					--			FROM RP_SC (NOLOCK)
+					--			WHERE TAGNO = ISNULL(FOLIO, 0) 
+					--			GROUP BY LOT 
+					--			ORDER BY SUM(CONVERT(DECIMAL(13,2), ISNULL(LTRIM(RTRIM(SQF)), 0))) DESC
+					--			), '') AS LOTE,
+					--=============================================
 					ISNULL(FOLIO, 0) AS FOLIO, 
+					--=============================================
 					ISNULL((	SELECT COUNT(ID) 
 								FROM RP_SC (NOLOCK) 
 								WHERE TAGNO = ISNULL(FOLIO, 0)), 0) AS HIDES,
+					--=============================================
 					ISNULL((	SELECT COUNT(colkey) 
 								FROM cccuthst_sql (NOLOCK) 
 								WHERE cccuthst_sql.jobno = ccjobhdr_sql.jobno), 0) AS CUT_PIEL,
+					--=============================================
 					ISNULL((	SELECT SUM(rawpatterns) 
 								FROM cccuthst_sql (NOLOCK) 
 								WHERE cccuthst_sql.jobno = ccjobhdr_sql.jobno), 0) AS CUT_PATRON,
+					--=============================================
 					ISNULL((	SELECT SUM(rawpatternsqm) 
 								FROM cccuthst_sql (NOLOCK) 
 								WHERE cccuthst_sql.jobno = ccjobhdr_sql.jobno), 0) AS CUT_NET,
+					--=============================================
 					ISNULL((	SELECT SUM(hidesqm) 
 								FROM cccuthst_sql (NOLOCK)
 								WHERE  cccuthst_sql.jobno = ccjobhdr_sql.jobno), 0) AS CUT_SQF
+					--=============================================
 	FROM	ccjobhdr_sql (NOLOCK)
 	WHERE machine = ( CASE WHEN @PP_MESA <> '' THEN @PP_MESA
 							ELSE machine END) 
@@ -125,6 +140,7 @@ AS
 		   PIELES_FOLIO,		
 		   PIELES_CORTADA,		
 		   PATTERNS_CORTADO,	
+		   --=============================================
 		   ( CASE WHEN PATTERNS_CORTADO > 0 AND PATTERNS_REQUERIDO > 0 THEN (PATTERNS_CORTADO * 100) / PATTERNS_REQUERIDO 
 				ELSE 0 END ) AS PORC_PATRON_COMPLETADO,
 			--=============================================

@@ -38,7 +38,7 @@ AS
 
 	-- ///////////////////////////////////////////
 
-	SELECT TOP 100
+	SELECT DISTINCT
 			LTRIM(RTRIM(COLOUR))	AS COLOUR,
 			LTRIM(RTRIM(LOT))		AS LOT,
 			LTRIM(RTRIM(HIDE))		AS HIDE,
