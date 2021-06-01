@@ -58,16 +58,28 @@ AS
 			BEGIN TRANSACTION 
 			BEGIN TRY
 				-- ///////SE OBTIENE EL NUMERO DE LA ULTIMA ORDEN GENERADA//////////////////////////////////////////////
-				SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(JOBNO)))
-				FROM	CCJOBHDR_SQL 
-				WHERE	JOBNO < '50000'
-				ORDER BY JOBNO DESC
+				--SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(JOBNO)))
+				--FROM	CCJOBHDR_SQL 
+				--WHERE	JOBNO < '50000'
+				--ORDER BY JOBNO DESC
+
+				SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
+				FROM	imlocfil_sql 
+				WHERE LOC = 'MFP'
 
 				IF @VP_ORDEN IS NULL
 					RAISERROR ('ERROR: No fue posible obtener el numero de orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
 
 				SET @VP_ORDEN = @VP_ORDEN + 1
 				SET @VP_ORDEN = RIGHT('00000' + @VP_ORDEN, 5)
+
+				-- ///////SE ACTUALIZA LA LOCACION MFP CON LA ORDEN CREADA//////////////////////////////////////////////	
+				UPDATE imlocfil_sql 
+					SET user_def_fld_4 = @VP_ORDEN
+				WHERE LOC = 'MFP'
+
+				IF @@ROWCOUNT = 0
+					RAISERROR ('ERROR: No fue posible Actualizar la orden en [imlocfil_sql]', 16, 1 ) --MENSAJE - Severity -State.
 
 				-- ///////SE OBTIENE LA DESCRIPCION DEL COLOR//////////////////////////////////////////////
 				DECLARE @VP_COLOR_SIN_F VARCHAR(25) = SUBSTRING(@PP_COLOR, 2 , 10)
@@ -97,15 +109,7 @@ AS
 					SET @VP_UTILIDAD_MINIMA = 0
 
 				SET @VP_UTILIDAD_MINIMA = @VP_UTILIDAD_MINIMA / 1000000						
-
-				-- ///////SE ACTUALIZA LA LOCACION MFP CON LA ORDEN CREADA//////////////////////////////////////////////	
-				UPDATE imlocfil_sql 
-					SET user_def_fld_4 = @VP_ORDEN
-				WHERE LOC = 'MFP'
-
-				IF @@ROWCOUNT = 0
-					RAISERROR ('ERROR: No fue posible Actualizar la orden en [imlocfil_sql]', 16, 1 ) --MENSAJE - Severity -State.
-
+								
 				-- ///////SE CREA TABLA TEMPORAL /////////////////////////////////////////////	
 				DECLARE @TBL_KIT_A_PROGRAMAR  TABLE (
 						K_KIT_A_PROGRAMAR	INT IDENTITY(1,1),
@@ -291,17 +295,6 @@ AS
 
 				IF @@ROWCOUNT = 0
 					RAISERROR ('ERROR: No fue posible agregar la orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
-				
-				-- ///////SE ACTUALIZA EL REGISTRO DE LA ORDEN EN CCJOBHDR_SQL//////////////////////////////////////////////
-				--IF @PP_ORDEN_2_TONO <> ''
-				--	BEGIN
-				--		UPDATE CCJOBHDR_SQL 
-				--			SET	LOTNO	=	@VP_ORDEN
-				--		WHERE jobno	= @PP_ORDEN_2_TONO
-						
-				--		IF @@ROWCOUNT = 0
-				--			RAISERROR ('ERROR: No fue posible Actualizar la orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
-				--	END	
 
 				-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
 				DECLARE @VP_DETAIL VARCHAR(100) = 'Creacion de Orden: ' + @VP_ORDEN

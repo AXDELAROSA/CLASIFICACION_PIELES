@@ -4,19 +4,20 @@ USE DATA_02PRUEBAS
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO  in ( SELECT jobno FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Crear orden' )
 	AND status = 'P' AND FOLIO IS NOT NULL ORDER BY JOBNO
 
+	SELECT * FROM imlocfil_sql WHERE LOC = 'MFP'
+	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Crear orden' ORDER BY ckey DESC
+	SELECT * FROM pearl_log WHERE JOBNO = '31979'  ORDER BY ckey DESC
+	SELECT * FROM pearl_log WHERE JOBNO = '31901'  ORDER BY ckey asc
 
-	SELECT * FROM pearl_log WHERE JOBNO = '30851'  ORDER BY ckey DESC
-	SELECT * FROM pearl_log WHERE JOBNO = '09309'  ORDER BY ckey DESC
-
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('09309') ORDER BY jobno, Ser_No
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '09309'
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31901') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31901'
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('30851') ORDER BY jobno, Ser_No
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '30851'
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31673') ORDER BY jobno, Ser_No
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31673'
-
+	
 	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND JOBNO < 50000  ORDER BY ckey DESC
 
 	SELECT TOP 20 * from serialcam_sql where SUBSTRING(serial, 1,5) IN	('30905')
@@ -37,10 +38,6 @@ USE DATA_02PRUEBAS
 	select TOP 10 * from IMITMIDX_SQL WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
 	select TOP 10 * from cccusitm_sql WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
 	select TOP 10 * from OECUSITM_SQL WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
-
-	--UPDATE IMITMIDX_SQL
-	--SET L_ACTIVO = 1
-	-- WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')
 
 	-- standar pack
 	select top(1) user_def_fld_5 from ccitmidx_sql where rtrim(item_no)='PWD2TBLCNPJRR' order by versionno desc
