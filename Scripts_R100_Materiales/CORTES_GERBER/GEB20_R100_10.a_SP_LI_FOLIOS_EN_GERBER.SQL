@@ -279,7 +279,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_IN_ORDEN_GERBER]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_IN_ORDEN_GERBER]
 GO
@@ -308,10 +308,14 @@ AS
 				BEGIN TRY
 					-- //////////SE OBTINE EL NUMERO DE ORDEN/////////////////////////////////
 					DECLARE @VP_ORDEN	VARCHAR(10) = 0
-					SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(JOBNO)))
-					FROM	CCJOBHDR_SQL 
-					WHERE	JOBNO < '50000'
-					ORDER BY JOBNO DESC
+					--SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(JOBNO)))
+					--FROM	CCJOBHDR_SQL 
+					--WHERE	JOBNO < '50000'
+					--ORDER BY JOBNO DESC
+
+					SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
+					FROM	imlocfil_sql 
+					WHERE LOC = 'MFP'
 
 					IF @VP_ORDEN IS NULL
 						RAISERROR ('ERROR: No fue posible obtener el numero de orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
@@ -320,6 +324,18 @@ AS
 					-- =====================
 
 					SET @VP_ORDEN =RIGHT('00000' + @VP_ORDEN, 5)
+
+					-- ///////SE ACTUALIZA LA LOCACION MFP CON LA ORDEN CREADA//////////////////////////////////////////////	
+					UPDATE imlocfil_sql 
+						SET user_def_fld_4 = @VP_ORDEN
+					WHERE LOC = 'MFP'
+
+					-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
+					DECLARE @VP_DETAIL VARCHAR(100) = 'Creacion de Orden: ' + @VP_ORDEN
+					EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														'VIVIANAC', 'PROYECT', 'Orden Gerber',
+														@VP_ORDEN, 'Crear orden',
+													@VP_DETAIL, ''
 
 					-- //////////SE OBTINE LA DESCRIPCION DEL COLOR/////////////////////////////////
 					DECLARE @VP_COLOR_DESCRIPCION VARCHAR(100) = ''

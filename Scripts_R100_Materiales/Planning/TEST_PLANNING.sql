@@ -5,15 +5,16 @@ USE DATA_02PRUEBAS
 	AND status = 'P' AND FOLIO IS NOT NULL ORDER BY JOBNO
 
 	SELECT * FROM imlocfil_sql WHERE LOC = 'MFP'
-	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Crear orden' ORDER BY ckey DESC
+
+	SELECT * FROM pearl_log (nolock) WHERE  movement = 'Crear orden' ORDER BY ckey DESC
 	SELECT * FROM pearl_log WHERE JOBNO = '31979'  ORDER BY ckey DESC
-	SELECT * FROM pearl_log WHERE JOBNO = '31901'  ORDER BY ckey asc
+	SELECT * FROM pearl_log WHERE JOBNO = '25021'  ORDER BY ckey asc
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31901') ORDER BY jobno, Ser_No
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31901'
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '25021'
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('30851') ORDER BY jobno, Ser_No
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '30851'
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '32104'
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31673') ORDER BY jobno, Ser_No
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31673'
@@ -21,12 +22,12 @@ USE DATA_02PRUEBAS
 	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND JOBNO < 50000  ORDER BY ckey DESC
 
 	SELECT TOP 20 * from serialcam_sql where SUBSTRING(serial, 1,5) IN	('30905')
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO > '30900' ORDER BY JOBNO 
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO < '50000' ORDER BY JOBNO DESC
 	
-	SELECT * FROM ccjobhdr_sql WHERE customer = 'YANG03' AND DATECREATED = '20210506' ORDER BY jobno
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31503'
 	
 	select imkitfil_sql.* from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31503') ) -- IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('30958')) ORDER BY item_no
-	SELECT * FROM imkitfil_sql where item_no = 'UMDL3CRSNODY3'
+	SELECT * FROM imkitfil_sql where item_no = 'UWLDLFWLROTX7'
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31504') ORDER BY jobno, Ser_No
 	SELECT * FROM  ccjoblin_sql WHERE JOBNO = '31504' AND ITEM_NO NOT IN (SELECT comp_item_no FROM imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31504') ))

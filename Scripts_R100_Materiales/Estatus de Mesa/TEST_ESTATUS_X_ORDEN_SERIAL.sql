@@ -34,7 +34,7 @@ SELECT * FROM [DATA_02].[DBO].ccitmidx_sql WHERE LEN(user_def_fld_4) = 3
 													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
 	-- ===========================
 
-	WHERE	ccjoblin_sql.jobno = 31901
+	WHERE	ccjoblin_sql.jobno = 31503
 	-- ===========================
     ORDER BY ccjoblin_sql.jobno, SER_NO
 		
