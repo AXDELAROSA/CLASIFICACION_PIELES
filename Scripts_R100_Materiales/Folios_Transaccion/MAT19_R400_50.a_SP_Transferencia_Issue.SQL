@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -43,8 +43,28 @@ AS
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
 	IF LTRIM(RTRIM(@PP_COMENTARIO)) = '' OR @PP_COMENTARIO IS NULL
-		SET  @VP_MENSAJE = 'Es necesario agregar un comentario para poder realizar la accion.'
-		
+		SET  @VP_MENSAJE = 'Es necesario agregar un comentario para poder realizar la acción.'
+
+	IF @VP_MENSAJE=''
+		BEGIN
+			IF LTRIM(RTRIM(@PP_LOCACION_ORIGEN)) NOT IN ('MHI', 'MQU')
+				SET  @VP_MENSAJE = 'Locación no valida para esta acción.'
+		END
+
+	IF @VP_MENSAJE=''
+		BEGIN
+			DECLARE @VP_N_FOLIO_BASE INT = 0
+			SELECT @VP_N_FOLIO_BASE = COUNT(ID) 
+			FROM RP_Folios 
+			WHERE TAG = @PP_FOLIO_ORIGEN 
+			AND STATUS = 'B'
+
+			IF @VP_N_FOLIO_BASE IS NULL
+				SET @VP_N_FOLIO_BASE = 0
+
+			IF @VP_N_FOLIO_BASE > 0
+				SET  @VP_MENSAJE = 'No se pueden borrar pieles del folio Base.'
+		END
 	-- /////////////////////////////////////////////////////////////////////
 	
 	IF @VP_MENSAJE=''
@@ -98,21 +118,22 @@ AS
 				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = ''	-- 'franciscoe@pearlleather.com.mx'
 				SET @VP_RECIPIENTS = 'manuelg@pearlleather.com.mx;omard@pearlleather.com.mx;adelaree@pearlleather.com.mx;guillermom@pearlleather.com.mx;jorgeh@pearlleather.com.mx;miguelc@pearlleather.com.mx;pedrov@pearlleather.com.mx'
 
-				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out MQU'
+				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out'
 				DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
 				DECLARE @VP_BODY		NVARCHAR(MAX) 
 				
 				SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
 									N'<thead>' + 
 									  N'<tr BGCOLOR="#ADD8E6">' + 
-									    N'<th colspan="8">Se han eliminado las siguientes pieles</th>' + 
+									    N'<th colspan="9">Se han eliminado las siguientes pieles</th>' + 
 									  N'</tr>' + 
 									  N'<tr BGCOLOR="#48D1CC">' + 
-									    N'<th>Folio</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Comentario</th><th>Usuario</th><th>Fecha</th>' + 
+									    N'<th>Folio</th><th>Locación</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Comentario</th><th>Usuario</th><th>Fecha</th>' + 
 									  N'</tr>' + 
 									N'</thead>' + 
 									N'<tbody>' + 
 										CAST ( ( SELECT td = RTRIM(LTRIM(TAGNO)),'',  
+												 td = @PP_LOCACION_ORIGEN, '',
 								                td = RTRIM(LTRIM(COLOUR)), '',  
 								                td = RTRIM(LTRIM(LOT)), '',  
 								                td = RTRIM(LTRIM(HIDE)), '',  
