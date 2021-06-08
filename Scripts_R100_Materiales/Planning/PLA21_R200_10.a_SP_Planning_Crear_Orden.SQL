@@ -58,11 +58,6 @@ AS
 			BEGIN TRANSACTION 
 			BEGIN TRY
 				-- ///////SE OBTIENE EL NUMERO DE LA ULTIMA ORDEN GENERADA//////////////////////////////////////////////
-				--SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(JOBNO)))
-				--FROM	CCJOBHDR_SQL 
-				--WHERE	JOBNO < '50000'
-				--ORDER BY JOBNO DESC
-
 				SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
 				FROM	imlocfil_sql 
 				WHERE LOC = 'MFP'
@@ -177,6 +172,7 @@ AS
 					BEGIN
 						DECLARE @VP_CUBE_LENGTH DECIMAL(13,4) = 0, @VP_CUBE_WIDTH DECIMAL(13,4) = 0, @VP_CUBE_QTY_PER DECIMAL(13,4) = 0;
 						DECLARE @VP_D_ITEM	VARCHAR(255), @VP_CHANGE_LEVEL	VARCHAR(100), @VP_MODELO	VARCHAR(50), @VP_VERSION VARCHAR(50);
+						DECLARE @VP_SERIAL VARCHAR(50) = ''
 
 						-- ////////SE OBTIENE EL MODELO Y ULTIMA VERSION DEL KIT///////////////////////////////////
 						SELECT	DISTINCT TOP (1) PERCENT 
@@ -262,6 +258,14 @@ AS
 													RAISERROR ('ERROR: No fue posible agregar el kit a la orden en [ccjoblin_sql]', 16, 1 ) --MENSAJE - Severity -State.
 											END
 
+										-- ///////SE GUARDA EL REGISTRO DEL MATERIAL ESCANEADO//////////////////////////////////////////////
+										SET @VP_SERIAL  = @VP_ORDEN + RIGHT('000'+ CONVERT(VARCHAR(10), @VP_CONSECUTIVO), 3) 
+									
+										EXECUTE [dbo].[PG_IN_MATERIAL_PROGRAMADO_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																						10, @VP_SERIAL, @VP_ITEM_NO,
+																						'MATERIALES', @PP_COMPUTER_NAME, @PP_K_USUARIO_ACCION, ''
+										
+										-- ///////SE RESTA DEL STADANDARD PACK LO INGRESADO Y SE AUMENTA EL CONSECUTIVO//////////////////////////////////////////////
 										SET @VP_CANTIDAD = @VP_CANTIDAD - @VP_STD_PACK
 										SET @VP_CONSECUTIVO = @VP_CONSECUTIVO + 1
 									END
@@ -276,6 +280,14 @@ AS
 								IF @@ROWCOUNT = 0
 									RAISERROR ('ERROR: No fue posible agregar el kit a la orden en [ccjoblin_sql]', 16, 1 ) --MENSAJE - Severity -State.
 
+								-- ///////SE GUARDA EL REGISTRO DEL MATERIAL ESCANEADO//////////////////////////////////////////////
+								SET @VP_SERIAL  = @VP_ORDEN + RIGHT('000'+ CONVERT(VARCHAR(10), @VP_CONSECUTIVO), 3) 
+								
+								EXECUTE [dbo].[PG_IN_MATERIAL_PROGRAMADO_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				10, @VP_SERIAL, @VP_ITEM_NO,
+																				'MATERIALES', @PP_COMPUTER_NAME, @PP_K_USUARIO_ACCION, ''
+										
+								-- ///////SE AUMENTA EL CONSECUTIVO//////////////////////////////////////////////
 								SET @VP_CONSECUTIVO = @VP_CONSECUTIVO + 1
 							END
 						

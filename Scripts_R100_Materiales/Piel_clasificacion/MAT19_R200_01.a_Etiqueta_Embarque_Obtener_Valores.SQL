@@ -64,7 +64,7 @@ AS
 
 	IF @VP_MENSAJE=''
 		IF LTRIM(RTRIM(@PP_ETIQUETA_EMBARQUE)) = ''
-			SET @VP_MENSAJE = 'El Numero de Piel no puede ser vacio'
+			SET @VP_MENSAJE = 'No se obtuvieron datos de la etiqueta'
 			
 	-- /////////////////////////////////////////////////////
 

@@ -100,7 +100,7 @@ AS
 										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 									END
 
-								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
+								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx;marlennes.pearl@gmail.com'
 								DECLARE @VP_SUBJECT		VARCHAR(255) = 'Creacion de Folio con Detallado'
 								DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
 								DECLARE @VP_COMENTARIO		VARCHAR(255) = 'Folio creado apartir del Folio detallado: ' + CONVERT(VARCHAR(10),@PP_FOLIO_DETALLADO) 
