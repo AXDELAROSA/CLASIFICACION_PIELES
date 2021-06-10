@@ -194,7 +194,7 @@ AS
 							SET @VP_SERIAL = @VP_ORDEN_COMPLEMENTO + RIGHT('000'+ CONVERT(VARCHAR(10), @VP_CONSECUTIVO), 3) 
 							
 							EXECUTE [dbo].[PG_IN_MATERIAL_PROGRAMADO_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																			10, @VP_SERIAL, @VP_ITEM_NO,
+																			10, @VP_SERIAL, @VP_ITEM_NO_COMPLEMENTO,
 																			'MATERIALES', @PP_COMPUTER_NAME, @VP_NUMERO_RELOJ, ''
 										
 							-- ///////SE RESTA DEL STADANDARD PACK LO INGRESADO Y SE AUMENTA EL CONSECUTIVO//////////////////////////////////////////////
@@ -216,7 +216,7 @@ AS
 					SET @VP_SERIAL = @VP_ORDEN_COMPLEMENTO + RIGHT('000'+ CONVERT(VARCHAR(10), @VP_CONSECUTIVO), 3) 
 					
 					EXECUTE [dbo].[PG_IN_MATERIAL_PROGRAMADO_LOG]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																	10, @VP_SERIAL, @VP_ITEM_NO,
+																	10, @VP_SERIAL, @VP_ITEM_NO_COMPLEMENTO,
 																	'MATERIALES', @PP_COMPUTER_NAME, @VP_NUMERO_RELOJ, ''
 							
 					-- ///////SE AUMENTA EL CONSECUTIVO//////////////////////////////////////////////
