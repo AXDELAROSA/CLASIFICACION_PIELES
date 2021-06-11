@@ -177,7 +177,7 @@ AS
 							ELSE '' END ) AS REF_PO,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
-							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'PEA'
 							ELSE '' END ) AS SUPPLIER,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
@@ -251,7 +251,7 @@ AS
 							ELSE '' END ) AS REF_PO,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
-							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'PEA'
 							ELSE '' END ) AS SUPPLIER,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
@@ -322,7 +322,7 @@ AS
 							ELSE '' END ) AS REF_PO,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
-							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'PEA'
 							ELSE '' END ) AS SUPPLIER,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
