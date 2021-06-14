@@ -173,7 +173,7 @@ AS
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
 																		FROM IMITMIDX_SQL (NOLOCK)
 																		WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
-							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX000566'
 							ELSE '' END ) AS REF_PO,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
@@ -247,7 +247,7 @@ AS
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
 																		FROM IMITMIDX_SQL (NOLOCK)
 																		WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
-							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX000566'
 							ELSE '' END ) AS REF_PO,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
@@ -318,7 +318,7 @@ AS
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
 																		FROM IMITMIDX_SQL (NOLOCK)
 																		WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
-							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
+							WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX000566'
 							ELSE '' END ) AS REF_PO,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
