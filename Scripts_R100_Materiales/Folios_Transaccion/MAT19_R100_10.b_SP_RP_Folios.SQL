@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -34,10 +34,6 @@ CREATE PROCEDURE [dbo].[PG_SK_RP_FOLIO_X_TAG]
 AS
 
 	-- ///////////////////////////////////////////
-
-	DECLARE @VP_LI_N_REGISTROS		INT = 10000
-
-	-- =========================================
 		
 	SELECT	ID,
 			ISNULL(TAG, 0)		AS ID,
@@ -46,7 +42,7 @@ AS
 			ISNULL(JOBNO,'')	AS JOBNO,
 			ISNULL(JOBNO2,'')	AS JOBNO2
 	-- =====================
-	FROM	RP_Folios 
+	FROM	RP_Folios (NOLOCK)
 	WHERE	TAG = @PP_TAG
 	-- =====================
 

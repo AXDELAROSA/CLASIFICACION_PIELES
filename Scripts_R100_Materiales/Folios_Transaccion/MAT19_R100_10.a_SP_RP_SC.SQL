@@ -50,7 +50,7 @@ AS
 			ISNULL(PESO, '')		AS PESO,
 			ISNULL(TYPE, '')		AS TYPE,
 			ISNULL(MOVEMENT, '')	AS MOVEMENT
-	FROM	RP_SC 
+	FROM	RP_SC (NOLOCK)
 	-- =======================
 	WHERE	LTRIM(RTRIM(TAGNO))=@PP_FOLIO
 	AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
@@ -94,7 +94,7 @@ AS
 			CONCAT('         ', RIGHT('000000' + Ltrim(Rtrim(LOT)), 6))		AS LOT,
 			SUM(CAST(SQF AS DECIMAL(4,2)))	AS SQF
 	-- =====================
-	FROM	RP_SC
+	FROM	RP_SC (NOLOCK)
 	-- =====================
 	WHERE	TAGNO=@PP_TAG_NO 
 	-- =====================
@@ -135,10 +135,10 @@ AS
 			COUNT(TAGNO) AS PIELES, 
 			SUM(CAST(SQF AS DECIMAL(4,2))) AS SQF 
 	-- =====================
-	FROM	RP_SC 
+	FROM	RP_SC (NOLOCK)
 	-- =====================
 	WHERE	TAGNO IN (	SELECT	TAG 
-						FROM	RP_Folios 
+						FROM	RP_Folios (NOLOCK)
 						WHERE	STATUS=@PP_STATUS )
 	-- =====================
 	GROUP BY TAGNO, COLOUR
@@ -149,7 +149,7 @@ GO
 
 
 
-USE [DATA_02] 
+--USE [DATA_02] 
 --GO
 -- EXECUTE [dbo].[PG_SK_RP_SC_X_TAG_NO] 0,0,  3791264
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_TAG_NO]') AND type in (N'P', N'PC'))
@@ -196,8 +196,8 @@ AS
 				PIEL_CLASIFICACION.K_PIEL_CLASIFICACION,
 				S_PIEL_CLASIFICACION
 	-- =====================
-	FROM	RP_SC
-	INNER	JOIN PIEL_CLASIFICACION ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
+	FROM	RP_SC (NOLOCK)
+	INNER	JOIN PIEL_CLASIFICACION (NOLOCK) ON RP_SC.K_CLASIFICACION = PIEL_CLASIFICACION.K_PIEL_CLASIFICACION
 	WHERE	TAGNO=@PP_TAG_NO 
 	AND		type<>'D'
 	ORDER BY HIDE ASC
@@ -210,8 +210,54 @@ GO
 
 
 
+-- USE [DATA_02PRUEBAS] 
+-- EXECUTE [dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO] 0,0,  3798327, 'D'
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO]
+GO
 
 
+CREATE PROCEDURE [dbo].PG_SK_PIEL_DEVOLUCION_X_FOLIO
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT,
+	@PP_TIPO					VARCHAR(10) -- D = DEVOLUCION, E = EXTRAS
+AS
+
+	-- ///////////////////////////////////////////
+	SELECT	RP_SC.ID					AS ID,
+			LTRIM(RTRIM(TAGNO))			AS TAGNO,
+			LTRIM(RTRIM(ccjobhdr_sql.JOBNO))	AS JOBNO,
+			LTRIM(RTRIM(RP_SC.COLOUR))		AS COLOR,
+			LTRIM(RTRIM(LOT))				AS LOTE,
+			LTRIM(RTRIM(HIDE))				AS PIEL,
+			LTRIM(RTRIM(SQF))				AS SQF,
+			CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))	AS SQF_CORTADO,
+			CONVERT(DECIMAL(13,2 ), LTRIM(RTRIM(SQF))) - CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))	AS SQF_TRANSFER,
+			LTRIM(RTRIM(MOVEMENT))			AS LOCACION,
+			LTRIM(RTRIM(TYPE))				AS TIPO
+	-- =====================
+	FROM	RP_SC (NOLOCK)
+	INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+	INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+	LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno
+		AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+		AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+	WHERE	TAGNO = @PP_FOLIO 
+	AND		type = @PP_TIPO
+	AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))
+	ORDER BY HIDE ASC
+
+	---////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+
+-- USE [DATA_02]
 -- EXECUTE [dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO] 0,0,  1524141
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_LOTE_X_TAG_NO]
@@ -235,7 +281,7 @@ AS
 			CONCAT('         ', RIGHT('000000' + Ltrim(Rtrim(LOT)), 6))		AS LOTE
 			--LOT		AS LOTE
 	-- =====================
-	FROM	RP_SC
+	FROM	RP_SC (NOLOCK)
 	WHERE	TAGNO=@PP_TAG_NO 
 	AND		type<>'D'
 	-- =====================
@@ -293,9 +339,9 @@ AS
 														)
 				ELSE	LTRIM(RTRIM(MOVEMENT)) END ) AS MOVEMENT
 	-- =====================
-	FROM	RP_SC
+	FROM	RP_SC (NOLOCK)
 	WHERE	TAGNO=@PP_TAG_NO 
-	AND LTRIM(RTRIM(COLOUR)) IN (SELECT COLOR FROM COLORES_CONTROLADOS WHERE COLOR <> 'FMCKSTT')
+	AND LTRIM(RTRIM(COLOUR)) IN (SELECT COLOR FROM COLORES_CONTROLADOS (NOLOCK) WHERE COLOR <> 'FMCKSTT')
 	-- =====================
 
 	-----////////////////////////////////////////////////////////////////
