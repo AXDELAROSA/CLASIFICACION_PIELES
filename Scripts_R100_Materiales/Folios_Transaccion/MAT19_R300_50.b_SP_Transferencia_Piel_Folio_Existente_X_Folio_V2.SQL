@@ -244,25 +244,26 @@ AS
 							WHERE	[K_PIEL_A_TRANSFERIR_TRANSACCION] = @PP_K_PIEL_A_TRANSFERIR_TRANSACCION
 						
 						OPEN CU_PIEL_SELECCIONADA
-						FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_DISPONIBLE_TBL, @VP_SQF_CORTADO_TBL, @VP_SQF_TBL
-						
-						IF CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_DISPONIBLE_TBL))) < CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_TBL)))
-							RAISERROR ('El SQF a transferir es mayor a lo disponible en el folio.', 16, 1 ) --MENSAJE - Severity -State.
+						FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_DISPONIBLE_TBL, @VP_SQF_CORTADO_TBL, @VP_SQF_TBL						
 
 						WHILE @@FETCH_STATUS = 0
 							BEGIN
-						
+								-- ///////////////////SE VALIDA QUE EL SQF DE LA PIEL EN EL FOLIO NO SEA MENOR AL SQF A TRANFERIR//////////////////////////////////////////////////
+								IF CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_DISPONIBLE_TBL))) < CONVERT(DECIMAL(13,2),LTRIM(RTRIM(@VP_SQF_TBL)))
+									RAISERROR ('El SQF a transferir es mayor a lo disponible en el folio.', 16, 1 ) --MENSAJE - Severity -State.
+
+								-- ///////////////////SE DECLARAN VARIABLES A USAR EN EL CURSOR//////////////////////////////////////////////////
 								DECLARE @VP_LOTE_INT INT			= CAST(LTRIM(RTRIM(@VP_LOTE_TBL)) AS INT)
 								DECLARE @VP_PIEL_INT INT			= CAST(LTRIM(RTRIM(@VP_PIEL_TBL)) AS INT)
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(LTRIM(RTRIM(@VP_SQF_TBL)) AS DECIMAL(13,2))
 
 								-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
-								SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
-															FROM RP_SC
-															WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
-															AND		TAGNO = @PP_TAGNO_ORIGEN
-															AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
-															AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+								--SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+								--							FROM RP_SC
+								--							WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+								--							AND		TAGNO = @PP_TAGNO_ORIGEN
+								--							AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+								--							AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
 
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -533,14 +534,14 @@ AS
 									END
 								ELSE
 									BEGIN
-										-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
+										-- ///////////////////SE COMENTO PORQUE POR EL MOMENTO NO SE USA//////////////////////////////////////////////////
 
-										SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
-																	FROM RP_SC
-																	WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
-																	AND		TAGNO = @PP_TAGNO_ORIGEN
-																	AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
-																	AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+										--SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+										--							FROM RP_SC
+										--							WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+										--							AND		TAGNO = @PP_TAGNO_ORIGEN
+										--							AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+										--							AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
 
 										-- /////////////////////////INGRESO EL FOLIO NUEVO////////////////////////////////////////////
 										EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,

@@ -1,0 +1,852 @@
+-- //////////////////////////////////////////////////////////////
+-- // ARCHIVO:			
+-- //////////////////////////////////////////////////////////////
+-- // BASE DE DATOS:	[DATA_02Pruebas]
+-- // MODULO:			DEVOLUCION DE PIEL POR PRODUCCION
+-- // OPERACION:		LIBERACION / STORED PROCEDURES
+-- //////////////////////////////////////////////////////////////
+-- // Autor:			FEG
+-- // Fecha creación:	16/JUN/2021
+-- ////////////////////////////////////////////////////////////// 
+
+USE [DATA_02Pruebas] 
+GO
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+
+-- USE [DATA_02PRUEBAS] 
+-- EXECUTE [dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO] 0,0,  3798327, 'D'
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_SK_PIEL_DEVOLUCION_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT,
+	@PP_TIPO					VARCHAR(10) -- D = DEVOLUCION, E = EXTRAS, C = NORMAL
+AS
+
+	-- ///////////////////////////////////////////
+	SELECT	RP_SC.ID									AS ID,
+			LTRIM(RTRIM(TAGNO))							AS TAGNO,
+			LTRIM(RTRIM(ccjobhdr_sql.JOBNO))			AS JOBNO,
+			LTRIM(RTRIM(RP_SC.COLOUR))					AS COLOR,
+			LTRIM(RTRIM(LOT))							AS LOTE,
+			LTRIM(RTRIM(HIDE))							AS PIEL,
+			LTRIM(RTRIM(SQF))							AS SQF,
+			CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))	AS SQF_CORTADO,
+			CONVERT(DECIMAL(13,2 ), LTRIM(RTRIM(SQF))) - CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))	AS SQF_TRANSFER,
+			LTRIM(RTRIM(MOVEMENT))						AS LOCACION,
+			LTRIM(RTRIM(TYPE))							AS TIPO
+	-- =====================
+	FROM	RP_SC (NOLOCK)
+	INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO AND STATUS <> 'B'
+	INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+		AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+	LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+		AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+		AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+		AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+		AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+	WHERE	TAGNO = @PP_FOLIO 
+	AND		TYPE = @PP_TIPO
+	AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS
+	ORDER BY HIDE ASC
+
+	---////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE [DATA_02PRUEBAS] 
+-- EXECUTE [dbo].[PG_GET_TOTAL_PIEL_SQF_X_FOLIO_TYPE] 0,0,  3798327, 'D'
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_TOTAL_PIEL_SQF_X_FOLIO_TYPE]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_TOTAL_PIEL_SQF_X_FOLIO_TYPE]
+GO
+
+
+CREATE PROCEDURE [dbo].[PG_GET_TOTAL_PIEL_SQF_X_FOLIO_TYPE]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT,
+	@PP_TIPO					VARCHAR(10) -- D = DEVOLUCION, E = EXTRAS, C = NORMAL
+AS
+
+	-- ///////////////////////////////////////////
+	SELECT	COUNT(RP_SC.ID)					AS TOTAL_PIEL,
+			ISNULL(SUM(CONVERT(DECIMAL(13,2 ), LTRIM(RTRIM(SQF))) - CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))), '0')	AS SQF_TRANSFER
+	-- =====================
+	FROM	RP_SC (NOLOCK)
+	INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO AND STATUS <> 'B'
+	INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+		AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+	LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+		AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+		AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+		AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+		AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+	WHERE	TAGNO = @PP_FOLIO 
+	AND		TYPE = @PP_TIPO
+	AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS
+
+	---////////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE [DATA_02PRUEBAS] 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]
+GO
+/*
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR FOLIO' , 3793142, 0, '' -- FOLIO TIPO BASE
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR FOLIO' , 3798327, 0, '' -- FOLIO EN MESA
+
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR PIEL', 0, 5829113, ''  -- 0044 -- -- FOLIO TIPO BASE
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR PIEL', 0, 5128940, ''  -- 0240
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR PIEL', 0, 5129175, ''  -- 0243
+
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR ETIQUETA' , 3793142, 0, 'FWLPAX7,401451-0044*43.70' -- FOLIO TIPO BASE
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	1, 144, 0, 'POR ETIQUETA' , 3798327, 0, 'FWLPAX7,401451-0240*15.00'
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR ETIQUETA' , 3798327, 0, 'FWLPAX7,401451-0243*31.20'
+*/
+CREATE PROCEDURE [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]
+	@PP_K_SISTEMA_EXE						INT,
+	@PP_K_USUARIO_ACCION					INT,
+	-- ===========================
+	@PP_ACCION								INT, --#0 QUITAR, #1 AGREGAR
+	@PP_TIPO_MOVIMIENTO						VARCHAR(50), --POR FOLIO, POR PIEL, POR ETIQUETA
+	@PP_FOLIO								INT,
+	@PP_ID_PIEL								INT,
+	@PP_ETIQUETA_PIEL						VARCHAR(150)
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+	DECLARE @VP_MENSAJE_TRANSACCION VARCHAR(255) = ''
+	DECLARE @VP_TIPO_FOLIO VARCHAR(10) = ''
+	DECLARE @VP_SQF_FOLIO DECIMAL(13,2) = 0
+	DECLARE @VP_SQF_CORTADO DECIMAL(13,2) = 0	
+
+	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
+	IF @PP_TIPO_MOVIMIENTO = 'POR ETIQUETA'
+		BEGIN
+			IF LTRIM(RTRIM(@PP_ETIQUETA_PIEL)) = ''
+				SET @VP_MENSAJE = 'La Etiqueta de la piel no contiene datos'
+							
+			IF @VP_MENSAJE=''
+				IF NOT (@PP_ETIQUETA_PIEL LIKE '_______,%_____-____*%')
+					SET @VP_MENSAJE = 'Los datos de la Etiqueta de la piel son incorrectos'
+		END
+
+	-- //////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE=''
+		BEGIN
+			BEGIN TRANSACTION 
+			BEGIN TRY				
+
+			-- //////PARA CANCELAR LA DEVOLUCION DE UN FOLIO EN PANTALLA NUEVA DE DEVOLUCIONES///////////////////////////////////////////////////////////////
+			IF @PP_TIPO_MOVIMIENTO = 'POR FOLIO'
+				BEGIN
+				-- //////SE VALIDA QUE EL FOLIO NO SEA TIPO BASE///////////////////////////////////////////////////////////////
+				SELECT @VP_TIPO_FOLIO = STATUS 
+				FROM RP_FOLIOS 
+				WHERE TAG = @PP_FOLIO
+
+				IF @VP_TIPO_FOLIO = 'B'
+					BEGIN
+						SET @VP_MENSAJE_TRANSACCION = 'EROR: El folio es tipo Base: ' + CONVERT(VARCHAR(50), @PP_FOLIO)  + '.'	
+						RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+					END
+
+					-- //////SE ACTUALIZA EL TYPE DE LAS PIELES EN EL FOLIO///////////////////////////////////////////////////////////////
+					--@PP_ACCION = #0 QUITAR, #1 AGREGAR
+					UPDATE RP_SC 
+						SET TYPE = ( CASE WHEN @PP_ACCION = 0	THEN 'C'
+											ELSE 'D' END)
+					WHERE TAGNO = @PP_FOLIO
+					AND TYPE = ( CASE WHEN @PP_ACCION = 0	THEN 'D'
+											ELSE 'C' END)
+					AND ID IN ( SELECT	RP_SC.ID
+								-- =====================
+								FROM	RP_SC (NOLOCK)
+								INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+								INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+									AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+								LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+									AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+									AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+									AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+									AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+								WHERE	TAGNO = @PP_FOLIO 
+								AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS)
+							)
+
+					IF @@ROWCOUNT = 0
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'No fue posible quitar las pieles de devolución del folio:' + CONVERT(VARCHAR(50), @PP_FOLIO)  + '.'
+							
+							IF @PP_ACCION = 1
+								SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar las pieles como devolución del folio:' + CONVERT(VARCHAR(50), @PP_FOLIO)  + '.'
+							
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END	
+				END
+
+			-- //////PARA CANCELAR LA DEVOLUCION DE UNA PIEL EN PANTALLA NUEVA DE DEVOLUCIONES///////////////////////////////////////////////////////////////
+			IF @PP_TIPO_MOVIMIENTO = 'POR PIEL'
+				BEGIN
+					-- //////SE VALIDA QUE EL FOLIO NO SEA TIPO BASE///////////////////////////////////////////////////////////////
+					SELECT TOP 1 @VP_TIPO_FOLIO = STATUS,
+								@PP_FOLIO = TAG
+					FROM RP_FOLIOS
+					INNER JOIN RP_SC ON TAG = TAGNO
+					WHERE RP_SC.ID = @PP_ID_PIEL
+
+					IF @VP_TIPO_FOLIO = 'B'
+					BEGIN
+						SET @VP_MENSAJE_TRANSACCION = 'EROR: El folio al que pertenece la piel es tipo Base: ' + CONVERT(VARCHAR(50), @PP_FOLIO)  + '.'		
+						RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+					END
+
+					-- //////SE VALIDA QUE LA PIEL NO ESTE CORTADA COMPLETA///////////////////////////////////////////////////////////////
+					SET @VP_SQF_FOLIO = 0
+					SET @VP_SQF_CORTADO = 0	
+
+					SELECT	@VP_SQF_FOLIO = CONVERT(DECIMAL(12,3), RP_SC.SQF),
+							@VP_SQF_CORTADO = CONVERT(DECIMAL(12,3),CCCUTHST_SQL.hidesqm)
+					-- =====================
+					FROM	RP_SC (NOLOCK)
+					INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+					INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+						AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+					LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+						AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+						AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+						AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+						AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+					WHERE	RP_SC.ID = @PP_ID_PIEL 
+					
+					IF @VP_SQF_FOLIO IS NULL OR @VP_SQF_FOLIO = 0
+						RAISERROR ('Piel no encontrada en el folio.', 16, 1 ) --MENSAJE - Severity -State.
+
+					IF @VP_SQF_CORTADO > @VP_SQF_FOLIO
+						RAISERROR ('El SQF cortado no puede ser mayor al SQF de la piel.', 16, 1 ) --MENSAJE - Severity -State.
+							
+					IF @VP_SQF_CORTADO = @VP_SQF_FOLIO
+						RAISERROR ('La piel ya esta cortada.', 16, 1 ) --MENSAJE - Severity -State.'
+
+					-- //////SE ACTUALIZA EL TYPE DE LAS PIEL///////////////////////////////////////////////////////////////
+					--@PP_ACCION = #0 QUITAR, #1 AGREGAR
+					UPDATE RP_SC 
+						SET TYPE = ( CASE WHEN @PP_ACCION = 0	THEN 'C'
+											ELSE 'D' END)
+					WHERE ID = @PP_ID_PIEL
+					AND TYPE = ( CASE WHEN @PP_ACCION = 0	THEN 'D'
+											ELSE 'C' END)
+
+					IF @@ROWCOUNT = 0
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'No fue posible quitar la piel de devolución.'
+							
+							IF @PP_ACCION = 1
+								SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar la piel como devolución.'
+
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END	
+				END
+
+			-- //////////PARA EL ESCANEO DE LA PIEL A DEVOLVER EN MESA///////////////////////////////////////////////////////////
+			IF @PP_TIPO_MOVIMIENTO = 'POR ETIQUETA'
+				BEGIN
+					-- //////SE VALIDA QUE EL FOLIO NO SEA TIPO BASE///////////////////////////////////////////////////////////////
+					SELECT @VP_TIPO_FOLIO = STATUS 
+					FROM RP_FOLIOS 
+					WHERE TAG = @PP_FOLIO
+
+					IF @VP_TIPO_FOLIO = 'B'
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'EROR: El folio es tipo Base: ' + CONVERT(VARCHAR(50), @PP_FOLIO)  + '.'	
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END
+
+					DECLARE @VP_COLOR		VARCHAR(20)		= ''
+					DECLARE @VP_LOTE		VARCHAR(20)		= ''
+					DECLARE @VP_PIEL		VARCHAR(10)		= ''
+					DECLARE @VP_SQF			VARCHAR(10)		= ''
+
+					-- /////////////////////////OBTENER VALORES DE LA ETIQUETA PIEL////////////////////////////////////////////
+					EXECUTE [dbo].[PG_RN_ETIQUETA_PIEL_OBTENER_VALOR]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																		@PP_ETIQUETA_PIEL,
+																		@OU_COLOR	 = @VP_COLOR	OUTPUT,
+																		@OU_LOTE	 = @VP_LOTE		OUTPUT,
+																		@OU_PIEL	 = @VP_PIEL		OUTPUT,
+																		@OU_SQF		 = @VP_SQF		OUTPUT
+
+					SET @VP_COLOR = RTRIM(LTRIM(@VP_COLOR))
+					SET @VP_LOTE = RTRIM(LTRIM(@VP_LOTE))
+					SET @VP_PIEL = RTRIM(LTRIM(@VP_PIEL))
+					SET @VP_SQF = RTRIM(LTRIM(@VP_SQF))
+
+					-- //////SE VALIDA QUE LA PIEL NO ESTE CORTADA COMPLETA///////////////////////////////////////////////////////////////
+					SET @VP_SQF_FOLIO = 0
+					SET @VP_SQF_CORTADO = 0		
+
+					SELECT	@VP_SQF_FOLIO = CONVERT(DECIMAL(12,3), RP_SC.SQF),
+							@VP_SQF_CORTADO = CCCUTHST_SQL.hidesqm
+					-- =====================
+					FROM	RP_SC (NOLOCK)
+					INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+					INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+						AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+					LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+						AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+						AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+						AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+						AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+					WHERE TAGNO = @PP_FOLIO
+					AND RP_SC.COLOUR = @VP_COLOR
+					AND	LOT = @VP_LOTE
+					AND HIDE = @VP_PIEL
+					AND SQF = @VP_SQF
+
+					IF @VP_SQF_FOLIO IS NULL OR @VP_SQF_FOLIO = 0
+						RAISERROR ('Piel no encontrada en el folio.', 16, 1 ) --MENSAJE - Severity -State.
+
+					IF @VP_SQF_CORTADO > @VP_SQF_FOLIO
+						RAISERROR ('El SQF cortado no puede ser mayor al SQF de la piel.', 16, 1 ) --MENSAJE - Severity -State.
+							
+					IF @VP_SQF_CORTADO = @VP_SQF_FOLIO
+						RAISERROR ('La piel ya esta cortada.', 16, 1 ) --MENSAJE - Severity -State.'
+
+					-- //////SE ACTUALIZA EL TYPE DE LAS PIEL///////////////////////////////////////////////////////////////
+					--@PP_ACCION = #0 QUITAR, #1 AGREGAR
+					UPDATE RP_SC 
+						SET TYPE = ( CASE WHEN @PP_ACCION = 0	THEN 'C'
+											ELSE 'D' END)
+					WHERE TAGNO = @PP_FOLIO
+					AND COLOUR = @VP_COLOR
+					AND	LOT = @VP_LOTE
+					AND HIDE = @VP_PIEL
+					AND SQF = @VP_SQF
+					AND TYPE = ( CASE WHEN @PP_ACCION = 0	THEN 'D'
+											ELSE 'C' END)
+
+					IF @@ROWCOUNT = 0
+						BEGIN
+							SET @VP_MENSAJE_TRANSACCION = 'No fue posible quitar la piel de devolución.'
+							
+							IF @PP_ACCION = 1
+								SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar la piel como devolución.'
+
+							RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						END		
+				END
+				
+			-- ////////////////////////////////////////////////////////////////////	
+			COMMIT TRANSACTION 
+			END TRY
+	
+			BEGIN CATCH
+				/* Ocurrió un error, deshacemos los cambios*/ 
+				ROLLBACK TRANSACTION
+				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
+				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
+				SET @VP_MENSAJE = 'ERROR: // TRANS: [PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO] // ' + @VP_ERROR_TRANS
+			END CATCH
+			
+		END
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE =  @VP_MENSAJE 
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_FOLIO AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE [DATA_02PRUEBAS] 
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]
+GO
+
+/*
+EXECUTE  [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI] 0,144, 3798327 , 'FWLPAX7' , '18014' , 'T31' , 2 , 63.20 , 'franciscoe' , 'IT-010' 
+
+*/
+CREATE PROCEDURE [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO_ORIGEN			INT,
+	@PP_COLOR					VARCHAR(20),
+	-- ===========================
+	@PP_ORDEN_ORIGEN			VARCHAR(10),
+	@PP_LOCACION_ORIGEN			VARCHAR(20), -- MESA
+	-- ===========================
+	@PP_TOTAL_PIEL				INT,
+	@PP_TOTAL_SQF				DECIMAL(13,2),
+	-- ===========================
+	@PP_USER					VARCHAR(50),
+	@PP_COMPUTER_NAME			VARCHAR(50)
+AS
+
+	-- /////////SE DECLARAN VARIABLES A USAR//////////////////////////////////
+	DECLARE @VP_MENSAJE				VARCHAR(255) = ''
+	DECLARE @VP_MENSAJE_TRANSACCION	VARCHAR(255) = ''
+	DECLARE @VP_LOCACION_DESTINO	VARCHAR(20) = 'MHI'
+	DECLARE	@VP_ORDEN_DESTINO		VARCHAR(20) = '-'
+	DECLARE @VP_TIPO_PIEL_LOG		INT = 6 -- 'DEVOLUCION'
+	DECLARE @VP_K_CLASIFICACION		INT = 0
+	DECLARE @VP_F_ACTUAL			DATE = GETDATE()
+
+	-- ///////RN VALIDACIONES////////////////////////////////////
+	DECLARE @VP_TIPO_FOLIO VARCHAR(10) = ''
+	SELECT @VP_TIPO_FOLIO = STATUS 
+	FROM RP_FOLIOS 
+	WHERE TAG = @PP_FOLIO_ORIGEN
+
+	IF @VP_TIPO_FOLIO = 'B'
+		SET @VP_MENSAJE = 'El folio es tipo Base.'	
+
+	IF @VP_MENSAJE=''
+		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_ORDEN_ORIGEN,
+															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+		
+	IF @VP_MENSAJE=''
+		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_ORDEN_ORIGEN,
+															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+	
+	IF @VP_MENSAJE=''
+		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_ORDEN_ORIGEN, @PP_COLOR,
+															@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+
+	IF @VP_MENSAJE=''
+		EXECUTE [dbo].[PG_RN_VALIDA_ORDEN_Y_FOLIO_CORRESPONDA]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@PP_ORDEN_ORIGEN,
+																@OU_RESULTADO_VALIDACION	= @VP_MENSAJE			OUTPUT,
+																@OU_FOLIO					= @PP_FOLIO_ORIGEN		OUTPUT
+
+	-- ////////////INICIA TRANSACCION/////////////////////////////////////////////////////////	
+	IF @VP_MENSAJE=''
+		BEGIN
+			BEGIN TRANSACTION 
+			BEGIN TRY
+				-- ////////////////////SE OBTIENE EL FOLIO BASE DEL COLOR//////////////////////////
+				DECLARE @VP_FOLIO_DESTINO INT = 0
+				SELECT	TOP 1 @VP_FOLIO_DESTINO = TAG	
+				FROM RP_Folios  (NOLOCK)
+				INNER JOIN RP_SC ON TAG=TAGNO 
+				WHERE STATUS = 'B' 
+				AND COLOUR = @PP_COLOR
+
+				-- ////////////////////SI NO EXISTE UN FOLIO BASE PARA EL COLOR SE CREA//////////////////////////
+				IF ( @VP_FOLIO_DESTINO IS NULL OR @VP_FOLIO_DESTINO = 0 )
+					BEGIN
+						EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
+														--'DATA_02', 
+														'DATA_02PRUEBAS',
+														'RP_FOLIOS', 'TAG',
+														@OU_K_TABLA_DISPONIBLE = @VP_FOLIO_DESTINO	OUTPUT
+
+						EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@VP_FOLIO_DESTINO, 'B', NULL, NULL, NULL
+					END				
+
+				-- ////////////////////SI NO HAY PIELES PARA DEVOLUCION//////////////////////////
+				DECLARE @VP_N_PIEL INT = 0
+				SELECT	@VP_N_PIEL = COUNT(RP_SC.ID)
+				-- =====================
+				FROM	RP_SC (NOLOCK)
+				INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+				INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+					AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+				LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+					AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+					AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+					AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+					AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+				WHERE	TAGNO = @PP_FOLIO_ORIGEN 
+				AND		TYPE = 'D'
+				AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS
+
+				IF @VP_N_PIEL IS NULL
+					RAISERROR ('NO hay pieles para devolución.', 16, 1 ) --MENSAJE - Severity -State.
+
+				-- /////////////SE OBTIENE LA CANTIDAD DE PIELES EN EL FOLIO///////////////////////////
+				DECLARE @VP_N_PIEL_FOLIO INT = 0
+				SELECT @VP_N_PIEL_FOLIO = COUNT(ID) 
+				FROM RP_SC (NOLOCK)
+				WHERE TAGNO = @PP_FOLIO_ORIGEN
+
+				IF @VP_N_PIEL_FOLIO IS NULL 
+					SET @VP_N_PIEL_FOLIO = 0
+
+				-- /////////////SE OBTIENE EL NUMERO DE PIELES PARA DEVOLUCION///////////////////////////
+				DECLARE @VP_N_PIEL_A_TRANSFERIR_COMPLETA INT = 0
+				SELECT	@VP_N_PIEL_A_TRANSFERIR_COMPLETA = COUNT(RP_SC.ID)
+				-- =====================
+				FROM	RP_SC (NOLOCK)
+				INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+				INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+					AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+				LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+					AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+					AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+					AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+					AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+				WHERE	TAGNO = @PP_FOLIO_ORIGEN 
+				AND		TYPE = 'D'
+				AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) = CONVERT(DECIMAL(13,2 ), LTRIM(RTRIM(SQF))) - CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))
+
+				IF @VP_N_PIEL_A_TRANSFERIR_COMPLETA IS NULL 
+					SET @VP_N_PIEL_A_TRANSFERIR_COMPLETA = 0
+
+				-- ///////EL TOTAL DE PIELES Y PIES CUADRADOS A DEVOLVER SON IGUALES ALA TOTALIDAD DEL FOLIO SE QUITA EL FOLIO DE LA ORDEN///////////////////////////////////////////////////////////////////////
+				IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR_COMPLETA
+					BEGIN
+						EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+																@PP_FOLIO_ORIGEN, 'A', NULL, NULL
+
+						-- ==========================================
+						UPDATE ccjobhdr_sql 
+						 SET FOLIO = NULL
+						WHERE FOLIO = @PP_FOLIO_ORIGEN
+
+						IF @@ROWCOUNT = 0
+							RAISERROR ('No fue posible quitar el folio de la Orden.', 16, 1 ) --MENSAJE - Severity -State.
+					END		
+															
+				-- ///////SE DECLARAN VARIABLES A USAR//////////////////////////////////////////////////////////////////////////////
+				DECLARE @VP_COLOR_TBL			VARCHAR(10)
+				DECLARE @VP_LOTE_TBL			VARCHAR(10)
+				DECLARE @VP_PIEL_TBL			VARCHAR(10)
+				DECLARE @VP_SQF_TRANSFERIR		VARCHAR(10)
+				DECLARE @VP_SQF_DISPONIBLE_TBL	VARCHAR(10)
+				DECLARE @VP_SQF_CORTADO_TBL		VARCHAR(10)
+
+				-- /////////////////////////SE CREA CURSOR PARA RECORRER PARA RECORERLAS PIELES DE DEVOLUCION////////////////////////////////////////////
+				DECLARE CU_PIEL_DEVOLUCION CURSOR 
+				FOR SELECT	LTRIM(RTRIM(RP_SC.COLOUR))					AS COLOR,
+							LTRIM(RTRIM(LOT))							AS LOTE,
+							LTRIM(RTRIM(HIDE))							AS PIEL,
+							LTRIM(RTRIM(SQF))							AS SQF,
+							CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))	AS SQF_CORTADO,
+							CONVERT(DECIMAL(13,2 ), LTRIM(RTRIM(SQF))) - CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))	AS SQF_TRANSFER
+					-- =====================
+					FROM	RP_SC (NOLOCK)
+					INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
+					INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
+						AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
+					LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
+						AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
+						AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
+						AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
+						AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
+					WHERE	TAGNO = @PP_FOLIO_ORIGEN 
+					AND		TYPE = 'D'
+					AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS
+					ORDER BY LOT, HIDE
+				
+				OPEN CU_PIEL_DEVOLUCION
+				FETCH NEXT FROM CU_PIEL_DEVOLUCION INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_DISPONIBLE_TBL, @VP_SQF_CORTADO_TBL, @VP_SQF_TRANSFERIR
+				
+				WHILE @@FETCH_STATUS = 0
+					BEGIN
+						-- ///////////////////SE VALIDA QUE EL SQF DE LA PIEL EN EL FOLIO NO SEA MENOR AL SQF A TRANFERIR//////////////////////////////////////////////////
+						IF CONVERT(DECIMAL(13,2),@VP_SQF_DISPONIBLE_TBL) < CONVERT(DECIMAL(13,2),@VP_SQF_TRANSFERIR)
+							BEGIN
+								SET @VP_MENSAJE_TRANSACCION = 'El SQF de la Piel:' + @VP_PIEL_TBL + ' a transferir es mayor a lo disponible en el folio.'
+								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+							END
+
+						-- ///////////////////SE DECLARAN VARIABLES A USAR EN EL CURSOR//////////////////////////////////////////////////
+						DECLARE @VP_LOTE_INT INT						= CAST(@VP_LOTE_TBL AS INT)
+						DECLARE @VP_PIEL_INT INT						= CAST(@VP_PIEL_TBL AS INT)
+						DECLARE @VP_SQF_TRANSFERIR_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TRANSFERIR AS DECIMAL(13,2))
+
+						-- ///////////////////SE COMENTO PARA ALIGERAR EL PROCESO POR EL MOMENTO NO SE USA//////////////////////////////////////////////////
+						--SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+						--							FROM RP_SC
+						--							WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+						--							AND		TAGNO = @PP_FOLIO_ORIGEN
+						--							AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+						--							AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+
+						-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
+						EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@VP_TIPO_PIEL_LOG, @PP_FOLIO_ORIGEN, @VP_COLOR_TBL,
+															@VP_LOTE_INT, @VP_PIEL_INT, @VP_SQF_TRANSFERIR_DEC, 
+															@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN, 
+															@VP_FOLIO_DESTINO, @VP_LOCACION_DESTINO, @VP_ORDEN_DESTINO --0 -- ORDER_DESTINO
+						
+						-- /////////////////////////SE VALIDA SI EL COLOR ES CONTROLADO////////////////////////////////////////////
+						DECLARE @VP_N_COLOR_CONTROLADO INT = 0
+						SELECT @VP_N_COLOR_CONTROLADO = COUNT(ID) 
+						FROM COLORES_CONTROLADOS (NOLOCK)
+						WHERE COLOR = @PP_COLOR
+
+						IF (@VP_N_COLOR_CONTROLADO IS NULL OR @VP_N_COLOR_CONTROLADO = 0 )
+							BEGIN
+								-- /////////////////////////SE AGREGA LA PIEL CON EL SQF A DEVOLVER AL FOLIO BASE DEL COLOR////////////////////////////////////////////
+								EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@VP_F_ACTUAL, @VP_COLOR_TBL, @VP_LOTE_TBL, 
+																@VP_PIEL_TBL, @VP_SQF_TRANSFERIR, @VP_FOLIO_DESTINO, 
+																NULL, NULL, NULL, 'C', @VP_LOCACION_DESTINO, @VP_K_CLASIFICACION
+							END
+						ELSE
+							BEGIN
+								-- /////////////////////////SE VALIDA SI LA PIEL YA EXISTE EN EL FOLIO DESTINO////////////////////////////////////////////
+								DECLARE @VP_N_PIEL_FOLIO_DESTINO INT = 0
+								SELECT  @VP_N_PIEL_FOLIO_DESTINO = COUNT(ID) 
+								FROM RP_SC (NOLOCK)
+								WHERE	LTRIM(RTRIM(TAGNO)) = @VP_FOLIO_DESTINO
+								AND		LTRIM(RTRIM(COLOUR)) = @PP_COLOR
+								AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+								AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+
+								IF (@VP_N_PIEL_FOLIO_DESTINO IS NULL OR @VP_N_PIEL_FOLIO_DESTINO = 0 )
+									BEGIN
+										-- /////////////////////////SE AGREGA LA PIEL CON EL SQF A DEVOLVER AL FOLIO BASE DEL COLOR////////////////////////////////////////////
+										EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																		@VP_F_ACTUAL, @VP_COLOR_TBL, @VP_LOTE_TBL, 
+																		@VP_PIEL_TBL, @VP_SQF_TRANSFERIR, @VP_FOLIO_DESTINO, 
+																		NULL, NULL, NULL, 'C', @VP_LOCACION_DESTINO, @VP_K_CLASIFICACION
+									END
+								ELSE
+									BEGIN
+										-- /////////////////////////SE OBTIENE EL SQF EN EL FOLIO DESTINO////////////////////////////////////////////
+										DECLARE @VP_SQF_PIEL_FOLIO_DESTINO DECIMAL(13, 2) = 0
+										SELECT  @VP_SQF_PIEL_FOLIO_DESTINO = CONVERT(DECIMAL(13,2), LTRIM(RTRIM(SQF)))
+										FROM RP_SC (NOLOCK)
+										WHERE	LTRIM(RTRIM(TAGNO)) = @VP_FOLIO_DESTINO
+										AND		LTRIM(RTRIM(COLOUR)) = @PP_COLOR
+										AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+										AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+
+										-- /////////////////////////SE SUMA EL SQF EN FOLIO DESTINO MAS SQF A TRANFERIR////////////////////////////////////////////
+										DECLARE @VP_TOTAL_SQF DECIMAL(13, 2) = @VP_SQF_PIEL_FOLIO_DESTINO + CONVERT(DECIMAL(13,2),@VP_SQF_TRANSFERIR)
+
+										IF @VP_TOTAL_SQF > 99
+											BEGIN
+												SET @VP_MENSAJE_TRANSACCION = 'El SQF de la Piel:' + @VP_PIEL_TBL + ' a transferir no es valido.'
+												RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+											END
+
+										-- /////////////////////////SE ACTUALIZA LA PIEL DEL FOLIO DESTINO////////////////////////////////////////////
+										UPDATE RP_SC
+											SET SQF = CONVERT(VARCHAR(10), @VP_TOTAL_SQF)
+										WHERE	LTRIM(RTRIM(TAGNO)) = @VP_FOLIO_DESTINO
+										AND		LTRIM(RTRIM(COLOUR)) = @PP_COLOR
+										AND		LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+										AND		LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+
+										IF @@ROWCOUNT = 0
+											BEGIN
+												SET @VP_MENSAJE_TRANSACCION = 'No fue posible actualizar el SQF de la Piel:' + @VP_PIEL_TBL + ' del folio destino:' + CONVERT(VARCHAR(20), @VP_FOLIO_DESTINO) + '.'
+												RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+											END
+									END
+							END
+
+						-- /////////////////////////SE VERIFICA SI LA DEVOLUCION DE LA PIEL ES COMPLETA O SI SE CORTO UNA PARTE////////////////////////////////////////////
+						IF CAST(@VP_SQF_DISPONIBLE_TBL AS DECIMAL(13,2)) <> CAST(@VP_SQF_TRANSFERIR AS DECIMAL(13,2)) 
+							BEGIN
+								-- ///////SE ACTUALIZA EL SQF DE LA PIEL CON EL SQF DEL CORTE////////////////////////////////////////////
+								UPDATE RP_SC
+									SET SQF = @VP_SQF_CORTADO_TBL,
+										TYPE = 'C'
+								WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+								AND LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+								AND LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+								AND TAGNO = @PP_FOLIO_ORIGEN
+
+								IF @@ROWCOUNT = 0
+									BEGIN
+										SET @VP_MENSAJE_TRANSACCION = 'No fue posible actualizar el SQF cortado de la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @VP_FOLIO_DESTINO) + '.'
+										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+									END
+
+								-- ///INGRESA UNA COPIA DE LA PIEL CORTADA CON EL SQF DEVUELTO PARA QUE SE PUEDA IMPRIMIR EN EL FORMATO DE DEVOLUCION///////////////
+								INSERT INTO RP_SC( [CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION] )
+											SELECT [CDATE],[COLOUR],[LOT],[HIDE],@VP_SQF_TRANSFERIR,[TAGNO],[YARDAS],[YLB],[PESO],'D',[MOVEMENT],[K_CLASIFICACION]
+											FROM	RP_SC
+											WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+											AND LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+											AND LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+											AND TAGNO = @PP_FOLIO_ORIGEN
+								
+								IF @@ROWCOUNT = 0
+									BEGIN
+										SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @VP_FOLIO_DESTINO) + ' como devolución.'
+										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+									END
+
+								-- ///////SE ENVIA CORREO TEMPORALMENTE PARA ESTAR MONITORIANDO////////////////////////////////////////////
+								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
+								DECLARE @VP_SUBJECT		VARCHAR(255) = 'Estación de Devolución...'
+								DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
+								DECLARE @VP_BODY		NVARCHAR(MAX) 
+
+								SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
+													N'<thead>' + 
+													  N'<tr BGCOLOR="#ADD8E6">' + 
+													    N'<th colspan="10">Devolucion de Piel cortada enviada con pieles Completas... </th>' + 
+													  N'</tr>' + 
+													  N'<tr BGCOLOR="#48D1CC">' + 
+													    N'<th>Movimiento</th><th>Color</th><th>Folio Ori.</th><th>Folio Des.</th><th>Locacion Ori.</th><th>Locacion Des.</th><th>Orden Ori.</th><th>Orden Des.</th><th>Usuario</th>' + 
+													  N'</tr>' + 
+													N'</thead>' + 
+													N'<tbody>' + 
+													  N'<tr>' + 
+													  N'<td>Devolución</td><td>'+ @VP_COLOR_TBL +'</td><td>'+ CONVERT(VARCHAR(50),@PP_FOLIO_ORIGEN) +'</td><td>'+ CONVERT(VARCHAR(10),@VP_FOLIO_DESTINO) +'</td><td>'+ @PP_LOCACION_ORIGEN+'</td><td>'+ @VP_LOCACION_DESTINO +'</td><td>'+ @PP_ORDEN_ORIGEN +'</td><td>'+ @VP_ORDEN_DESTINO +'</td><td>'+ CONVERT(VARCHAR(10),@PP_K_USUARIO_ACCION) +'</td>' + 
+													  N'</tr>' + 
+													N'</tbody>' + 
+												N'</table>' ;
+								SET ROWCOUNT 0
+									 				
+								EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+									
+							END
+
+						-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
+						DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @VP_PIEL_TBL + ' to: ' + CONVERT(VARCHAR(20),@PP_FOLIO_ORIGEN) + ' Lot: ' + RIGHT('000000' + LTRIM(RTRIM(@VP_LOTE_TBL)), 6)
+						EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
+															@PP_FOLIO_ORIGEN, 'Transfer',
+															@VP_DETAIL, @VP_PIEL_TBL
+
+						FETCH NEXT FROM CU_PIEL_DEVOLUCION INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_DISPONIBLE_TBL, @VP_SQF_CORTADO_TBL, @VP_SQF_TRANSFERIR
+					END
+
+				CLOSE CU_PIEL_DEVOLUCION
+				DEALLOCATE CU_PIEL_DEVOLUCION		
+				
+				-- ////////SE VALIDA QUE LOS SQF Y TOTAL DE PIELES SEAN IGUALES A LOS ENVIADOS DESDE LA PANTALLA/////////////////////////////////////////////////////////////
+				DECLARE @VP_N_PIEL_DEVOLUCION INT = 0
+				DECLARE @VP_TOTAL_SQF_DEVOLUCION DECIMAL(13,2) = 0
+
+				SELECT	@VP_N_PIEL_DEVOLUCION = COUNT(ID), 
+						@VP_TOTAL_SQF_DEVOLUCION = SUM(CONVERT(DECIMAL(13,2),LTRIM(RTRIM(SQF))))
+				FROM	RP_SC (NOLOCK)
+				WHERE	TAGNO = @PP_FOLIO_ORIGEN
+				AND TYPE = 'D'			
+
+				IF @PP_TOTAL_PIEL <> @VP_N_PIEL_DEVOLUCION
+					RAISERROR ('El total de Pieles a Transferir no es correcto.', 16, 1 ) --MENSAJE - Severity -State.
+
+				IF @PP_TOTAL_SQF <> @VP_TOTAL_SQF_DEVOLUCION
+					RAISERROR ('El total de Pies Cuadrados a Transferir no es correcto.', 16, 1 ) --MENSAJE - Severity -State.
+						
+				-- ////////SE TRANSFIEREN LOS PIES CUADRADOS/////////////////////////////////////////////////////////////
+				EXECUTE [dbo].[PG_PR_TRANSFER_SQF_X_DEVOLUCION_MESA_A_MHI]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																				@PP_FOLIO_ORIGEN, @PP_COLOR, 
+																				@PP_ORDEN_ORIGEN, @PP_LOCACION_ORIGEN,
+																				@VP_ORDEN_DESTINO, @VP_LOCACION_DESTINO,
+																				@PP_USER, @PP_COMPUTER_NAME
+
+				-- ////////////SI LAS PIELES A DEVOLVER SON MAS DE 4 SE IMPRIME EL FORMATO DE DEVOLUCION SI NO LAS ESCRIBEN MANUAL EN EL FOLIO FISICO/////////////////////////////////////////////////////////
+				IF @VP_N_PIEL > 4
+					BEGIN
+						--SET @PP_FOLIO_ORIGEN = @PP_FOLIO_ORIGEN --AGREGADO PARA PRUEBAS
+
+						--COMENTADO PARA PRUEBAS FEG
+						EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_FOLIO_ORIGEN, 5
+					END	
+				ELSE
+					BEGIN
+						-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
+						EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																	@PP_FOLIO_ORIGEN, 'D'
+
+						-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
+						SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
+						EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
+															@PP_FOLIO_ORIGEN, 'Delete hides',
+															@VP_DETAIL, @VP_PIEL_TBL
+					END
+			COMMIT TRANSACTION 
+			END TRY
+	
+			BEGIN CATCH
+				/* Ocurrió un error, deshacemos los cambios*/ 
+				ROLLBACK TRANSACTION
+				DECLARE @VP_ERROR_TRANS NVARCHAR(4000);
+				SET @VP_ERROR_TRANS = ERROR_MESSAGE() 
+				SET @VP_MENSAJE = 'ERROR: //TRASAC. PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI // ' + @VP_ERROR_TRANS
+			END CATCH
+			
+		END
+	-- /////////////////////////////////////////////////////////////////////
+	-- /////////////////////////////////////////////////////////////////////
+	IF @VP_MENSAJE<>''
+		BEGIN
+		
+		SET		@VP_MENSAJE = 'No es posible realizar la devolución del [FOLIO]: ' + CONVERT(VARCHAR(20),@PP_FOLIO_ORIGEN) + ' ' + @VP_MENSAJE 
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' ( '
+		--SET		@VP_MENSAJE = @VP_MENSAJE + '[#FOL.'+CONVERT(VARCHAR(10),@VP_TAGNO_DESTINO)+']'
+		--SET		@VP_MENSAJE = @VP_MENSAJE + ' )'
+		
+		END
+	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_FOLIO_ORIGEN AS CLAVE
+	
+	-- //////////////////////////////////////////////////////////////
+
+	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													-- ===========================================
+													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+													'PROCESO',
+													'',
+													-- ===========================================
+													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+													0, 0, @PP_FOLIO_ORIGEN, '' , 0.00, 0.00,
+													-- === @PP_VALOR_1 al 6_DATO
+													'', '', '', '', '', ''
+
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
+-- //////////////////////////////////////////////////////////////
