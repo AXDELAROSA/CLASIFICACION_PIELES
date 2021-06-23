@@ -42,7 +42,7 @@ AS
 	-- ///////SE OBTIENE EL NUMERO DE LA ULTIMA ORDEN GENERADA//////////////////////////////////////////////
 	DECLARE @VP_ORDEN_COMPLEMENTO VARCHAR(50) = ''
 	SELECT	TOP 1 @VP_ORDEN_COMPLEMENTO = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
-	FROM	imlocfil_sql 
+	FROM	imlocfil_sql (NOLOCK)
 	WHERE LOC = 'MFP'
 
 	IF @VP_ORDEN_COMPLEMENTO IS NULL
@@ -67,14 +67,14 @@ AS
 
 	-- //////SE OBTIENE EL NUMERO DE RELOJ DEL USUARIO PEARL/////////////////////////////////////
 	SELECT @VP_NUMERO_RELOJ = K_EMPLEADO_PEARL				
-	FROM BD_GENERAL.DBO.USUARIO_PEARL 
+	FROM BD_GENERAL.DBO.USUARIO_PEARL (NOLOCK)
 	WHERE K_USUARIO_PEARL = @PP_K_USUARIO_ACCION
 	
 	-- //////SE CREA CURSOR PARA DARLE FORMATO A LOS DATOS/////////////////////////////////////
 	DECLARE CU_ORDEN_2_TONO_A_PROGRAMAR CURSOR 
 	FOR SELECT Kit, IMKITFIL_SQL.Item_No, ccjoblin_sql.item_no, OriginalQty
-		FROM IMKITFIL_SQL
-		INNER JOIN ccjoblin_sql ON   ccjoblin_sql.Item_No = comp_item_no
+		FROM IMKITFIL_SQL (NOLOCK)
+		INNER JOIN ccjoblin_sql (NOLOCK) ON   ccjoblin_sql.Item_No = comp_item_no
 		WHERE JOBNO = @PP_ORDEN_PRINCIPAL
 		ORDER BY Ser_No
 
@@ -86,7 +86,7 @@ AS
 			-- ////////SE OBTIENE EL NUMERO DE COMPLEMENTOS PARA EL KIT ORIGINAL///////////////////////////////////
 			DECLARE @VP_N_ITEM_NO INT = 0
 			SELECT  @VP_N_ITEM_NO = COUNT(A4GLIdentity)
-			FROM imkitfil_sql 
+			FROM imkitfil_sql (NOLOCK)
 			WHERE item_no = @VP_U_ITEM_NO AND comp_item_no <> @VP_ITEM_NO
 
 			IF @VP_N_ITEM_NO IS NULL OR @VP_N_ITEM_NO = 0
@@ -98,11 +98,12 @@ AS
 			-- ////////SE OBTIENE EL KIT COMPLEMENTO PARA EL KIT ORIGINAL///////////////////////////////////
 			DECLARE @VP_ITEM_NO_COMPLEMENTO VARCHAR(50) = ''
 			SELECT  @VP_ITEM_NO_COMPLEMENTO = comp_item_no
-			FROM imkitfil_sql 
+			FROM imkitfil_sql (NOLOCK)
 			WHERE item_no = @VP_U_ITEM_NO AND comp_item_no <> @VP_ITEM_NO						
 
 			DECLARE @VP_COLOR VARCHAR(50) = CONCAT('F', RIGHT(LTRIM(RTRIM(@VP_ITEM_NO_COMPLEMENTO)),6))
-			
+			SET @VP_KIT = SUBSTRING(LTRIM(RTRIM(@VP_ITEM_NO_COMPLEMENTO)), 1, 7)
+
 			DECLARE @VP_CUBE_LENGTH DECIMAL(13,4) = 0, @VP_CUBE_WIDTH DECIMAL(13,4) = 0, @VP_CUBE_QTY_PER DECIMAL(13,4) = 0;
 			DECLARE @VP_D_ITEM	VARCHAR(255), @VP_CHANGE_LEVEL	VARCHAR(100), @VP_MODELO	VARCHAR(50), @VP_VERSION VARCHAR(50);
 			DECLARE @VP_SERIAL VARCHAR(50) = ''
@@ -111,7 +112,7 @@ AS
 			SELECT	DISTINCT TOP (1) PERCENT 
 				 @VP_VERSION = ccverhdr_sql.versionno, 
 				 @VP_MODELO = ccverhdr_sql.modelno
-			FROM	dbo.ccverhdr_sql
+			FROM	dbo.ccverhdr_sql (NOLOCK)
 			INNER JOIN cccusitm_sql ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
 				AND SUBSTRING(LTRIM(RTRIM(cccusitm_sql.item_no)) ,1 ,1)  = 'P' 
 				AND cus_item_no <> ''
@@ -132,7 +133,7 @@ AS
 					@VP_CUBE_WIDTH			= CUBE_WIDTH,
 					@VP_CUBE_QTY_PER		= CUBE_QTY_PER,
 					@VP_D_ITEM				= LTRIM(RTRIM(item_desc_1))
-			FROM IMITMIDX_SQL   
+			FROM IMITMIDX_SQL (NOLOCK)
 			WHERE	LTRIM(RTRIM(ITEM_NO)) = @VP_ITEM_NO_COMPLEMENTO
 
 			IF @VP_CUBE_LENGTH IS NULL
@@ -156,7 +157,8 @@ AS
 			DECLARE @VP_STD_PACK INT = 0
 			SELECT	TOP(1) 
 					@VP_STD_PACK = user_def_fld_5 
-			FROM ccitmidx_sql WHERE LTRIM(RTRIM(item_no)) = @VP_ITEM_NO_COMPLEMENTO
+			FROM ccitmidx_sql (NOLOCK)
+			WHERE LTRIM(RTRIM(item_no)) = @VP_ITEM_NO_COMPLEMENTO
 			ORDER BY versionno DESC
 			
 			IF @VP_STD_PACK IS NULL
@@ -234,7 +236,7 @@ AS
 	DECLARE @VP_D_COLOR VARCHAR(255) = ''
 
 	SELECT TOP 1 @VP_D_COLOR = LTRIM(RTRIM(ITEM_DESC_1))
-	FROM IMITMIDX_SQL   
+	FROM IMITMIDX_SQL   (NOLOCK)
 	WHERE	LTRIM(RTRIM(ITEM_NO)) = @VP_COLOR
 
 	IF @VP_D_COLOR IS NULL
@@ -253,7 +255,7 @@ AS
 	-- /////////SE OBTIENE LA UTILIDAD//////////////////////////////////
 	DECLARE @VP_UTILIDAD_MINIMA DECIMAL(13,2) = 0
 	SELECT @VP_UTILIDAD_MINIMA = User_Def_Fld_2
-	FROM arcusfil_sql 
+	FROM arcusfil_sql (NOLOCK)
 	WHERE CUS_NO = @PP_CLIENTE
 
 	IF @VP_UTILIDAD_MINIMA IS NULL

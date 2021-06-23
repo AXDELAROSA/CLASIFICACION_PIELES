@@ -70,7 +70,7 @@ AS
 		BEGIN
 			DECLARE @VP_LOCACION_ANTERIOR VARCHAR(50) = ''
 			SELECT @VP_LOCACION_ANTERIOR = LTRIM(RTRIM(MACHINE))
-			FROM ccjobhdr_sql 
+			FROM ccjobhdr_sql (NOLOCK)
 			WHERE JOBNO = @PP_ORDEN
 
 			IF @VP_LOCACION_ANTERIOR IS NULL OR @VP_LOCACION_ANTERIOR = ''
@@ -82,7 +82,7 @@ AS
 						BEGIN
 							DECLARE @VP_LOCACION VARCHAR(50) = ''
 							SELECT	@VP_LOCACION = LTRIM(RTRIM(LOC))
-							FROM	imlocfil_sql 
+							FROM	imlocfil_sql (NOLOCK)
 							WHERE	loc_desc = @VP_LOCACION_ANTERIOR
 
 							IF @VP_LOCACION IS NULL OR @VP_LOCACION = ''
@@ -185,7 +185,7 @@ AS
 						-- ///////SE ELIMINAN LOS KITS LOS CODIGOS DE LA CAMARA DEL CAMPO SERIAL///////////////////////////////////////////////////////
 						INSERT INTO SERIALCAM_SQL 
 						SELECT code, NULL, NULL 
-						FROM SERIALCAM_SQL 
+						FROM SERIALCAM_SQL (NOLOCK)
 						WHERE SERIAL IN (	SELECT @PP_ORDEN + RIGHT('000'+ LTRIM(RTRIM(1)), 3) 
 											FROM ccjoblin_sql 
 											WHERE JOBNO = @PP_ORDEN 
@@ -200,7 +200,7 @@ AS
 
 						DELETE SERIALCAM_SQL 
 						WHERE SERIAL IN (	SELECT @PP_ORDEN + RIGHT('000'+ LTRIM(RTRIM(1)), 3) 
-											FROM ccjoblin_sql 
+											FROM ccjoblin_sql (NOLOCK)
 											WHERE JOBNO = @PP_ORDEN 
 											AND Ser_No NOT IN ( SELECT POSICION 
 															FROM @TBL_KIT_A_MODIFICAR 
@@ -214,9 +214,9 @@ AS
 						-- ///////SE ELIMINAN LOS KITS LOS CODIGOS DE LA CAMARA DEL CAMPO SERIAL2///////////////////////////////////////////////////////
 						INSERT INTO SERIALCAM_SQL 
 						SELECT code, NULL, NULL 
-						FROM SERIALCAM_SQL 
+						FROM SERIALCAM_SQL (NOLOCK)
 						WHERE SERIAL2 IN (	SELECT @PP_ORDEN + RIGHT('000'+ LTRIM(RTRIM(1)), 3) 
-											FROM ccjoblin_sql 
+											FROM ccjoblin_sql (NOLOCK)
 											WHERE JOBNO = @PP_ORDEN 
 											AND Ser_No NOT IN ( SELECT POSICION 
 															FROM @TBL_KIT_A_MODIFICAR 
@@ -229,7 +229,7 @@ AS
 
 						DELETE SERIALCAM_SQL 
 						WHERE SERIAL2 IN (	SELECT @PP_ORDEN + RIGHT('000'+ LTRIM(RTRIM(1)), 3) 
-											FROM ccjoblin_sql 
+											FROM ccjoblin_sql (NOLOCK)
 											WHERE JOBNO = @PP_ORDEN 
 											AND Ser_No NOT IN ( SELECT POSICION 
 															FROM @TBL_KIT_A_MODIFICAR 
@@ -249,7 +249,7 @@ AS
 							RAISERROR ('ERROR: Verifique el numero de Kits a eliminar en [ccjoblin_sql].', 16, 1 ) --MENSAJE - Severity -State
 
 						SELECT TOP 1 @VP_CONSECUTIVO = Ser_No
-						FROM ccjoblin_sql
+						FROM ccjoblin_sql (NOLOCK)
 						WHERE JOBNO = @PP_ORDEN 
 						ORDER BY Ser_No DESC
 
@@ -311,12 +311,12 @@ AS
 						SELECT	DISTINCT TOP (1) PERCENT 
 							 @VP_VERSION = ccverhdr_sql.versionno, 
 							 @VP_MODELO = ccverhdr_sql.modelno
-						FROM	dbo.ccverhdr_sql
-						INNER JOIN cccusitm_sql ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
+						FROM	dbo.ccverhdr_sql (NOLOCK)
+						INNER JOIN cccusitm_sql (NOLOCK) ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
 							AND SUBSTRING(LTRIM(RTRIM(cccusitm_sql.item_no)) ,1 ,1)  = 'P' 
 							AND cus_item_no <> ''
-						INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = cccusitm_sql.item_no
-						INNER JOIN  IMCATFIL_SQL ON dbo.IMITMIDX_SQL.prod_cat = IMCATFIL_SQL.prod_cat 
+						INNER JOIN IMITMIDX_SQL (NOLOCK) ON IMITMIDX_SQL.item_no = cccusitm_sql.item_no
+						INNER JOIN  IMCATFIL_SQL (NOLOCK) ON dbo.IMITMIDX_SQL.prod_cat = IMCATFIL_SQL.prod_cat 
 							AND IMCATFIL_SQL.L_BORRADO = 0
 						WHERE ccverhdr_sql.specstatus = 'U' 
 						AND ccverhdr_sql.status = 'L' 
@@ -375,7 +375,7 @@ AS
 				-- ///////SE OBTIENE LA ORDEN QUE TIENE LIGADA EN CCJOBHDR_SQL//////////////////////////////////////////////
 				DECLARE @VP_ORDEN_LIGADA VARCHAR(10) = ''
 				SELECT @VP_ORDEN_LIGADA = LOTNO
-				FROM CCJOBHDR_SQL
+				FROM CCJOBHDR_SQL (NOLOCK)
 				WHERE jobno	= @PP_ORDEN
 
 				IF @VP_ORDEN_LIGADA IS NULL

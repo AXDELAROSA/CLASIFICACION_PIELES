@@ -192,17 +192,17 @@ AS
 					LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
 					-- ===========================
 					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
-																			FROM IMITMIDX_SQL 
+																			FROM IMITMIDX_SQL (NOLOCK)
 																			WHERE item_no = ccjoblin_sql.item_no )	
 							ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
-									FROM IMITMIDX_SQL 
+									FROM IMITMIDX_SQL (NOLOCK)
 									WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_1_IMPRIMIR,
 					-- ===========================
 					( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
-																			FROM IMITMIDX_SQL 
+																			FROM IMITMIDX_SQL (NOLOCK)
 																			WHERE item_no = ccjoblin_sql.item_no )	
 							ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
-									FROM IMITMIDX_SQL 
+									FROM IMITMIDX_SQL (NOLOCK)
 									WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_2_IMPRIMIR,
 					-- ===========================
 					ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
@@ -224,7 +224,7 @@ AS
 			FROM ccjoblin_sql  (NOLOCK)
 			LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
 			-- ===========================
-			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			INNER JOIN	cccusitm_sql (NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
 			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
 															FROM	cccusitm_sql (NOLOCK)
@@ -264,11 +264,11 @@ AS
 					LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
 					-- ===========================
 					(	SELECT LTRIM(RTRIM(ITEM_DESC_1))
-						FROM IMITMIDX_SQL 
+						FROM IMITMIDX_SQL (NOLOCK)
 						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
 					-- ===========================
 					(	SELECT  LTRIM(RTRIM(ITEM_DESC_2))
-						FROM IMITMIDX_SQL 
+						FROM IMITMIDX_SQL (NOLOCK)
 						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_2_IMPRIMIR,
 					-- ===========================
 					ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
@@ -289,7 +289,7 @@ AS
 					-- ===========================
 			FROM ccjoblin_sql  (NOLOCK)
 			-- ===========================
-			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			INNER JOIN	cccusitm_sql (NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
 			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
 															FROM	cccusitm_sql (NOLOCK)
@@ -298,9 +298,9 @@ AS
 			-- ===========================
 			WHERE	ccjoblin_sql.jobno = @VP_ORDEN_COMPLEMENTO 
 			AND ccjoblin_sql.ITEM_NO NOT IN (	SELECT comp_item_no 
-												FROM imkitfil_sql	
+												FROM imkitfil_sql	(NOLOCK)
 												WHERE comp_item_no IN ( SELECT item_no 
-																		FROM ccjoblin_sql 
+																		FROM ccjoblin_sql (NOLOCK)
 																		WHERE JOBNO = @VP_ORDEN_COMPLEMENTO ) )
 			ORDER BY jobno, SER_NO
 		END
@@ -335,11 +335,11 @@ AS
 					LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
 					-- ===========================
 					(	SELECT LTRIM(RTRIM(ITEM_DESC_1))
-						FROM IMITMIDX_SQL 
+						FROM IMITMIDX_SQL (NOLOCK)
 						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
 					-- ===========================
 					(	SELECT  LTRIM(RTRIM(ITEM_DESC_2))
-						FROM IMITMIDX_SQL 
+						FROM IMITMIDX_SQL (NOLOCK)
 						WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_2_IMPRIMIR,
 					-- ===========================
 					ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
@@ -360,7 +360,7 @@ AS
 					-- ===========================
 			FROM ccjoblin_sql  (NOLOCK)
 			-- ===========================
-			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			INNER JOIN	cccusitm_sql (NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
 			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
 															FROM	cccusitm_sql (NOLOCK)
