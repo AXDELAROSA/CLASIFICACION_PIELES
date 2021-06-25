@@ -223,6 +223,7 @@ AS
 					-- ===========================
 			FROM ccjoblin_sql  (NOLOCK)
 			LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
+			AND CONCAT('F', RIGHT(LTRIM(RTRIM(imkitfil_sql.item_no)),6)) <> 'FLCPTX7'
 			-- ===========================
 			INNER JOIN	cccusitm_sql (NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no

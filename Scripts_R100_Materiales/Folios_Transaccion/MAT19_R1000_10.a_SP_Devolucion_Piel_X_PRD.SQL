@@ -119,12 +119,10 @@ GO
 	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR FOLIO' , 3798327, 0, '' -- FOLIO EN MESA
 
 	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR PIEL', 3793142, 5829115, ''  -- 0242 -- -- FOLIO TIPO BASE
-	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 0, 'POR PIEL', 3798327, 5128940, ''  -- 0240
-	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR PIEL', 3798327, 5122794, ''  -- 0031
+	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR PIEL', 3798086, 5110390    , ''  -- 0019 
 
 	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR ETIQUETA' , 3793142, 0, 'FWLPAX7,401451-0044*43.70' -- FOLIO TIPO BASE
 	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	1, 144, 0, 'POR ETIQUETA' , 3798327, 0, 'FWLPAX7,401451-0240*15.00'
-	EXECUTE  [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]	0, 144, 1, 'POR ETIQUETA' , 3798327, 0, 'FWLPAX7,401451-0243*31.20'
 */
 CREATE PROCEDURE [dbo].[PG_PR_AGREGAR_QUITAR_DEVOLUCION_PIEL_EN_FOLIO]
 	@PP_K_SISTEMA_EXE						INT,
@@ -397,7 +395,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE [DATA_02PRUEBAS] 
+-- USE [DATA_02] 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]
 GO
@@ -419,6 +417,7 @@ CREATE PROCEDURE [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]
 	@PP_TOTAL_PIEL				INT,
 	@PP_TOTAL_SQF				DECIMAL(13,2),
 	-- ===========================
+	@PP_NUMERO_RELOJ			INT,
 	@PP_USER					VARCHAR(50),
 	@PP_COMPUTER_NAME			VARCHAR(50)
 AS
@@ -428,19 +427,32 @@ AS
 	DECLARE @VP_MENSAJE_TRANSACCION	VARCHAR(255) = ''
 	DECLARE @VP_LOCACION_DESTINO	VARCHAR(20) = 'MHI'
 	DECLARE	@VP_ORDEN_DESTINO		VARCHAR(20) = '-'
-	DECLARE @VP_TIPO_PIEL_LOG		INT = 6 -- 'DEVOLUCION'
+	DECLARE @VP_TIPO_PIEL_LOG		INT = 14 -- DEVOLUCION DE PIEL POR PRD
 	DECLARE @VP_K_CLASIFICACION		INT = 0
 	DECLARE @VP_F_ACTUAL			DATE = GETDATE()
 
 	-- ///////RN VALIDACIONES////////////////////////////////////
-	DECLARE @VP_TIPO_FOLIO VARCHAR(10) = ''
-	SELECT @VP_TIPO_FOLIO = STATUS 
-	FROM RP_FOLIOS 
-	WHERE TAG = @PP_FOLIO_ORIGEN
+	IF @VP_MENSAJE = ''
+		BEGIN
+			DECLARE @VP_N_RELOJ_EXISTE INT = 0
+			SELECT @VP_N_RELOJ_EXISTE = COUNT(EN_NUM_EMP) 
+			FROM HOWE.dbo.VISTA_GAFETES (NOLOCK)
+			WHERE EN_NUM_EMP = @PP_NUMERO_RELOJ
 
-	IF @VP_TIPO_FOLIO = 'B'
-		SET @VP_MENSAJE = 'El folio es tipo Base.'	
+			IF @VP_N_RELOJ_EXISTE IS NULL OR @VP_N_RELOJ_EXISTE = 0
+				SET @VP_MENSAJE = 'Numero de Reloj no valido.'
+		END
+	
+	IF @VP_MENSAJE = ''
+		BEGIN
+			DECLARE @VP_TIPO_FOLIO VARCHAR(10) = ''
+			SELECT @VP_TIPO_FOLIO = STATUS 
+			FROM RP_FOLIOS 
+			WHERE TAG = @PP_FOLIO_ORIGEN
 
+			IF @VP_TIPO_FOLIO = 'B'
+				SET @VP_MENSAJE = 'El folio es tipo Base.'	
+		END
 	-- //////////SE OBTIENE LA LOCACION DE LA ORDEN/////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
@@ -606,7 +618,7 @@ AS
 						--							AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
 
 						-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
-						EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+						EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_NUMERO_RELOJ,
 															@VP_TIPO_PIEL_LOG, @PP_FOLIO_ORIGEN, @VP_COLOR_TBL,
 															@VP_LOTE_INT, @VP_PIEL_INT, @VP_SQF_TRANSFERIR_DEC, 
 															@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN, 
@@ -793,28 +805,30 @@ AS
 							RAISERROR ('No fue posible quitar el folio de la Orden.', 16, 1 ) --MENSAJE - Severity -State.
 					END		
 
+				-- ////////////SIEMPRE SE DEBE DE IMPRIMIR EL FORMATO DE DEVOLUCION PARA ESTE PROCESO/////////////////////////////////////////////////////////
+				EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													@PP_FOLIO_ORIGEN, 5
+
 				-- ////////////SI LAS PIELES A DEVOLVER SON MAS DE 4 SE IMPRIME EL FORMATO DE DEVOLUCION SI NO LAS ESCRIBEN MANUAL EN EL FOLIO FISICO/////////////////////////////////////////////////////////
-				IF @VP_N_PIEL > 4
-					BEGIN
-						--SET @PP_FOLIO_ORIGEN = @PP_FOLIO_ORIGEN --AGREGADO PARA PRUEBAS
+				--IF @VP_N_PIEL > 4
+				--	BEGIN
+						--SIEMPRE SE DEBE DE IMPRIMIR EL FORMATO DE DEVOLUCION PARA ESTA PANTALLA
+						--EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+						--									@PP_FOLIO_ORIGEN, 5
+					--END	
+				--ELSE
+				--	BEGIN
+				--		-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
+				--		EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+				--													@PP_FOLIO_ORIGEN, 'D'
 
-						--COMENTADO PARA PRUEBAS FEG
-						EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-															@PP_FOLIO_ORIGEN, 5
-					END	
-				ELSE
-					BEGIN
-						-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
-						EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																	@PP_FOLIO_ORIGEN, 'D'
-
-						-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
-						SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
-						EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-															@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
-															@PP_FOLIO_ORIGEN, 'Delete hides',
-															@VP_DETAIL, @VP_PIEL_TBL
-					END
+				--		-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
+				--		SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
+				--		EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+				--											@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
+				--											@PP_FOLIO_ORIGEN, 'Delete hides',
+				--											@VP_DETAIL, @VP_PIEL_TBL
+				--	END
 			COMMIT TRANSACTION 
 			END TRY
 	

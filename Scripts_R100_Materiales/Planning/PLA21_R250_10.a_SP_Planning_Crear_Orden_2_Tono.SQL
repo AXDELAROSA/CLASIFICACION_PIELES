@@ -75,6 +75,7 @@ AS
 	FOR SELECT Kit, IMKITFIL_SQL.Item_No, ccjoblin_sql.item_no, OriginalQty
 		FROM IMKITFIL_SQL (NOLOCK)
 		INNER JOIN ccjoblin_sql (NOLOCK) ON   ccjoblin_sql.Item_No = comp_item_no
+		AND CONCAT('F', RIGHT(LTRIM(RTRIM(imkitfil_sql.item_no)),6)) <> 'FLCPTX7'
 		WHERE JOBNO = @PP_ORDEN_PRINCIPAL
 		ORDER BY Ser_No
 
