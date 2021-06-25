@@ -27,13 +27,31 @@ USE DATA_02PRUEBAS
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31503'
 	
 	select imkitfil_sql.* from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31503') ) -- IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('30958')) ORDER BY item_no
-	SELECT * FROM imkitfil_sql where item_no = 'UWLDLFWLROTX7'
 
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31504') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('33921') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('33922') ORDER BY jobno, Ser_No
 	SELECT * FROM  ccjoblin_sql WHERE JOBNO = '31504' AND ITEM_NO NOT IN (SELECT comp_item_no FROM imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31504') ))
 
-	select * from imkitfil_sql where comp_item_no='PWLDFCLWLCPX7'
-	SELECT CONCAT('F', RIGHT(LTRIM(RTRIM('PWD2TBLCNPDX9')),6))
+	SELECT SUBSTRING('PWALBR2WLROX7', 1,7 )
+	SELECT * FROM imkitfil_sql where item_no = 'UWLKFBRWLCPX7'
+	select * from imkitfil_sql where comp_item_no='PWLK2FBWLCPX7'
+
+	SELECT Kit, IMKITFIL_SQL.Item_No, ccjoblin_sql.item_no, OriginalQty
+		FROM IMKITFIL_SQL (NOLOCK)
+		INNER JOIN ccjoblin_sql (NOLOCK) ON   ccjoblin_sql.Item_No = comp_item_no
+		WHERE JOBNO = '33917 '
+		ORDER BY Ser_No
+
+	
+ SELECT * FROM OEHDRHST_SQL WHERE INV_NO IN  ('557603') 
+ 
+ SELECT * FROM OELINHST_SQL WHERE  INV_NO IN  ('557603') 
+ 
+ --UPDATE OELINHST_SQL  
+ --SET ITEM_NO = 'UWLDLFWLCPX7'        
+ --WHERE ITEM_NO = 'UWLDLFWLROTX7' -- INV_NO IN  ('557519') 
+
+ SELECT * FROM OELINHST_SQL  WHERE INV_NO IN  ('557519') 
 
 	select TOP 10 * from IMCATFIL_SQL WHERE PROD_CAT = 'PDS'
 	select TOP 10 * from IMITMIDX_SQL WHERE item_no IN ('PMDL3CRSNODY3', 'PMDLTCRSNODY8')

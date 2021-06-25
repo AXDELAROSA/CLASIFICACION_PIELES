@@ -59,7 +59,7 @@ AS
 			BEGIN TRY
 				-- ///////SE OBTIENE EL NUMERO DE LA ULTIMA ORDEN GENERADA//////////////////////////////////////////////
 				SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
-				FROM	imlocfil_sql 
+				FROM	imlocfil_sql (NOLOCK)
 				WHERE LOC = 'MFP'
 
 				IF @VP_ORDEN IS NULL
@@ -81,7 +81,7 @@ AS
 				DECLARE @VP_D_COLOR VARCHAR(255) = ''
 
 				SELECT TOP 1 @VP_D_COLOR = LTRIM(RTRIM(ITEM_DESC_1))
-				FROM IMITMIDX_SQL   
+				FROM IMITMIDX_SQL   (NOLOCK)
 				WHERE	LTRIM(RTRIM(ITEM_NO)) = @PP_COLOR
 
 				-- ///////SE OBTIENE LA FECHA EN FORMATO NUMERICO//////////////////////////////////////////////
@@ -97,7 +97,7 @@ AS
 				-- /////////SE OBTIENE LA UTILIDAD//////////////////////////////////
 				DECLARE @VP_UTILIDAD_MINIMA DECIMAL(13,2) = 0
 				SELECT @VP_UTILIDAD_MINIMA = User_Def_Fld_2
-				FROM arcusfil_sql 
+				FROM arcusfil_sql (NOLOCK)
 				WHERE CUS_NO = @PP_CLIENTE
 
 				IF @VP_UTILIDAD_MINIMA IS NULL
@@ -165,7 +165,7 @@ AS
 
 				-- //////SE OBTIENE EL NUMERO DE RELOJ DEL USUARIO PEARL/////////////////////////////////////
 				SELECT @VP_NUMERO_RELOJ = K_EMPLEADO_PEARL				
-				FROM BD_GENERAL.DBO.USUARIO_PEARL 
+				FROM BD_GENERAL.DBO.USUARIO_PEARL  (NOLOCK)
 				WHERE K_USUARIO_PEARL = @PP_K_USUARIO_ACCION
 
 				-- //////SE CREA CURSOR PARA DARLE FORMATO A LOS DATOS/////////////////////////////////////
@@ -186,12 +186,12 @@ AS
 						SELECT	DISTINCT TOP (1) PERCENT 
 							 @VP_VERSION = ccverhdr_sql.versionno, 
 							 @VP_MODELO = ccverhdr_sql.modelno
-						FROM	dbo.ccverhdr_sql
-						INNER JOIN cccusitm_sql ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
+						FROM	dbo.ccverhdr_sql (NOLOCK)
+						INNER JOIN cccusitm_sql (NOLOCK) ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
 							AND SUBSTRING(LTRIM(RTRIM(cccusitm_sql.item_no)) ,1 ,1)  = 'P' 
 							AND cus_item_no <> ''
-						INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = cccusitm_sql.item_no
-						INNER JOIN  IMCATFIL_SQL ON dbo.IMITMIDX_SQL.prod_cat = IMCATFIL_SQL.prod_cat 
+						INNER JOIN IMITMIDX_SQL (NOLOCK) ON IMITMIDX_SQL.item_no = cccusitm_sql.item_no
+						INNER JOIN  IMCATFIL_SQL (NOLOCK) ON dbo.IMITMIDX_SQL.prod_cat = IMCATFIL_SQL.prod_cat 
 							AND IMCATFIL_SQL.L_BORRADO = 0
 						WHERE ccverhdr_sql.specstatus = 'U' 
 						AND ccverhdr_sql.status = 'L' 
@@ -208,7 +208,7 @@ AS
 								@VP_CUBE_QTY_PER		= CUBE_QTY_PER,
 								@VP_D_ITEM				= LTRIM(RTRIM(item_desc_1))--,
 								--@VP_CHANGE_LEVEL		= LTRIM(RTRIM(Last_item_revision))
-						FROM IMITMIDX_SQL   
+						FROM IMITMIDX_SQL   (NOLOCK)
 						WHERE	LTRIM(RTRIM(ITEM_NO)) = @VP_ITEM_NO
 
 						IF @VP_CUBE_LENGTH IS NULL
@@ -232,7 +232,8 @@ AS
 						DECLARE @VP_STD_PACK INT = 0
 						SELECT	TOP(1) 
 								@VP_STD_PACK = user_def_fld_5 
-						FROM ccitmidx_sql WHERE LTRIM(RTRIM(item_no)) = @VP_ITEM_NO
+						FROM ccitmidx_sql (NOLOCK)
+						WHERE LTRIM(RTRIM(item_no)) = @VP_ITEM_NO
 						ORDER BY versionno DESC
 						
 						IF @VP_STD_PACK IS NULL
@@ -326,7 +327,7 @@ AS
 			-- ///////SE VERIFICA SI LA ORDEN CREADA TIENE KITS (U) DOS TODOS//////////////////////////////////////////////
 			DECLARE @VP_N_KITS_U INT = 0
 			SELECT @VP_N_KITS_U = COUNT(A4GLIdentity) 
-			FROM imkitfil_sql 
+			FROM imkitfil_sql (NOLOCK)
 			WHERE comp_item_no IN ( SELECT item_no 
 									FROM ccjoblin_sql 
 									WHERE JOBNO = @VP_ORDEN )
