@@ -39,6 +39,11 @@ AS
 		-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
 
+	IF	(	SELECT	COUNT(K_DETAILS_RMA)
+			FROM	DETAILS_RMA
+			WHERE	JOBNO	= @PP_ORDEN	) > 0
+		SET @VP_MENSAJE = 'ERROR: La orden [RMA] no se puede eliminar.'
+
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,

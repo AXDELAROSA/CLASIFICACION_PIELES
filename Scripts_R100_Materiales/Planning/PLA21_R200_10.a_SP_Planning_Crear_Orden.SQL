@@ -133,6 +133,9 @@ AS
 						SELECT @VP_KIT_VALOR		= LEFT(@PP_KIT_ARRAY, @VP_POSICION_KIT - 1)
 						SELECT @VP_CANTIDAD_VALOR	= LEFT(@PP_CANTIDAD_ARRAY, @VP_POSICION_CANTIDAD - 1)
 
+						IF	LEFT(@VP_KIT_VALOR,1)	LIKE 'I'
+							RAISERROR ('ERROR: La orden [RMA] no se puede crear desde esta pantalla.', 16, 1 ) --MENSAJE - Severity -State.
+
 						-- /////////INSERTAMOS LA PIEL EN UNA TABLA TEMPORAL////////////////////////////////////////////////////////////
 						INSERT	INTO	@TBL_KIT_A_PROGRAMAR
 								VALUES	( 
