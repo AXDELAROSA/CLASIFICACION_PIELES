@@ -4,9 +4,9 @@
 
 	SELECT * FROM HIDESHDR_SQL   
 	 inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-	WHERE	LTRIM(RTRIM(PLOT)) IN ('34851')
+	WHERE	LTRIM(RTRIM(PLOT)) IN ('401101')
 	--and HIDESLIN_SQL.fileno = '210310181706T1000002'
-	--AND CONVERT(INT, LTRIM(RTRIM(HIDE))) IN (0109)
+	AND CONVERT(INT, LTRIM(RTRIM(HIDE))) IN (9, 12, 68, 13, 6)
 	----AND
 	 --PCOLOR = 'FCPRHL1'
 	 --AND SQF < 1
@@ -41,15 +41,15 @@
 
 
 	SELECT *
-	FROM RP_SC
+	FROM RP_SC_HIDE_DELETE
 	WHERE 
 	--COLOUR = 'fwlnpx7' 
 	--AND
-	LOT = '107551'
-	and movement = 'mhi'
+	LOT = '401101'
+	--and movement = 'mhi'
 	--AND TAGNO = 3832476
-	AND convert(int, LTRIM(RTRIM(hide)))  IN (109)
-	and convert(int, LTRIM(RTRIM(hide))) between 1 and 200
+	AND convert(int, LTRIM(RTRIM(hide)))  IN (9, 12, 68, 13, 6)
+	--and convert(int, LTRIM(RTRIM(hide))) between 1 and 200
 	ORDER  BY HIDE asc
 	---3827585
 
@@ -82,17 +82,17 @@
 	LEFT JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 	INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
 	WHERE --  ( FOLIO_ORIGEN = 3836576 OR  FOLIO_DESTINO = 3836576 )
-	--(ORDEN_ORIGEN = '-' OR  ORDEN_DESTIDO = '-' )
+	--(ORDEN_ORIGEN = '33214' OR  ORDEN_DESTIDO = '33214' )
 	--LOCACION_ORIGEN = 'MQU' AND LOCACION_DESTINO = 'MQU'
 	--AND 
-	LOTE IN (34851)    
+	LOTE IN (401101)    
 	AND          
-	PIEL   IN (0015, 192)
+	PIEL   IN (9, 12, 68, 13, 6)
 	--PIEL  BETWEEN 217 and 218
 	--AND 
 	--PIEL_LOG.K_TIPO_PIEL_LOG IN (13)
 	--AND usuario = 'ANAG'
-	ORDER BY piel, k_piel_log asc
+	ORDER BY k_piel_log desc
 
 	SELECT * FROM RP_SC_PRT
 
@@ -103,19 +103,20 @@
 
 	SELECT DISTINCT LOT FROM RP_SC_FOLIO_TYPE_2 WHERE TAGNO = 3789716 
 	
-	SELECT * FROM RP_SC WHERE TAGNO IN ( 3832840) 
+	SELECT * FROM RP_SC WHERE TAGNO  IN ( 3833756, 3834377)  order by HIDE
 
-	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE TAGNO IN ( 3835870) 
+	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE TAGNO IN ( 3833756, 3834377) 
 
-	SELECT * FROM RP_Folios WHERE TAG = 3832840
+	SELECT * FROM RP_Folios WHERE TAG  IN ( 3833756, 3834377) 
 
-	SELECT * FROM ccjobhdr_sql WHERE jobno = '33828'
+	SELECT * FROM ccjobhdr_sql WHERE jobno in ('33143', '33214')
+	--SELECT * FROM ccjobhdr_sql WHERE jobno = '33214'
 
 	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '33458' order by ckey
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO = '22693 ' ORDER BY col_key
 
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO in ( '32653' )
+	SELECT * FROM ccjobhdr_sql WHERE JOBNO in ( '09309' )
 
 	--update ccjobhdr_sql set folio = NULL WHERE JOBNO in ( '33899', '33316', '33930' )
 	
@@ -130,13 +131,13 @@
 	order by hideno		
 
 	--delete cccuthst_sql where colkey = 8707507
-	--SELECT  '         ' + '4' + SUBSTRING(Ltrim(Rtrim(450151)), 2, 6)  
-	
+	----SELECT  '         ' + '4' + SUBSTRING(Ltrim(Rtrim(450151)), 2, 6)  
+	5624.2000
 	SELECT * FROM	IMLSMST_SQL	
-	WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('018151')
+	WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('032702', '032751') and loc = 'T05'
 
 	SELECT TOP 10 * FROM	IMINVLOC_SQL	
-	WHERE	LTRIM(RTRIM(loc)) IN ('MSL')
+	WHERE	LTRIM(RTRIM(loc)) IN ('T05') AND item_no = 'FMCKTX7'
 
 	USE DATA_02PRUEBAS
 	SELECT TOP 100 * FROM IMINVTRX_SQL ORDER BY A4GLIdentity DESC

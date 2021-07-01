@@ -168,7 +168,7 @@ AS
 					-- ===========================
 					(	SELECT	LTRIM(RTRIM(MACHINE)) 
 						FROM	ccjobhdr_sql (NOLOCK)
-						WHERE	JOBNO = ccjoblin_sql.JOBNO )	AS MESA,
+						WHERE	JOBNO = @VP_ORDEN_PRINCIPAL )	AS MESA,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
 																		FROM IMITMIDX_SQL (NOLOCK)
@@ -243,7 +243,7 @@ AS
 					-- ===========================
 					(	SELECT LTRIM(RTRIM(MACHINE)) 
 						FROM	ccjobhdr_sql (NOLOCK)
-						WHERE	JOBNO = ccjoblin_sql.JOBNO )				AS MESA,
+						WHERE	JOBNO = @VP_ORDEN_COMPLEMENTO )				AS MESA,
 					-- ===========================
 					( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
 																		FROM IMITMIDX_SQL (NOLOCK)
