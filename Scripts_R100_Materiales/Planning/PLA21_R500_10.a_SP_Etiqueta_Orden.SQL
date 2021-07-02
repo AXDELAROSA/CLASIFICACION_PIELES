@@ -22,20 +22,143 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
 GO
-
-/*
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '29678' --NORMAL
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30088' --NORMAL
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30089' -- U
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30659' -- FAUR
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '28432' -- WPI003
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30761' -- IRVI02
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30555' -- YANG03
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30901' -- MAGN02
- EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '31504' -- MAG02
+/*	
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '29678' --NORMAL
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30088' --NORMAL
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30089' -- U
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30659' -- FAUR
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '28432' -- WPI003
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30761' -- IRVI02
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30555' -- YANG03
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '30901' -- MAGN02
+	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '31504' -- MAG02
 */
-
+ --	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '34658' -- MAG02
+ --	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '34659' -- MAG02
 CREATE PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN					VARCHAR(50)	
+AS
+	
+	IF	(	SELECT	COUNT(K_DETAILS_RMA)
+			FROM	DETAILS_RMA
+			WHERE	JOBNO	= @PP_ORDEN	) > 0
+	BEGIN
+		EXECUTE	[dbo].[PG_PR_ETIQUETA_ORDEN_RMA]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
+													-- ===========================
+													@PP_ORDEN
+	END
+	ELSE
+	BEGIN
+		EXECUTE	[dbo].[PG_PR_ETIQUETA_ORDEN_KIT]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
+													-- ===========================
+													@PP_ORDEN
+	END
+-- ////////////////////////////////////////////////////////////////////
+GO
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ETIQUETA_ORDEN_RMA]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
+GO
+--		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 34659
+CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_ORDEN					VARCHAR(50)	
+AS
+	
+	-- /////SE OBTIENE EL TURNO EN QUE SE REALIZA LA IMPRESION//////////////////////////////////////
+	DECLARE @VP_HORA	INT = FORMAT(CAST(GETDATE() AS TIME(0)), N'hhmmss');
+	DECLARE @VP_TURNO	VARCHAR(5) = '2'
+	
+	IF @VP_HORA > 2000 AND @VP_HORA < 60002
+		SET @VP_TURNO = '3'
+	ELSE IF @VP_HORA > 60001 AND @VP_HORA < 153001
+		SET @VP_TURNO = '1'
+
+
+	SELECT	1										AS IMPRIMIR,
+			LTRIM(RTRIM(ccjoblin_sql.jobno))		AS ORDEN_PRINCIPAL, 
+			''										AS JOBNO_COMPLEMENTO,
+			LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+			-- ===========================
+			''										AS MESA,
+			-- ===========================
+			''										AS REF_PO,
+			-- ===========================
+			''										AS SUPPLIER,
+			-- ===========================
+			''										AS SHIP_TO,
+			-- ===========================
+			LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
+			LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+			ccjoblin_sql.item_no					AS ITEM_NO,
+			-- ===========================
+			LTRIM(RTRIM(ccjoblin_sql.KitDesc))		AS KIT_DESC, 
+			-- ===========================
+			(	SELECT LTRIM(RTRIM(ITEM_DESC_1))
+				FROM IMITMIDX_SQL (NOLOCK)
+				WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
+			-- ===========================
+			''										AS KIT_DESC_2_IMPRIMIR,
+			-- ===========================
+			ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+			-- ===========================
+			CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
+			CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
+			CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+			--RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
+			'XRMA'									AS PROD_CAT,
+			-- ===========================
+			(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+				FROM INVENTARIO_EMBARQUE (NOLOCK)
+				WHERE	(		SERIAL_1 = LTRIM(RTRIM(ccjoblin_sql.jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+							OR	SERIAL_2 = LTRIM(RTRIM(ccjoblin_sql.jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+						)  
+				AND K_ESTATUS_INVENTARIO_EMBARQUE > 2
+			) AS ENVIADO,
+			-- ===========================
+			@VP_TURNO	AS TURNO,
+			-- ===========================
+			GRUPO_ORDEN								AS GRUPO_ORDEN,
+			SOLICITADA_POR_RMA						AS ATENCION_A
+			--RIGHT(DETAILS_RMA.ITEM_NO,6)			AS COLOR
+	FROM ccjoblin_sql  (NOLOCK)
+	-- ===========================
+	INNER JOIN	cccusitm_sql (NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+	AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+	AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+													FROM	cccusitm_sql (NOLOCK)
+													WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
+	-- ===========================
+	INNER JOIN	DETAILS_RMA	ON	DETAILS_RMA.SERIAL	= CONCAT(LTRIM(RTRIM(ccjoblin_sql.jobno)) , RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3))
+	INNER JOIN	HEADER_RMA	ON	HEADER_RMA.JOBNO	= ccjoblin_sql.jobno
+	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
+	-- ===========================
+	ORDER BY GRUPO_ORDEN, ccjoblin_sql.Ser_No
+
+		-----////////////////////////////////////////////////////////////////
+GO
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+-- USE DATA_02
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ETIQUETA_ORDEN_KIT]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT]
+GO
+--		 execute [dbo].[PG_PR_ETIQUETA_ORDEN_KIT] 0,139,34658
+CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
@@ -373,10 +496,7 @@ AS
 			ORDER BY ccjoblin_sql.Ser_No
 	END
 		-----////////////////////////////////////////////////////////////////
-		-- ////////////////////////////////////////////////////////////////////
 GO
-
-
 
 
 -- //////////////////////////////////////////////////////////////
