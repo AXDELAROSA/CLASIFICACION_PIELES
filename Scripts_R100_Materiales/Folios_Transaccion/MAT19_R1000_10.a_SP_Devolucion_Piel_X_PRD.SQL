@@ -414,7 +414,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 GO
 
 /*
-EXECUTE  [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI] 0,144,  3798533 , 'FWLPAX7' , '18147' , 'Table 32' , 12 , 401.50 , 'franciscoe' , 'IT-010' 
+EXECUTE  [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI] 0,144, 3798317 , 'FCNPWA3' , '17878' , 'Table 68' , 1 , 48.00 , 13367 , 'franciscoe' , 'IT-010' 
 
 */
 CREATE PROCEDURE [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]
@@ -545,38 +545,7 @@ AS
 				AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS
 
 				IF @VP_N_PIEL IS NULL
-					RAISERROR ('NO hay pieles para devolución.', 16, 1 ) --MENSAJE - Severity -State.
-
-				-- /////////////SE OBTIENE LA CANTIDAD DE PIELES EN EL FOLIO///////////////////////////
-				DECLARE @VP_N_PIEL_FOLIO INT = 0
-				SELECT @VP_N_PIEL_FOLIO = COUNT(ID) 
-				FROM RP_SC (NOLOCK)
-				WHERE TAGNO = @PP_FOLIO_ORIGEN
-
-				IF @VP_N_PIEL_FOLIO IS NULL 
-					SET @VP_N_PIEL_FOLIO = 0
-
-				-- /////////////SE OBTIENE EL NUMERO DE PIELES PARA DEVOLUCION///////////////////////////
-				DECLARE @VP_N_PIEL_A_TRANSFERIR_COMPLETA INT = 0
-				SELECT	@VP_N_PIEL_A_TRANSFERIR_COMPLETA = COUNT(RP_SC.ID)
-				-- =====================
-				FROM	RP_SC (NOLOCK)
-				INNER JOIN RP_FOLIOS (NOLOCK) ON TAG = TAGNO
-				INNER JOIN ccjobhdr_sql (NOLOCK) ON folio = TAG 
-					AND LTRIM(RTRIM(RP_SC.COLOUR)) = CONCAT('F', LTRIM(RTRIM(ccjobhdr_sql.COLOUR)))
-				LEFT JOIN CCCUTHST_SQL (NOLOCK) ON CCCUTHST_SQL.jobno = ccjobhdr_sql.jobno 
-					AND LTRIM(RTRIM(ccjobhdr_sql.machine)) = LTRIM(RTRIM(CCCUTHST_SQL.machine))
-					AND LTRIM(RTRIM(RP_SC.COLOUR)) = LTRIM(RTRIM(CCCUTHST_SQL.COLOUR))
-					AND LTRIM(RTRIM(CCCUTHST_SQL.lotno)) = RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) 
-					AND	LTRIM(RTRIM(HIDENO)) = LTRIM(RTRIM(HIDE))
-				WHERE	TAGNO = @PP_FOLIO_ORIGEN 
-				AND		TYPE = 'C'
-				AND		PESO = '1' -- SE USA COMO BANDERA PARA ESPECIFICAR LA DEVOLUCION EN APP DE PRODUCCION
-				--AND		TYPE = 'D'
-				AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) = CONVERT(DECIMAL(13,2 ), LTRIM(RTRIM(SQF))) - CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0))
-
-				IF @VP_N_PIEL_A_TRANSFERIR_COMPLETA IS NULL 
-					SET @VP_N_PIEL_A_TRANSFERIR_COMPLETA = 0				
+					RAISERROR ('NO hay pieles para devolución.', 16, 1 ) --MENSAJE - Severity -State.							
 															
 				-- ///////SE DECLARAN VARIABLES A USAR//////////////////////////////////////////////////////////////////////////////
 				DECLARE @VP_COLOR_TBL			VARCHAR(10)
@@ -728,13 +697,13 @@ AS
 
 								IF @@ROWCOUNT = 0
 									BEGIN
-										SET @VP_MENSAJE_TRANSACCION = 'No fue posible actualizar el SQF cortado de la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @VP_FOLIO_DESTINO) + '.'
+										SET @VP_MENSAJE_TRANSACCION = 'No fue posible actualizar el SQF cortado de la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @PP_FOLIO_ORIGEN) + '.'
 										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 									END
 
 								-- ///INGRESA UNA COPIA DE LA PIEL CORTADA CON EL SQF DEVUELTO PARA QUE SE PUEDA IMPRIMIR EN EL FORMATO DE DEVOLUCION///////////////
 								INSERT INTO RP_SC( [CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION] )
-											SELECT [CDATE],[COLOUR],[LOT],[HIDE],@VP_SQF_TRANSFERIR,[TAGNO],[YARDAS],[YLB],[PESO],'D',[MOVEMENT],[K_CLASIFICACION]
+											SELECT TOP 1 [CDATE],[COLOUR],[LOT],[HIDE],@VP_SQF_TRANSFERIR,[TAGNO],[YARDAS],[YLB],[PESO],'D',[MOVEMENT],[K_CLASIFICACION]
 											FROM	RP_SC (NOLOCK)
 											WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
 											AND LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
@@ -745,36 +714,9 @@ AS
 
 								IF @@ROWCOUNT = 0
 									BEGIN
-										SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @VP_FOLIO_DESTINO) + ' como devolución.'
+										SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @PP_FOLIO_ORIGEN) + ' como devolución.'
 										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
-									END
-								
-								-- ///////SE ENVIA CORREO TEMPORALMENTE PARA ESTAR MONITORIANDO////////////////////////////////////////////
-								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx'
-								DECLARE @VP_SUBJECT		VARCHAR(255) = 'Estación de Devolución...'
-								DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
-								DECLARE @VP_BODY		NVARCHAR(MAX) 
-
-								SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
-													N'<thead>' + 
-													  N'<tr BGCOLOR="#ADD8E6">' + 
-													    N'<th colspan="10">Devolucion de Piel cortada enviada con pieles Completas... </th>' + 
-													  N'</tr>' + 
-													  N'<tr BGCOLOR="#48D1CC">' + 
-													    N'<th>Movimiento</th><th>Color</th><th>Folio Ori.</th><th>Folio Des.</th><th>Locacion Ori.</th><th>Locacion Des.</th><th>Orden Ori.</th><th>Orden Des.</th><th>Usuario</th>' + 
-													  N'</tr>' + 
-													N'</thead>' + 
-													N'<tbody>' + 
-													  N'<tr>' + 
-													  N'<td>Devolución</td><td>'+ @VP_COLOR_TBL +'</td><td>'+ CONVERT(VARCHAR(50),@PP_FOLIO_ORIGEN) +'</td><td>'+ CONVERT(VARCHAR(10),@VP_FOLIO_DESTINO) +'</td><td>'+ @PP_LOCACION_ORIGEN+'</td><td>'+ @VP_LOCACION_DESTINO +'</td><td>'+ @PP_ORDEN_ORIGEN +'</td><td>'+ @VP_ORDEN_DESTINO +'</td><td>'+ CONVERT(VARCHAR(10),@PP_K_USUARIO_ACCION) +'</td>' + 
-													  N'</tr>' + 
-													N'</tbody>' + 
-												N'</table>' ;
-								SET ROWCOUNT 0
-									 				
-								EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																			@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
-									
+									END								
 							END
 						ELSE
 							BEGIN
@@ -787,6 +729,12 @@ AS
 								AND TAGNO = @PP_FOLIO_ORIGEN
 								AND TYPE = 'C'
 								AND PESO = '1'
+
+								IF @@ROWCOUNT = 0
+									BEGIN
+										SET @VP_MENSAJE_TRANSACCION = 'No fue posible agregar la Piel:' + @VP_PIEL_TBL + ' del folio origen:' + CONVERT(VARCHAR(20), @PP_FOLIO_ORIGEN) + ' como devolución.'
+										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+									END		
 							END
 
 						-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
@@ -825,8 +773,16 @@ AS
 																				@VP_ORDEN_DESTINO, @VP_LOCACION_DESTINO,
 																				@PP_USER, @PP_COMPUTER_NAME
 
-				-- ///////EL TOTAL DE PIELES Y PIES CUADRADOS A DEVOLVER SON IGUALES ALA TOTALIDAD DEL FOLIO SE QUITA EL FOLIO DE LA ORDEN///////////////////////////////////////////////////////////////////////
-				IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR_COMPLETA
+				-- /////////////SE OBTIENE EL NUMERO DE PIELES QUE QUEDARAN EN EL FOLIO ORIGEN DESPUES DEL TRASPASO///////////////////////////
+				DECLARE @VP_N_PIEL_FOLIO INT = 0
+				SELECT	@VP_N_PIEL_FOLIO = COUNT(RP_SC.ID)
+				-- =====================
+				FROM	RP_SC (NOLOCK)
+				WHERE	TAGNO = @PP_FOLIO_ORIGEN 
+				AND		TYPE <> 'D'
+
+				--IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR_COMPLETA
+				IF	( @VP_N_PIEL_FOLIO IS NULL OR @VP_N_PIEL_FOLIO = 0 )
 					BEGIN
 						EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
 																@PP_FOLIO_ORIGEN, 'A', NULL, NULL
@@ -844,26 +800,6 @@ AS
 				EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 													@PP_FOLIO_ORIGEN, 5
 
-				-- ////////////SI LAS PIELES A DEVOLVER SON MAS DE 4 SE IMPRIME EL FORMATO DE DEVOLUCION SI NO LAS ESCRIBEN MANUAL EN EL FOLIO FISICO/////////////////////////////////////////////////////////
-				--IF @VP_N_PIEL > 4
-				--	BEGIN
-						--SIEMPRE SE DEBE DE IMPRIMIR EL FORMATO DE DEVOLUCION PARA ESTA PANTALLA
-						--EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-						--									@PP_FOLIO_ORIGEN, 5
-					--END	
-				--ELSE
-				--	BEGIN
-				--		-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
-				--		EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-				--													@PP_FOLIO_ORIGEN, 'D'
-
-				--		-- ////////////////////////////INGRESA EL LOG/////////////////////////////////////////
-				--		SET @VP_DETAIL = 'Delete hides por devolucion (ya se agrego al nuevo folio) Lot:' + @VP_LOTE_TBL
-				--		EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-				--											@PP_USER, @PP_COMPUTER_NAME, 'FoliosN',
-				--											@PP_FOLIO_ORIGEN, 'Delete hides',
-				--											@VP_DETAIL, @VP_PIEL_TBL
-				--	END
 			COMMIT TRANSACTION 
 			END TRY
 	
