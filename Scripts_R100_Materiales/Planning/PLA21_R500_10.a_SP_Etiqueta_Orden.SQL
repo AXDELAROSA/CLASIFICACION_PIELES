@@ -12,7 +12,12 @@
 USE [DATA_02] 
 GO
 
-
+-- //////////////////////////////////////////////////////////////
+-- //////////////		CONTENIDO DEL SP
+--	[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
+--	[PG_PR_ETIQUETA_ORDEN_RMA]
+--	[PG_PR_ETIQUETA_ORDEN_KIT]
+--	[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
 
 
 -- //////////////////////////////////////////////////////////////
@@ -35,6 +40,9 @@ GO
 */
  --	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '34658' -- MAG02
  --	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '34659' -- MAG02
+
+ --	EXEC [PG_LI_IMPRIMIR_ETIQUETA_ORDEN] 0 ,0,  '35154' -- MAG02
+
 CREATE PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -68,6 +76,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 	DROP PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
 GO
 --		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 34659
+--		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 35154
 CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -85,9 +94,9 @@ AS
 		SET @VP_TURNO = '1'
 
 
-	SELECT	1										AS IMPRIMIR,
+	SELECT	1										AS L_IMPRIMIR,
 			LTRIM(RTRIM(ccjoblin_sql.jobno))		AS ORDEN_PRINCIPAL, 
-			''										AS JOBNO_COMPLEMENTO,
+			--''										AS JOBNO_COMPLEMENTO,
 			LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
 			-- ===========================
 			''										AS MESA,
@@ -128,6 +137,8 @@ AS
 			-- ===========================
 			@VP_TURNO	AS TURNO,
 			-- ===========================
+			DETAILS_RMA.K_HEADER_RMA				AS JOBNO_COMPLEMENTO,
+			DETAILS_RMA.SERIAL						AS SER_NO,
 			GRUPO_ORDEN								AS GRUPO_ORDEN,
 			SOLICITADA_POR_RMA						AS ATENCION_A
 			--RIGHT(DETAILS_RMA.ITEM_NO,6)			AS COLOR
@@ -138,10 +149,10 @@ AS
 	AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
 													FROM	cccusitm_sql (NOLOCK)
 													WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
-													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
+													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer	)
 	-- ===========================
 	INNER JOIN	DETAILS_RMA	ON	DETAILS_RMA.SERIAL	= CONCAT(LTRIM(RTRIM(ccjoblin_sql.jobno)) , RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3))
-	INNER JOIN	HEADER_RMA	ON	HEADER_RMA.JOBNO	= ccjoblin_sql.jobno
+	INNER JOIN	HEADER_RMA	ON	HEADER_RMA.K_HEADER_RMA	= DETAILS_RMA.K_HEADER_RMA	---.JOBNO	= ccjoblin_sql.jobno
 	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
 	-- ===========================
 	ORDER BY GRUPO_ORDEN, ccjoblin_sql.Ser_No
