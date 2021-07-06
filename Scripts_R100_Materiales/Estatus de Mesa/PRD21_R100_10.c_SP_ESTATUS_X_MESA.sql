@@ -88,7 +88,9 @@ AS
 					ISNULL((	SELECT COUNT(ID) 
 								FROM RP_SC (NOLOCK) 
 								WHERE TAGNO = ISNULL(FOLIO, 0)
-								AND TYPE = 'C'), 0) AS HIDES,
+								AND TYPE = 'C'
+								AND PESO IS NULL), 0) AS HIDES,
+								--AND TYPE = 'C'), 0) AS HIDES,
 					--=============================================
 					ISNULL((	SELECT COUNT(colkey) 
 								FROM cccuthst_sql (NOLOCK) 

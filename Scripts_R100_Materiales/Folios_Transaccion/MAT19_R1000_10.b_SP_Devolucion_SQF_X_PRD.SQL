@@ -9,7 +9,7 @@
 -- // Fecha creación:	16/JUN/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -110,7 +110,7 @@ AS
 		EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 												@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
 												@PP_LOCACION_ORIGEN, @VP_SQF_X_LOTE, @VP_ORDERNO, 
-												@PP_USER, 'Devolución de Pieles desde Estación', 0, @VP_INDICE,
+												@PP_USER, 'DEVOLUCION/TRASPASO DE MESAS', 0, @VP_INDICE,
 												'T', 'M', @VP_SQF_X_LOTE
 		
 		-- ////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ AS
 		EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 												@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
 												@PP_LOCACION_DESTINO, @VP_SQF_X_LOTE, @VP_ORDERNO, 
-												@PP_USER, 'Devolución de Pieles desde Estación', 1, @VP_INDICE,
+												@PP_USER, 'DEVOLUCION/TRASPASO DE MESAS', 1, @VP_INDICE,
 												'T', 'M', @VP_SQF_X_LOTE
 		-- ////////////////////////////////////////////////////////////////////
 
