@@ -95,25 +95,30 @@ AS
 
 
 	SELECT	1										AS L_IMPRIMIR,
-			LTRIM(RTRIM(ccjoblin_sql.jobno))		AS ORDEN_PRINCIPAL, 
+			--LTRIM(RTRIM(ccjoblin_sql.jobno))		AS ORDEN_PRINCIPAL, 
+			DETAILS_RMA.JOBNO						AS ORDEN_PRINCIPAL, 
 			--''										AS JOBNO_COMPLEMENTO,
-			LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+			--LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+			LTRIM(RTRIM(DETAILS_RMA.CUS_NO))		AS CUSTOMER, 
 			-- ===========================
-			''										AS MESA,
+			LTRIM(RTRIM(ccjobhdr_sql.machine))		AS MESA,
 			-- ===========================
 			''										AS REF_PO,
 			-- ===========================
-			''										AS SUPPLIER,
+			(SELECT CUS_NAME FROM ARCUSFIL_SQL WHERE CUS_NO = HEADER_RMA.CUS_NO )						AS SUPPLIER,
 			-- ===========================
 			''										AS SHIP_TO,
 			-- ===========================
-			LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
-			LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
-			ccjoblin_sql.item_no					AS ITEM_NO,
+			--LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
+			LTRIM(RTRIM(DETAILS_RMA.CUS_ITEM_NO))	AS CUS_ITEM_NO,
+			--LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+			LEFT(DETAILS_RMA.ITEM_NO,8)				AS KIT, 
+			--ccjoblin_sql.item_no					AS ITEM_NO,
+			DETAILS_RMA.item_no						AS ITEM_NO,
 			-- ===========================
 			LTRIM(RTRIM(ccjoblin_sql.KitDesc))		AS KIT_DESC, 
 			-- ===========================
-			(	SELECT LTRIM(RTRIM(ITEM_DESC_1))
+			(	SELECT TOP (1) LTRIM(RTRIM(ITEM_DESC_1))
 				FROM IMITMIDX_SQL (NOLOCK)
 				WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
 			-- ===========================
@@ -121,9 +126,12 @@ AS
 			-- ===========================
 			ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
 			-- ===========================
-			CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
-			CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
-			CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+			--CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
+			DETAILS_RMA.CANTIDAD_ORDENADA			AS PLANNED_QTY, 
+			--CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
+			DETAILS_RMA.CANTIDAD_ENVIADA			AS COMPLETED_QTY, 
+			--CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
+			DETAILS_RMA.CANTIDAD_ORDENADA			AS ORIGINAL_QTY,
 			--RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
 			'XRMA'									AS PROD_CAT,
 			-- ===========================
@@ -133,26 +141,27 @@ AS
 							OR	SERIAL_2 = LTRIM(RTRIM(ccjoblin_sql.jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
 						)  
 				AND K_ESTATUS_INVENTARIO_EMBARQUE > 2
-			) AS ENVIADO,
+			)										AS ENVIADO,
 			-- ===========================
-			@VP_TURNO	AS TURNO,
+			@VP_TURNO								AS TURNO,
 			-- ===========================
 			DETAILS_RMA.K_HEADER_RMA				AS JOBNO_COMPLEMENTO,
 			DETAILS_RMA.SERIAL						AS SER_NO,
 			GRUPO_ORDEN								AS GRUPO_ORDEN,
-			SOLICITADA_POR_RMA						AS ATENCION_A
-			--RIGHT(DETAILS_RMA.ITEM_NO,6)			AS COLOR
-	FROM ccjoblin_sql  (NOLOCK)
+			SOLICITADA_POR_RMA						AS ATENCION_A,
+			(SELECT TOP (1) ITEM_DESC_1 FROM IMITMIDX_SQL WHERE ITEM_NO = CONCAT('F',LTRIM(RTRIM(RIGHT(DETAILS_RMA.ITEM_NO,6))) ))		AS COLOR
+	FROM	ccjoblin_sql		(NOLOCK)
 	-- ===========================
-	INNER JOIN	cccusitm_sql (NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+	INNER JOIN	ccjobhdr_sql	(NOLOCK) ON ccjobhdr_sql.jobno	= ccjoblin_sql.jobno
+	INNER JOIN	cccusitm_sql	(NOLOCK) ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
 	AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
 	AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
 													FROM	cccusitm_sql (NOLOCK)
 													WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
 													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer	)
 	-- ===========================
-	INNER JOIN	DETAILS_RMA	ON	DETAILS_RMA.SERIAL	= CONCAT(LTRIM(RTRIM(ccjoblin_sql.jobno)) , RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3))
-	INNER JOIN	HEADER_RMA	ON	HEADER_RMA.K_HEADER_RMA	= DETAILS_RMA.K_HEADER_RMA	---.JOBNO	= ccjoblin_sql.jobno
+	INNER JOIN	DETAILS_RMA		(NOLOCK) ON	DETAILS_RMA.SERIAL	= CONCAT(LTRIM(RTRIM(ccjoblin_sql.jobno)) , RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3))
+	INNER JOIN	HEADER_RMA		(NOLOCK) ON	HEADER_RMA.K_HEADER_RMA	= DETAILS_RMA.K_HEADER_RMA	---.JOBNO	= ccjoblin_sql.jobno
 	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
 	-- ===========================
 	ORDER BY GRUPO_ORDEN, ccjoblin_sql.Ser_No

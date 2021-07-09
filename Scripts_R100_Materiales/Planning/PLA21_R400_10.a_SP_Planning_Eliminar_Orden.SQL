@@ -20,11 +20,9 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_PLANNING_ELIMINAR_ORDER]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_PLANNING_ELIMINAR_ORDER]
 GO
-
 /*
 	 EXEC [PG_PR_PLANNING_ELIMINAR_ORDER] 0 ,144,  '31617' , 'FCPRHL1' , 'Table 71' , 'franciscoe' , 'IT-010'  
 */
-
 CREATE PROCEDURE [dbo].[PG_PR_PLANNING_ELIMINAR_ORDER]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -39,11 +37,13 @@ AS
 		-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
 
-	IF	(	SELECT	COUNT(K_DETAILS_RMA)
-			FROM	DETAILS_RMA
-			WHERE	JOBNO	= @PP_ORDEN	) > 0
-		SET @VP_MENSAJE = 'ERROR: La orden [RMA] no se puede eliminar.'
-
+	IF @PP_K_USUARIO_ACCION <> 139
+	BEGIN
+		IF	(	SELECT	COUNT(K_DETAILS_RMA)
+				FROM	DETAILS_RMA
+				WHERE	JOBNO	= @PP_ORDEN	) > 0
+			SET @VP_MENSAJE = 'ERROR: La orden [RMA] no se puede eliminar.'
+	END
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
