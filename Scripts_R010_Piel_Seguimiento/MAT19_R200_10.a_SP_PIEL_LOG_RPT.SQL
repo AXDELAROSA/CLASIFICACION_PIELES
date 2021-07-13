@@ -20,7 +20,7 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 /*
- EXEC DBO.[PG_RPT_PIEL_LOG] 0,144, 0, 0, 34872, 616
+ EXEC DBO.[PG_RPT_PIEL_LOG] 0,144, 0, 34991, 0, 0
 */
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RPT_PIEL_LOG]') AND type in (N'P', N'PC'))
@@ -54,6 +54,9 @@ AS
 		(  CASE WHEN ORDEN_ORIGEN = 0 THEN ' '
 				ELSE CONVERT(VARCHAR(20), ORDEN_ORIGEN) END) ORDEN_ORIGEN,
 		--=============================== 
+		(  CASE WHEN ORDEN_ORIGEN = 0 THEN ''
+			ELSE ISNULL(( SELECT TOP 1 LTRIM(RTRIM(STATUS)) FROM ccjobhdr_sql WHERE JOBNO = CONVERT(VARCHAR(20), ORDEN_ORIGEN) ), 'D')  END) AS ESTATUS_ORDEN_ORIGEN,
+		--=============================== 
 		LOTE, 
 		PIEL,
 		SQF,
@@ -64,6 +67,9 @@ AS
 		--=============================== 
 		(  CASE WHEN ORDEN_DESTIDO = 0 THEN ' '
 				ELSE CONVERT(VARCHAR(20), ORDEN_DESTIDO) END) ORDEN_DESTIDO,
+		--=============================== 
+		(  CASE WHEN ORDEN_DESTIDO = 0 THEN ''
+			ELSE ISNULL(( SELECT TOP 1 LTRIM(RTRIM(STATUS)) FROM ccjobhdr_sql WHERE JOBNO = CONVERT(VARCHAR(20), ORDEN_DESTIDO) ), 'D')  END) AS ESTATUS_ORDEN_DESTINO,
 		--=============================== 
 		( CASE WHEN COLOR_DESTINO = '' THEN COLOR
 			ELSE COLOR_DESTINO END ) COLOR_DESTINO,
