@@ -76,7 +76,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 	DROP PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
 GO
 --		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 34659
---		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 35154
+--		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 35515
 CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -105,7 +105,8 @@ AS
 			-- ===========================
 			''										AS REF_PO,
 			-- ===========================
-			(SELECT CUS_NAME FROM ARCUSFIL_SQL WHERE CUS_NO = HEADER_RMA.CUS_NO )						AS SUPPLIER,
+			--(SELECT CUS_NAME FROM ARCUSFIL_SQL (NOLOCK) WHERE CUS_NO = HEADER_RMA.CUS_NO )						AS SUPPLIER,
+			''										AS SUPPLIER,
 			-- ===========================
 			''										AS SHIP_TO,
 			-- ===========================
@@ -123,6 +124,7 @@ AS
 				WHERE item_no = ccjoblin_sql.item_no ) AS KIT_DESC_1_IMPRIMIR,
 			-- ===========================
 			''										AS KIT_DESC_2_IMPRIMIR,
+			dbo.CONVERT_INT_TO_DATE(datecreated)	AS FECHA,
 			-- ===========================
 			ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
 			-- ===========================
@@ -149,7 +151,8 @@ AS
 			DETAILS_RMA.SERIAL						AS SER_NO,
 			GRUPO_ORDEN								AS GRUPO_ORDEN,
 			SOLICITADA_POR_RMA						AS ATENCION_A,
-			(SELECT TOP (1) ITEM_DESC_1 FROM IMITMIDX_SQL WHERE ITEM_NO = CONCAT('F',LTRIM(RTRIM(RIGHT(DETAILS_RMA.ITEM_NO,6))) ))		AS COLOR
+			(SELECT TOP (1) ITEM_DESC_1					FROM IMITMIDX_SQL			(NOLOCK) WHERE ITEM_NO = CONCAT('F',LTRIM(RTRIM(RIGHT(DETAILS_RMA.ITEM_NO,6))) ))		AS COLOR,
+			(SELECT TOP (1) D_ARCUSFIL_PROGRAM_MODEL	FROM ARCUSFIL_PROGRAM_MODEL (NOLOCK) WHERE S_ARCUSFIL_PROGRAM_MODEL	= DETAILS_RMA.MODELNO)							AS D_MODELNO
 	FROM	ccjoblin_sql		(NOLOCK)
 	-- ===========================
 	INNER JOIN	ccjobhdr_sql	(NOLOCK) ON ccjobhdr_sql.jobno	= ccjoblin_sql.jobno
