@@ -127,6 +127,12 @@ AS
 			AND cccusitm_sql.item_no = @VP_ITEM_NO_COMPLEMENTO
 			--ORDER BY versionno DESC
 
+			IF @VP_MODELO IS NULL OR @VP_MODELO = ''
+				RAISERROR ('ERROR: No fue posible obtener el Modelo en [ccitmidx_sql]', 16, 1 ) --MENSAJE - Severity -State.
+
+			IF @VP_VERSION IS NULL OR @VP_VERSION = ''
+				RAISERROR ('ERROR: No fue posible obtener la Versión en [ccitmidx_sql]', 16, 1 ) --MENSAJE - Severity -State.
+
 			SET @VP_CHANGE_LEVEL = @VP_MODELO + @VP_VERSION
 
 			-- ////////SE OBTIENE EL GROSS, NETO Y PATRONES DEL KIT///////////////////////////////////
@@ -157,12 +163,12 @@ AS
 			-- ////////SE OBTIENE EL STANDARD PACK DEL KIT///////////////////////////////////			
 			DECLARE @VP_STD_PACK INT = 0
 			SELECT	TOP(1) 
-					@VP_STD_PACK = user_def_fld_5 
+					@VP_STD_PACK = LTRIM(RTRIM(user_def_fld_5)) 
 			FROM ccitmidx_sql (NOLOCK)
 			WHERE LTRIM(RTRIM(item_no)) = @VP_ITEM_NO_COMPLEMENTO
 			ORDER BY versionno DESC
 			
-			IF @VP_STD_PACK IS NULL
+			IF @VP_STD_PACK IS NULL OR @VP_STD_PACK = 0
 				RAISERROR ('ERROR: No fue posible obtener el Estandar Pack en [ccitmidx_sql]', 16, 1 ) --MENSAJE - Severity -State.
 
 			-- //////SE INGRESAN LOS KITS EN LA TABLA ccjoblin_sql/////////////////////////////////////
