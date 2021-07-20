@@ -9,7 +9,7 @@
 -- // Fecha creación:	18/DIC/2019
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -76,12 +76,12 @@ AS
 	DECLARE @VP_K_CLASIFICACION	INT = 0
 
 	SELECT	TOP 1 @VP_COLOR_DESTINO		= LTRIM(RTRIM(COLOUR))
-								FROM	RP_SC
+								FROM	RP_SC (NOLOCK)
 								WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_DESTINO
 	--=====================
 		
 	SELECT	TOP 1 @VP_COLOR_ORIGEN	=	LTRIM(RTRIM(COLOUR))
-									FROM	RP_SC
+									FROM	RP_SC (NOLOCK)
 									WHERE	LTRIM(RTRIM(TAGNO))=@PP_TAGNO_ORIGEN
 	-- =====================
 
@@ -166,18 +166,19 @@ AS
 				IF @PP_TIPO_TRANSFERENCIA = 'DEVOLUCION'
 					BEGIN
 						IF NOT EXISTS(	SELECT	TOP 1 TAG	
-										FROM RP_Folios  INNER JOIN RP_SC ON TAG=TAGNO 
+										FROM RP_Folios (NOLOCK)  
+										INNER JOIN RP_SC (NOLOCK) ON TAG=TAGNO 
 										WHERE TAGNO = @PP_TAGNO_DESTINO AND STATUS=@PP_ESTATUS AND COLOUR = @PP_CB_COLOR	)
 							BEGIN
 								EXECUTE [dbo].[PG_IN_RP_FOLIOS]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	@PP_TAGNO_DESTINO, @PP_ESTATUS, NULL, NULL, NULL
 							END
 					END
-				-- /////////////////////////////////////////////////////////////////////
 
-				IF	@PP_SELECT_TODOS = 1
-					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+				-- //////SE COMENTO PORQUE SE AGREGO AL FINAL DEL PROCESO FEG 20/07/2021///////////////////////////////////////////////////////////////
+				--IF	@PP_SELECT_TODOS = 1
+				--	EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+				--											@PP_TAGNO_ORIGEN, 'A', NULL, NULL
 				-- /////////////////////////////////////////////////////////////////////
 								
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
@@ -234,7 +235,7 @@ AS
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
 				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
-				IF @VP_N_PIEL IS NULL
+				IF ( @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0 )
 					RAISERROR ('NO hay pieles seleccionadas.', 16, 1 ) --MENSAJE - Severity -State.
 				-- /////////////////////////////////////////////////////////////////////////////////////
 									
@@ -261,12 +262,12 @@ AS
 								DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF_TBL AS DECIMAL(19,4))
 
 								-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
-								SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
-															FROM RP_SC
-															WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
-															AND		TAGNO = @PP_TAGNO_ORIGEN
-															AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
-															AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+								--SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+								--							FROM RP_SC
+								--							WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+								--							AND		TAGNO = @PP_TAGNO_ORIGEN
+								--							AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+								--							AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
 
 								-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
 								EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -472,12 +473,12 @@ AS
 								ELSE
 									BEGIN
 										-- ///////////////////OBTENGO LA CLASIFICACION DE LA PIEL//////////////////////////////////////////////////
-										SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
-																	FROM RP_SC
-																	WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
-																	AND		TAGNO = @PP_TAGNO_ORIGEN
-																	AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
-																	AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
+										--SELECT @VP_K_CLASIFICACION = K_CLASIFICACION
+										--							FROM RP_SC
+										--							WHERE LTRIM(RTRIM(COLOUR)) = @VP_COLOR_TBL
+										--							AND		TAGNO = @PP_TAGNO_ORIGEN
+										--							AND	LTRIM(RTRIM(LOT)) = @VP_LOTE_TBL
+										--							AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL_TBL
 
 										-- /////////////////////////INGRESO EL FOLIO NUEVO////////////////////////////////////////////
 										EXECUTE [dbo].[PG_IN_RP_SC]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
@@ -498,7 +499,7 @@ AS
 						-- /////////////////////////////////////////////////////////////////////
 					END
 
-					-- ///////////////OBTENEMOS LOS SQF DE LOS DIFERENTES LOTES A TRANSFERIR//////////////////////////////////////////////////////
+					-- ///////////////OBTENEMOS EL SQF DE LOS DIFERENTES LOTES A TRANSFERIR//////////////////////////////////////////////////////
 					IF (	SELECT COUNT(*) FROM sys.table_types
 							WHERE name = 'TVPParam' AND schema_id = 1	) = 0
 							CREATE TYPE dbo.TVPParam AS TABLE(	COLOR		VARCHAR(20),
@@ -523,15 +524,34 @@ AS
 						END
 					
 									
-					-- /////////////////////////////////////////////////////////////////////
+					-- //////////SE TRANSFIEREN LOS PIES CUADRADOS///////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_PM_TRANSFER]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														@PP_LOCACION_DESTINO, @PP_LOCACION_ORIGEN,
 														@PP_ORDEN_DESTINO, @PP_ORDEN_ORIGEN,  @TBL_TOTAL_SQF_X_LOTE,						 	
 														@PP_TB_SQF, @PP_COMENTARIO, @PP_USER
-						-- ////////////////////////////////////////////////////////////////////
 
+					-- ///////SE ACTUALIZAN LAS PIELES INGRESADAS CON LA LOCACION DESTINO/////////////////////////////////////////////////////////////
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@PP_TAGNO_DESTINO, 0, @PP_LOCACION_DESTINO, 0
+					
+					-- ////SE VERIFICA QUE QUEDEN PIELES EN EL FOLIO DESPUES DEL PROCESO SI NO SE DESCAZA EL FOLIO DE LA ORDEN Y VICEVERSA////////////
+					DECLARE @VP_N_PIEL_EN_FOLIO INT = 0
+					SELECT	@VP_N_PIEL_EN_FOLIO	=	COUNT(ID)
+					FROM	RP_SC (NOLOCK)
+					WHERE	TAGNO = @PP_TAGNO_ORIGEN
+					AND TYPE = 'C'
+					
+					IF	( @VP_N_PIEL_EN_FOLIO IS NULL OR @VP_N_PIEL_EN_FOLIO = 0 )
+						BEGIN
+							-- ///////SE QUITA LA ORDEN DEL FOLIO/////////////////////////////////////////////
+							EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+																	@PP_TAGNO_ORIGEN, 'A', NULL, NULL
+
+							-- ///////SE QUITA EL FOLIO DE LA ORDEN///////////////////////////////////////////
+							UPDATE ccjobhdr_sql 
+							 SET FOLIO = NULL
+							WHERE FOLIO = @PP_TAGNO_ORIGEN
+						END
 					-- /////////////////////////////////////////////////////////////////////
 								
 			COMMIT TRANSACTION 
