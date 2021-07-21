@@ -181,7 +181,7 @@ GO
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ETIQUETA_ORDEN_KIT]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT]
 GO
---		 execute [dbo].[PG_PR_ETIQUETA_ORDEN_KIT] 0,139,34658
+--		EXECUTE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT] 0,144, 36568
 CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -230,82 +230,7 @@ AS
 					SET @VP_ORDEN_PRINCIPAL = @PP_ORDEN
 					SET @VP_ORDEN_COMPLEMENTO = @VP_ORDEN_LIGADA
 				END
-
-			--SELECT	1							AS IMPRIMIR,
-			--		JOBNO						AS ORDEN_PRINCIPAL, 
-			--		-- ===========================
-			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ''
-			--				ELSE @VP_ORDEN_COMPLEMENTO END ) AS JOBNO_COMPLEMENTO,
-			--		LTRIM(RTRIM(ccjoblin_sql.customer))	AS CUSTOMER, 
-			--		-- ===========================
-			--		(	SELECT	LTRIM(RTRIM(MACHINE)) 
-			--			FROM	ccjobhdr_sql (NOLOCK)
-			--			WHERE	JOBNO = ccjoblin_sql.JOBNO )	AS MESA,
-			--		-- ===========================
-			--		( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN (	SELECT  LTRIM(RTRIM(ISNULL(filler_0003, '')))
-			--															FROM IMITMIDX_SQL (NOLOCK)
-			--															WHERE LTRIM(RTRIM(item_no)) = ccjoblin_sql.item_no )
-			--				WHEN ccjoblin_sql.customer = 'WPI003' THEN 'WPIMX077'
-			--				ELSE '' END ) AS REF_PO,
-			--		-- ===========================
-			--		( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN '227704'
-			--				WHEN ccjoblin_sql.customer = 'WPI003' THEN 'ADZ'
-			--				ELSE '' END ) AS SUPPLIER,
-			--		-- ===========================
-			--		( CASE WHEN ccjoblin_sql.customer = 'FAUR01' THEN 'Faurecia Sistemas Automotrices de Mexico, BAU-AS-SNA-PR-Puebla C&S'
-			--				ELSE '' END ) AS SHIP_TO,
-			--		-- ===========================
-			--		LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
-			--		LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
-			--		-- ===========================
-			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN ccjoblin_sql.item_no	
-			--				ELSE imkitfil_sql.item_no END ) AS ITEM_NO,
-			--		-- ===========================
-			--		LTRIM(RTRIM(ccjoblin_sql.KitDesc))			AS KIT_DESC, 
-			--		-- ===========================
-			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
-			--																FROM IMITMIDX_SQL 
-			--																WHERE item_no = ccjoblin_sql.item_no )	
-			--				ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_1)) 
-			--						FROM IMITMIDX_SQL 
-			--						WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_1_IMPRIMIR,
-			--		-- ===========================
-			--		( CASE WHEN imkitfil_sql.comp_item_no IS NULL THEN (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
-			--																FROM IMITMIDX_SQL 
-			--																WHERE item_no = ccjoblin_sql.item_no )	
-			--				ELSE (	SELECT LTRIM(RTRIM(ITEM_DESC_2))
-			--						FROM IMITMIDX_SQL 
-			--						WHERE item_no = imkitfil_sql.item_no )	 END ) AS KIT_DESC_2_IMPRIMIR,
-			--		-- ===========================
-			--		ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
-			--		-- ===========================
-			--		CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
-			--		CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
-			--		CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
-			--		RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
-			--		LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
-			--		-- ===========================
-			--		(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
-			--			FROM INVENTARIO_EMBARQUE (NOLOCK)
-			--			WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
-			--					OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
-			--			AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
-			--		-- ===========================
-			--		@VP_TURNO	AS TURNO
-			--		-- ===========================
-			--FROM ccjoblin_sql  (NOLOCK)
-			--LEFT JOIN imkitfil_sql (NOLOCK) ON ccjoblin_sql.ITEM_NO = imkitfil_sql.comp_item_no
-			--INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
-			--AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
-			--AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
-			--												FROM	cccusitm_sql (NOLOCK)
-			--												WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
-			--												AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
-			---- ===========================
-			--WHERE	ccjoblin_sql.jobno = @VP_ORDEN_PRINCIPAL 
-			---- ===========================
-			--ORDER BY ccjoblin_sql.Ser_No
-
+				
 			SELECT	1							AS IMPRIMIR,
 					JOBNO						AS ORDEN_PRINCIPAL, 
 					-- ===========================
@@ -360,11 +285,16 @@ AS
 					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
 					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
 					-- ===========================
-					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
-						FROM INVENTARIO_EMBARQUE (NOLOCK)
-						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
-								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
-						AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+					(	SELECT COUNT([K_MATERIAL_PROGRAMADO_LOG]) 
+						FROM [MATERIAL_PROGRAMADO_LOG] (NOLOCK)
+						WHERE SERIAL = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)   
+						AND K_TIPO_EVENTO_KIT >= 300 ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA
+					-- ===========================
+					--(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+					--	FROM INVENTARIO_EMBARQUE (NOLOCK)
+					--	WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+					--			OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+					--	AND K_ESTATUS_INVENTARIO_EMBARQUE > 0) AS ENVIADO,
 					-- ===========================
 					@VP_TURNO	AS TURNO
 					-- ===========================
@@ -427,11 +357,16 @@ AS
 					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
 					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
 					-- ===========================
-					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
-						FROM INVENTARIO_EMBARQUE (NOLOCK)
-						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
-								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
-						AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+					(	SELECT COUNT([K_MATERIAL_PROGRAMADO_LOG]) 
+						FROM [MATERIAL_PROGRAMADO_LOG] (NOLOCK)
+						WHERE SERIAL = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)   
+						AND K_TIPO_EVENTO_KIT >= 300 ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA
+					-- ===========================
+					--(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+					--	FROM INVENTARIO_EMBARQUE (NOLOCK)
+					--	WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+					--			OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+					--	AND K_ESTATUS_INVENTARIO_EMBARQUE > 0) AS ENVIADO,
 					-- ===========================
 					@VP_TURNO	AS TURNO
 					-- ===========================
@@ -498,11 +433,16 @@ AS
 					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
 					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
 					-- ===========================
-					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
-						FROM INVENTARIO_EMBARQUE (NOLOCK)
-						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
-								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
-						AND K_ESTATUS_INVENTARIO_EMBARQUE > 2) AS ENVIADO,
+					(	SELECT COUNT([K_MATERIAL_PROGRAMADO_LOG]) 
+						FROM [MATERIAL_PROGRAMADO_LOG] (NOLOCK)
+						WHERE SERIAL = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)   
+						AND K_TIPO_EVENTO_KIT >= 300 ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA
+					-- ===========================
+					--(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+					--	FROM INVENTARIO_EMBARQUE (NOLOCK)
+					--	WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+					--			OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  
+					--	AND K_ESTATUS_INVENTARIO_EMBARQUE > 0) AS ENVIADO,
 					-- ===========================
 					@VP_TURNO	AS TURNO
 					-- ===========================
@@ -526,13 +466,13 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
 GO
 
 /*
-	 EXEC [PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL] 0 ,144,  '30088' , '' , 004 , '30088004' 
+	 EXEC [PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL] 0 ,144,  '35695' , '' , 001 , '35695001' , 'EQUITA DAÑADA SOLICITADO POR PRD FIRMADO POR GUILLERMO MATA' , 'IT-010' 
 */
 
 CREATE PROCEDURE [dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
@@ -542,7 +482,9 @@ CREATE PROCEDURE [dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
 	@PP_ORDEN_PRINCIPAL			VARCHAR(50),
 	@PP_ORDEN_COMPLEMENTO		VARCHAR(50),
 	@PP_POS_KIT					INT,
-	@PP_SERIAL					VARCHAR(50)
+	@PP_SERIAL					VARCHAR(50),
+	@PP_COMENTARIO				VARCHAR(150),
+	@PP_EQUIPO					VARCHAR(100)
 AS
 
 	-- ///////////////////////////////////////////
@@ -566,17 +508,48 @@ AS
 		BEGIN
 			BEGIN TRANSACTION 
 			BEGIN TRY
-				-- ///////SE ACTUALIZA LA TABLA ccjoblin_sql PARA ESPECIFICAR QUE YA SE IMPRIMIO LA ETIQUETA DEL KIT//////////////////////////////////////////////
-				UPDATE ccjoblin_sql
-					SET User_def_Fld1 = 'Y'
-				WHERE JOBNO = @PP_ORDEN_PRINCIPAL
-				AND Ser_No = @PP_POS_KIT
-
-				IF @@ROWCOUNT = 0
-					RAISERROR ('ERROR: No fue posible Actualizar el kit en [ccjoblin_sql]', 16, 1 ) --MENSAJE - Severity -State.
-
 				IF @VP_CODIGO_ASIGNADO = 1
 					BEGIN
+						IF LTRIM(RTRIM(@PP_COMENTARIO)) = ''
+							RAISERROR ('ERROR: Por favor proporcione el motivo de la Reimpresión de la etiqueta!', 16, 1 ) --MENSAJE - Severity -State.
+
+						-- ///////INGRESA EL LOG EN [MATERIAL_PROGRAMADO_LOG] DEL MATERIAL REETIQUETADO//////////////////////////////////////////////
+						DECLARE @VP_ITEM_NO VARCHAR(100) = ''
+
+						SELECT @VP_ITEM_NO = LTRIM(RTRIM(ITEM_NO))
+						FROM ccjoblin_sql (NOLOCK) 
+						WHERE LTRIM(RTRIM(ccjoblin_sql.jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) = @PP_SERIAL
+
+						INSERT INTO [MATERIAL_PROGRAMADO_LOG]	
+										(					
+											[K_TIPO_EVENTO_KIT],			
+											-- =====================				
+											[SERIAL],					
+											[ITEM_NO],				
+											[USUARIO_EVENTO],			
+											[ESTACION],				
+											[K_RESPONSABLE],			
+											[CODIGO_ETIQUETA],		
+											[F_LOG],			
+											-- ===========================
+											[K_USUARIO_ALTA], [F_ALTA], [K_USUARIO_CAMBIO], [F_CAMBIO],
+											[L_BORRADO], [K_USUARIO_BAJA], [F_BAJA]  )	
+									VALUES	
+										(	1,	-- REIMPRESION DE ETIQURTA
+											@PP_SERIAL,				
+											@VP_ITEM_NO,				
+											'REIMPRESION_ETIQUETA',			
+											@PP_EQUIPO,						
+											@PP_K_USUARIO_ACCION,		
+											@PP_COMENTARIO,								
+											GETDATE(),
+											-- ===========================				
+											@PP_K_USUARIO_ACCION, GETDATE(), @PP_K_USUARIO_ACCION, GETDATE(),
+											0, NULL, NULL )	
+							
+							IF @@ROWCOUNT = 0
+								RAISERROR ('ERROR: No fue posible guardar el Log de la Reimpresion en [PG_IN_MATERIAL_PROGRAMADO_LOG]', 16, 1 ) --MENSAJE - Severity -State.
+
 						-- ///////SE OBTIENE EL CODIGO ASIGNADO AL SERIAL//////////////////////////////////////////////
 						SELECT @VP_CODIGO_CAMARA = LTRIM(RTRIM(CODE))
 						FROM SERIALCAM_SQL (NOLOCK)
@@ -587,6 +560,15 @@ AS
 					END
 				ELSE
 					BEGIN
+						-- ///////SE ACTUALIZA LA TABLA ccjoblin_sql PARA ESPECIFICAR QUE YA SE IMPRIMIO LA ETIQUETA DEL KIT//////////////////////////////////////////////
+						UPDATE ccjoblin_sql
+							SET User_def_Fld1 = 'Y'
+						WHERE JOBNO = @PP_ORDEN_PRINCIPAL
+						AND Ser_No = @PP_POS_KIT
+
+						IF @@ROWCOUNT = 0
+							RAISERROR ('ERROR: No fue posible Actualizar el kit en [ccjoblin_sql]', 16, 1 ) --MENSAJE - Severity -State.
+						
 						-- ///////SE OBTIENE UN CODIGO QUE AUN NO ESTE ASIGNADO//////////////////////////////////////////////
 						SELECT TOP 1 @VP_CODIGO_CAMARA = LTRIM(RTRIM(CODE)) 
 						FROM	SERIALCAM_SQL (NOLOCK)

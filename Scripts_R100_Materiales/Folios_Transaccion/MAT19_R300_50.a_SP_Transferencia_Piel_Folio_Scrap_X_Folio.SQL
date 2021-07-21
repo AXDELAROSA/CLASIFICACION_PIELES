@@ -56,6 +56,9 @@ AS
 	DECLARE @VP_F_CREACION_INT	INT = DATA_02.DBO.[CONVERT_DATE_TO_INT](CONVERT(DATE, GETDATE()),'yyyyMMdd')
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
+	IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T')
+		SET @VP_MENSAJE = 'Movimiento no permitido con folios asignados a Mesa'
+
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_RP_SC_FOLIO_EXISTE]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,	
 													@PP_TAGNO_ORIGEN, @PP_CB_COLOR,
