@@ -107,6 +107,25 @@ AS
 		BEGIN
 			BEGIN TRANSACTION 
 			BEGIN TRY	
+			-- PROCESO NUEVO
+			-- ///////SE ACTUALIZA EL REGISTRO DE LA ORDEN EN CCJOBHDR_SQL//////////////////////////////////////////////
+				UPDATE CCJOBHDR_SQL 
+					SET machine		=	@PP_MESA,
+						instruct1	=	@PP_COMENTARIO,
+						comments	=	@PP_COMENTARIO
+				WHERE jobno	= @PP_ORDEN
+				
+				IF @@ROWCOUNT = 0
+					RAISERROR ('ERROR: No fue posible Actualizar la orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
+				
+				-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
+				DECLARE @VP_DETAIL VARCHAR(100) = 'Modificacion de Orden: ' + @PP_ORDEN + ', ' + @PP_COMENTARIO
+				EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+													@PP_USER, @PP_COMPUTER_NAME, 'Planning',
+													@PP_ORDEN, 'Modificar orden',
+													@VP_DETAIL, ''
+			-- PROCESO ANTERIOR
+			/*
 				DECLARE @VP_COLOR_SIN_F VARCHAR(25) = SUBSTRING(@PP_COLOR, 2 , 10)
 
 				-- ///////SE CREA TABLA TEMPORAL /////////////////////////////////////////////	
@@ -282,17 +301,6 @@ AS
 						IF @@ROWCOUNT > 50
 							RAISERROR ('ERROR: Verifique el numero de Kits a Eliminar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
 
-						INSERT INTO SERIALCAM_SQL 
-						SELECT code, NULL, NULL FROM SERIALCAM_SQL WHERE SERIAL2 LIKE @PP_ORDEN	+ '%'
-
-						IF @@ROWCOUNT > 50
-							RAISERROR ('ERROR: Verifique el numero de Kits a Ingresar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
-
-						DELETE SERIALCAM_SQL 
-						WHERE SERIAL2 LIKE @PP_ORDEN + '%'
-
-						IF @@ROWCOUNT > 50
-							RAISERROR ('ERROR: Verifique el numero de Kits a Eliminar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
 					END				
 
 				-- //////SE DECLARAN VARIABLES A USARSE/////////////////////////////////////
@@ -304,7 +312,6 @@ AS
 				DECLARE CU_KIT_A_MODIFICAR CURSOR 
 				FOR SELECT	KIT, ITEM_NO, CANTIDAD, MFP
 					FROM	@TBL_KIT_A_MODIFICAR
-					--WHERE	MFP = 0
 
 				OPEN CU_KIT_A_MODIFICAR
 				FETCH NEXT FROM CU_KIT_A_MODIFICAR INTO @VP_KIT, @VP_ITEM_NO, @VP_CANTIDAD, @VP_MFP
@@ -329,7 +336,6 @@ AS
 						AND CONCAT('F', RIGHT(LTRIM(RTRIM(cccusitm_sql.item_no)),6)) = @PP_COLOR
 						AND ccverhdr_sql.cus_no = @PP_CLIENTE
 						AND cccusitm_sql.item_no = @VP_ITEM_NO
-						--ORDER BY versionno DESC
 
 						SET @VP_CHANGE_LEVEL = @VP_MODELO + @VP_VERSION
 
@@ -337,8 +343,7 @@ AS
 						SELECT TOP 1 @VP_CUBE_LENGTH	= CUBE_LENGTH,
 								@VP_CUBE_WIDTH			= CUBE_WIDTH,
 								@VP_CUBE_QTY_PER		= CUBE_QTY_PER,
-								@VP_D_ITEM				= LTRIM(RTRIM(item_desc_1)) --,
-								--@VP_CHANGE_LEVEL		= LTRIM(RTRIM(Last_item_revision))
+								@VP_D_ITEM				= LTRIM(RTRIM(item_desc_1)) 
 						FROM IMITMIDX_SQL   
 						WHERE	LTRIM(RTRIM(ITEM_NO)) = @VP_ITEM_NO
 
@@ -431,7 +436,7 @@ AS
 													@PP_USER, @PP_COMPUTER_NAME, 'Planning',
 													@PP_ORDEN, 'Modificar orden',
 													@VP_DETAIL, ''
-
+			*/
 			-- ///////////////////////////////////////////
 			COMMIT TRANSACTION 
 			END TRY
