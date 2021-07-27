@@ -24,17 +24,53 @@ USE DATA_02PRUEBAS
 	SELECT TOP 20 * from serialcam_sql where SUBSTRING(serial, 1,5) IN	('30905')
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO < '50000' ORDER BY JOBNO DESC
 	
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31503'
+	 SELECT * FROM ccjobhdr_sql WHERE COLOUR = 'CNPWA3' AND STATUS = 'P'
+ SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('37207', '37208') ORDER BY JOBNO
 	
 	select imkitfil_sql.* from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31503') ) -- IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('30958')) ORDER BY item_no
 
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('33921') ORDER BY jobno, Ser_No
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('36405') ORDER BY jobno, Ser_No
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('33922') ORDER BY jobno, Ser_No
 	SELECT * FROM  ccjoblin_sql WHERE JOBNO = '31504' AND ITEM_NO NOT IN (SELECT comp_item_no FROM imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31504') ))
 
+	DECLARE @VP_N_ITEM_NO INT = 0
+	SELECT  *
+	FROM imkitfil_sql (NOLOCK)
+	WHERE item_no = 'UW2WQBLCNPWA3'   AND comp_item_no <> 'PW2WQBLCNPWA3'  
+
+	SELECT *
+			FROM imkitfil_sql (NOLOCK)
+			WHERE comp_item_no IN ( SELECT item_no 
+									FROM ccjoblin_sql 
+									WHERE JOBNO = '35403' )
+
+	SELECT *
+			FROM imkitfil_sql (NOLOCK)
+			WHERE comp_item_no IN ( SELECT item_no 
+									FROM ccjoblin_sql 
+									WHERE JOBNO = '36462' )
+
+
+	SELECT COUNT(DISTINCT(CONCAT('F', RIGHT(LTRIM(RTRIM(item_no)),6))))
+			FROM imkitfil_sql (NOLOCK)
+			WHERE comp_item_no IN ( SELECT item_no 
+									FROM ccjoblin_sql 
+									WHERE JOBNO = '36170' )
+
+
+		SELECT *
+			FROM imkitfil_sql (NOLOCK)
+			WHERE comp_item_no = 'PWDLFBRWLCPX7'
+
+		
+		SELECT *
+			FROM imkitfil_sql (NOLOCK)
+			WHERE item_no = 'UW2WQBLCNPWA3  '
+
+
 	SELECT SUBSTRING('PWALBR2WLROX7', 1,7 )
-	SELECT * FROM imkitfil_sql where item_no = 'UWLKFBRWLCPX7'
-	select * from imkitfil_sql where comp_item_no='PWLK2FBWLCPX7'
+	SELECT * FROM imkitfil_sql where item_no = 'PW2SQBLCNPDX9  '
+	select * from imkitfil_sql where comp_item_no='PW2SQBLCNPDX9  '
 
 	SELECT Kit, IMKITFIL_SQL.Item_No, ccjoblin_sql.item_no, OriginalQty
 		FROM IMKITFIL_SQL (NOLOCK)

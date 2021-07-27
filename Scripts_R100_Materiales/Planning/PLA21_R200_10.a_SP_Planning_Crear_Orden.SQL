@@ -340,13 +340,30 @@ AS
 			
 			IF @VP_N_KITS_U IS NULL
 				SET @VP_N_KITS_U = 0
-
-			-- ///////SE SI EXISTEN KITS (U) DOS TONOS SE GENERA LA ORDEN COMPLEMENTO//////////////////////////////////////////////
+			
+			-- ///////SE VALIDA SI EXISTEN KITS (U) DOS TONOS//////////////////////////////////////////////
 			IF @VP_N_KITS_U > 0
-				EXECUTE [dbo].[PG_PR_PLANNING_CREAR_ORDER_2_TONO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																	@VP_ORDEN, @PP_CLIENTE, @PP_MESA, 
-																	@PP_COMENTARIO, @PP_USER, @PP_COMPUTER_NAME
+				BEGIN
+					-- ///////SE VALIDA EL COLOR DE LA ORDEN SEA LA ORDEN GRANDE ES DECIR QUE NO ESTE LIGADA A MAS DE UN COLOR//////////////////////////////////////////////
+					DECLARE @VP_N_COLORES INT = 0
+					SELECT @VP_N_COLORES = COUNT(DISTINCT(CONCAT('F', RIGHT(LTRIM(RTRIM(item_no)),6))))
+					FROM imkitfil_sql (NOLOCK)
+					WHERE comp_item_no IN ( SELECT item_no 
+											FROM ccjoblin_sql 
+											WHERE JOBNO = @VP_ORDEN )
+					
+					IF @VP_N_COLORES IS NULL
+						SET @VP_N_COLORES = 0
 
+					IF @VP_N_COLORES > 1	
+						RAISERROR ('ERROR: La orden que intenta generar contiene numeros de parte U ligados con mas de un color en [imkitfil_sql]', 16, 1 ) --MENSAJE - Severity -State.
+					 
+					-- ///////SI SOLO ESTA LIGADA A UN COLOR GENERA LA ORDEN COMPLEMENTO//////////////////////////////////////////////
+					IF @VP_N_COLORES = 1
+						EXECUTE [dbo].[PG_PR_PLANNING_CREAR_ORDER_2_TONO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@VP_ORDEN, @PP_CLIENTE, @PP_MESA, 
+																			@PP_COMENTARIO, @PP_USER, @PP_COMPUTER_NAME
+				END
 			-- ///////////////////////////////////////////
 			COMMIT TRANSACTION 
 			END TRY
