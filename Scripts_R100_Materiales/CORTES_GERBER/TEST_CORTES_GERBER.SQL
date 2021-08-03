@@ -37,15 +37,16 @@
 	SELECT * --distinct TAGNO , MOVEMENT
 	FROM RP_SC--_HIDE_DELETE
 	WHERE 
-	--COLOUR = 'FCPRHL1' 
+	--COLOUR = 'FNRUDX9' 
 	--AND
-	LOT = '401771'
+	--LOT = '401331'
 	--and movement = 'MHI'
-	--AND TAGNO = 3832476
-	AND convert(int, LTRIM(RTRIM(hide)))  IN (49, 57)
+	--AND
+	 TAGNO = 3781184
+	--AND convert(int, LTRIM(RTRIM(hide)))  IN (214  )
 	--and convert(int, LTRIM(RTRIM(hide))) between 1 and 200
 	ORDER  BY HIDE asc
-
+	
 	SELECT  LOT, HIDE,count(*) FROM RP_SC 
 	WHERE  --LTRIM(RTRIM(COLOUR)) = 'FWLNPX7'
 		LOT = '34011'
@@ -61,38 +62,46 @@
 	FROM PIEL_LOG 
 	LEFT JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
 	INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
-	WHERE  --( FOLIO_ORIGEN = 3842443 OR  FOLIO_DESTINO = 3842443 )
+	--WHERE  --( FOLIO_ORIGEN = 3842443 OR  FOLIO_DESTINO = 3842443 )
 	--(ORDEN_ORIGEN = '35519' OR  ORDEN_DESTIDO = '35519' )
-	--COLOR = 'FWLNPX7'
+	--COLOR = 'FCNPDX9'
 	--AND 
-	LOTE IN (34171)    
-	AND          
-	PIEL  IN (1)
+	--LOTE IN (750121        )    
+	--AND          
+	--PIEL  IN (617 )
 	----PIEL  BETWEEN 217 and 218
 	--AND 
 	--PIEL_LOG.K_TIPO_PIEL_LOG IN (4)
 	ORDER BY k_piel_log desc
 	
-	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE TAGNO IN ( 3814277) order by HIDE
+	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE TAGNO IN ( 3839484) order by HIDE
+	
+	SELECT * FROM RP_SC WHERE TAGNO  IN (3835438) 
 
-	SELECT * FROM RP_SC WHERE TAGNO  IN (3837020)  order by HIDE
+	SELECT * FROM RP_SC_FOLIO_TYPE_2 WHERE TAGNO  IN (3789698) 
+	
+	SELECT * FROM RP_Folios (NOLOCK)
+	inner join rp_sc (NOLOCK) on TAG = tagno
+	 WHERE STATUS = 'A'
+	 --AND 
+	 --COLOUR = 'FCPRDX9'
+	order by TAG desc
 
-	SELECT * FROM RP_Folios WHERE TAG  IN ( 3837020) 
 
+	SELECT * FROM ccjobhdr_sql WHERE folio in ( 3841045 )
 
-	SELECT * FROM ccjobhdr_sql WHERE folio in (3837020 )
+	SELECT * FROM RP_Folios WHERE JOBNO  IN ( '35221') 
 
-	SELECT * FROM RP_Folios WHERE JOBNO  IN ( '33197') 
+	SELECT * FROM ccjobhdr_sql WHERE jobno = '33330'
 
-	SELECT * FROM ccjobhdr_sql WHERE jobno = '33197'
-
-	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '34991' order by ckey
+	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '3837729' order by ckey
+	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '33330' order by ckey
 	
 	use DATA_02
-	SELECT * FROM cccuthst_sql WHERE --jobno IN ('27848') --order by colkey desc
+	SELECT * FROM cccuthst_sql WHERE --jobno IN ('35265') --order by colkey desc
 	--AND 
-	LTRIM(RTRIM(LOTNO)) = '034171' 
-	AND CONVERT(INT, hideno) IN (149)
+	LTRIM(RTRIM(LOTNO)) = '750421' 
+	AND CONVERT(INT, hideno) IN (487)
 	order by hideno
 
 	SELECT * FROM	IMLSMST_SQL	

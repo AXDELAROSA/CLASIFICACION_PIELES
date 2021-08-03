@@ -22,7 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 	DROP PROCEDURE [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]
 GO
 /*
-	EXECUTE  [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]	0, 144,  3789698 , 'franciscoe' , 'IT-010' 
+	EXECUTE  [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]	0, 144,  3790371 , 'franciscoe' , 'IT-010' 
 */
 CREATE PROCEDURE [dbo].[PG_PR_TRANSFERIR_PIEL_DE_FOLIO_DETALLADO]
 	@PP_K_SISTEMA_EXE						INT,
@@ -38,39 +38,175 @@ AS
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 	DECLARE @VP_MENSAJE_TRANSACCION VARCHAR(255) = ''
 	DECLARE @VP_LOCACION_ORIGEN VARCHAR(20) = 'MQU'
+	DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = ''
+	DECLARE @VP_SUBJECT		VARCHAR(255) = ''
+	DECLARE @VP_BODY		NVARCHAR(MAX) = ''
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
 	DECLARE @VP_N_FOLIO_DETALLADO INT = 0
 	SELECT @VP_N_FOLIO_DETALLADO = COUNT(ID)
-	FROM RP_SC_FOLIO_TYPE_2
+	FROM RP_SC_FOLIO_TYPE_2 (NOLOCK)
 	WHERE TAGNO = @PP_FOLIO_DETALLADO
 	AND	COLOUR IN  ( SELECT COLOR
-					 FROM COLORES_CONTROLADOS )
+					 FROM COLORES_CONTROLADOS (NOLOCK) )
 
 	IF @VP_N_FOLIO_DETALLADO IS NULL OR @VP_N_FOLIO_DETALLADO = 0
 		SET @VP_MENSAJE = 'Folio detallado no encontrado o sin pieles de colores controlados.'
+
+	IF @VP_MENSAJE = ''
+		BEGIN
+			DECLARE @TBL_PIELES_NO_ENCONTRADAS TABLE(
+				ID			INT IDENTITY(1,1),
+				FOLIO		INT,
+				COLOR		VARCHAR(50),
+				LOTE		VARCHAR(50),
+				PIEL		VARCHAR(10),
+				SQF			DECIMAL(5,2),
+				LOCACION	VARCHAR(10),
+				MENSAJE		VARCHAR(255)
+			)
+
+			-- /////////VALIDAR PIELES////////////////////////////////////////////////////////////
+			DECLARE @VP_COLOR			VARCHAR(10)	= ''
+			DECLARE @VP_LOTE			VARCHAR(10)	= ''
+			DECLARE @VP_PIEL			VARCHAR(10)	= ''
+			DECLARE @VP_SQF_FOLIO		DECIMAL(5,2) = 0
+
+			DECLARE CU_VALIDAR_PIEL CURSOR 
+			FOR SELECT LTRIM(RTRIM(COLOUR)) , LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)), CONVERT(DECIMAL(5,2),LTRIM(RTRIM(SQF)))
+				FROM RP_SC_FOLIO_TYPE_2 (NOLOCK)
+				WHERE TAGNO = @PP_FOLIO_DETALLADO
+				AND	COLOUR IN  (	SELECT COLOR
+									FROM COLORES_CONTROLADOS (NOLOCK) )
+				ORDER BY COLOUR, LOT, HIDE
+
+			OPEN CU_VALIDAR_PIEL
+			FETCH NEXT FROM CU_VALIDAR_PIEL INTO @VP_COLOR, @VP_LOTE, @VP_PIEL, @VP_SQF_FOLIO
+				
+			WHILE @@FETCH_STATUS = 0
+				BEGIN
+					-- /////////SE VALIDA QUE EL LOTE Y PIEL EXISTA EN MQU Y QUE NO ESTE DUPLICADA///////////////////////////////////////////////////////////	
+					DECLARE @VP_N_PIEL_VALIDAR INT = 0
+					SELECT @VP_N_PIEL_VALIDAR = COUNT(ID)
+					FROM RP_SC (NOLOCK)
+					WHERE COLOUR = @VP_COLOR
+					AND LOT = @VP_LOTE 
+					AND HIDE = @VP_PIEL
+					AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
+					AND MOVEMENT = @VP_LOCACION_ORIGEN --'MQU'
+
+					IF @VP_N_PIEL_VALIDAR IS NULL OR  @VP_N_PIEL_VALIDAR = 0
+						BEGIN
+							DECLARE @VP_N_PIEL_DIF_LOC INT = 0
+							SELECT @VP_N_PIEL_DIF_LOC = COUNT(ID)
+							FROM RP_SC (NOLOCK)
+							WHERE COLOUR = @VP_COLOR
+							AND LOT = @VP_LOTE 
+							AND HIDE = @VP_PIEL
+							AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
+							AND MOVEMENT <> @VP_LOCACION_ORIGEN --'MQU'
+
+							IF @VP_N_PIEL_DIF_LOC IS NULL OR  @VP_N_PIEL_DIF_LOC = 0
+								BEGIN
+									INSERT INTO @TBL_PIELES_NO_ENCONTRADAS
+									SELECT 0, @VP_COLOR, @VP_LOTE, @VP_PIEL, @VP_SQF_FOLIO, '-' ,'No Encontrada'
+								END
+							ELSE
+								BEGIN
+									INSERT INTO @TBL_PIELES_NO_ENCONTRADAS
+									SELECT TAGNO, LTRIM(RTRIM(COLOUR)), LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)),  LTRIM(RTRIM(SQF)), LTRIM(RTRIM(MOVEMENT)), 'Diferente Locación'
+									FROM RP_SC (NOLOCK)
+									WHERE COLOUR = @VP_COLOR
+									AND LOT = @VP_LOTE 
+									AND HIDE = @VP_PIEL
+									AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
+									AND MOVEMENT <> @VP_LOCACION_ORIGEN --'MQU'
+								END
+						END	
+
+					IF @VP_N_PIEL_VALIDAR > 1
+						BEGIN
+							INSERT INTO @TBL_PIELES_NO_ENCONTRADAS
+							SELECT TAGNO, LTRIM(RTRIM(COLOUR)), LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)),  LTRIM(RTRIM(SQF)), LTRIM(RTRIM(MOVEMENT)), 'Duplicada en MQU'
+							FROM RP_SC (NOLOCK)
+							WHERE COLOUR = @VP_COLOR
+							AND LOT = @VP_LOTE 
+							AND HIDE = @VP_PIEL
+							AND CONVERT(DECIMAL(13,2), SQF) = @VP_SQF_FOLIO
+							AND MOVEMENT = @VP_LOCACION_ORIGEN --'MQU'
+						END	
+					FETCH NEXT FROM CU_VALIDAR_PIEL INTO @VP_COLOR, @VP_LOTE, @VP_PIEL, @VP_SQF_FOLIO	
+				END
+	
+			CLOSE CU_VALIDAR_PIEL
+			DEALLOCATE CU_VALIDAR_PIEL
+		END
+
+	-- /////SE VALIDA QUE LA TABLA DE PIELES NO ENCONTRADAS ESTE VACIA SI NO SE ARRIGA UN ERROR/////////////////////////////////////////////////////////
+	DECLARE @VP_N_PIEL_NO_ENCONTRADA INT = 0
+	SELECT @VP_N_PIEL_NO_ENCONTRADA = COUNT(ID)
+	FROM @TBL_PIELES_NO_ENCONTRADAS 
+
+	IF @VP_N_PIEL_NO_ENCONTRADA IS NULL
+		SET @VP_N_PIEL_NO_ENCONTRADA = 0
+
+	IF @VP_N_PIEL_NO_ENCONTRADA > 0
+		BEGIN
+			SET @VP_MENSAJE = 'Folio detallado con pieles no encontradas en MQU, se envio información al correo.'
+
+			SET @VP_RECIPIENTS	= 'franciscoe@pearlleather.com.mx;marlennes.pearl@gmail.com'
+			SET @VP_SUBJECT		= CONCAT( 'Folio detallado:', CONVERT(VARCHAR(20), @PP_FOLIO_DETALLADO), ' con pieles no encontradas en MQU' )	 
+			
+			SET @VP_BODY =	N'<table  border="1" align="center" cellspacing="0">' + 
+								N'<thead>' + 
+									N'<tr BGCOLOR="#ADD8E6">' + 
+										N'<th colspan="7">'+ @VP_SUBJECT +'</th>' + 
+									N'</tr>' + 
+									N'<tr BGCOLOR="#48D1CC">' + 
+										N'<th>Folio</th><th>Color</th><th>Lote</th><th>Piel</th><th>SQF</th><th>Locación</th><th>Mensaje</th>' + 
+									N'</tr>' + 
+								N'</thead>' + 
+								N'<tbody>' + 
+									N'<tr>' + 
+										CAST ( ( SELECT td = FOLIO, '',
+								                td = COLOR, '',  
+								                td = LOTE, '',  
+								                td = PIEL, '',  
+								                td = SQF, '', 
+												td = LOCACION, '',
+												td = MENSAJE, ''
+								         FROM @TBL_PIELES_NO_ENCONTRADAS
+								          FOR XML PATH('tr'), TYPE   
+										) AS NVARCHAR(MAX) ) +  
+									N'</tr>' +
+								N'</tbody>' + 
+							N'</table>' ; 
+					SET ROWCOUNT 0
+				 				
+			EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+														@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+		END
 
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
 			BEGIN TRANSACTION 
-			BEGIN TRY				
-				-- /////////////////////////////////////////////////////////////////////
-				DECLARE @VP_COLOR			VARCHAR(10)	= ''
-				DECLARE @VP_LOTE			VARCHAR(10)	= ''
-				DECLARE @VP_PIEL			VARCHAR(10)	= ''
-				DECLARE @VP_SQF_FOLIO		DECIMAL(5,2) = 0
+			BEGIN TRY							
+				-- ////////////TRANSFERENCIA DE PIELES/////////////////////////////////////////////////////////
 				DECLARE @VP_COLOR_ANTERIOR	VARCHAR(10)	= ''
-
+				SET @VP_COLOR			= ''
+				SET @VP_LOTE			= ''
+				SET @VP_PIEL			= ''
+				SET @VP_SQF_FOLIO		= 0
 
 				DECLARE CU_PIEL_X_FOLIO_DETALLADO CURSOR 
 				FOR SELECT LTRIM(RTRIM(COLOUR)) , LTRIM(RTRIM(LOT)), LTRIM(RTRIM(HIDE)), CONVERT(DECIMAL(5,2),LTRIM(RTRIM(SQF)))
-					FROM RP_SC_FOLIO_TYPE_2
+					FROM RP_SC_FOLIO_TYPE_2 (NOLOCK)
 					WHERE TAGNO = @PP_FOLIO_DETALLADO
 					AND	COLOUR IN  (	SELECT COLOR
-										FROM COLORES_CONTROLADOS )
+										FROM COLORES_CONTROLADOS (NOLOCK) )
 					--AND LOT IN ('401531', '401781', '750041') -- PARA PRUEBAS
-					ORDER BY COLOUR, LOT
+					ORDER BY COLOUR, LOT, HIDE
 
 				OPEN CU_PIEL_X_FOLIO_DETALLADO
 				FETCH NEXT FROM CU_PIEL_X_FOLIO_DETALLADO INTO @VP_COLOR, @VP_LOTE, @VP_PIEL, @VP_SQF_FOLIO
@@ -100,11 +236,11 @@ AS
 										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 									END
 
-								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = 'franciscoe@pearlleather.com.mx;marlennes.pearl@gmail.com'
-								DECLARE @VP_SUBJECT		VARCHAR(255) = 'Creacion de Folio con Detallado'
+								SET @VP_RECIPIENTS	= 'franciscoe@pearlleather.com.mx;marlennes.pearl@gmail.com'
+								SET @VP_SUBJECT		= 'Creacion de Folio con Detallado'
 								DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)
 								DECLARE @VP_COMENTARIO		VARCHAR(255) = 'Folio creado apartir del Folio detallado: ' + CONVERT(VARCHAR(10),@PP_FOLIO_DETALLADO) 
-								DECLARE @VP_BODY		NVARCHAR(MAX) 
+							
 								
 								SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
 													N'<thead>' + 
@@ -130,7 +266,7 @@ AS
 						-- /////////SE VALIDA QUE EL LOTE Y PIEL EXISTA EN MQU Y QUE NO ESTE DUPLICADA///////////////////////////////////////////////////////////	
 						DECLARE @VP_N_PIEL INT = 0
 						SELECT @VP_N_PIEL = COUNT(ID)
-						FROM RP_SC 
+						FROM RP_SC (NOLOCK)
 						WHERE COLOUR = @VP_COLOR
 						AND LOT = @VP_LOTE 
 						AND HIDE = @VP_PIEL
@@ -152,7 +288,7 @@ AS
 						-- /////////SE OBTIENE EL FOLIO ORIGEN///////////////////////////////////////////////////////////	
 						DECLARE @VP_FOLIO_ORIGEN INT = 0
 						SELECT @VP_FOLIO_ORIGEN = TAGNO
-						FROM RP_SC 
+						FROM RP_SC (NOLOCK)
 						WHERE COLOUR = @VP_COLOR
 						AND LOT = @VP_LOTE 
 						AND HIDE = @VP_PIEL
