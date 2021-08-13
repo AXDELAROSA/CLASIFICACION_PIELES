@@ -16,6 +16,54 @@ GO
 -- //////////////////////////////////////////////////////////////
 
 
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> RN_EXISTE
+-- //////////////////////////////////////////////////////////////
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_PLANNING_VALIDA_ORDEN_ABIERTA_X_COLOR_LOCACION]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_RN_PLANNING_VALIDA_ORDEN_ABIERTA_X_COLOR_LOCACION]
+GO
+/*
+	 EXEC [PG_RN_PLANNING_VALIDA_ORDEN_ABIERTA_X_COLOR_LOCACION] 0, 144, 'FCNPDX9', 'Table 37'
+	 EXEC [PG_RN_PLANNING_VALIDA_ORDEN_ABIERTA_X_COLOR_LOCACION] 0, 144, 'FCNPDX9', 'TABLE 40'
+*/
+CREATE PROCEDURE [dbo].[PG_RN_PLANNING_VALIDA_ORDEN_ABIERTA_X_COLOR_LOCACION]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================	
+	@PP_COLOR					VARCHAR(50),
+	@PP_LOCACION				VARCHAR(50),
+	-- ===========================		
+	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
+AS
+
+	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 	
+	DECLARE @VP_MENSAJE			VARCHAR(255) = ''
+	DECLARE @VP_COLOR_SIN_F VARCHAR(25) = SUBSTRING(@PP_COLOR, 2 , 10)
+	-- /////////////////////////////////////////////////////
+
+	DECLARE @VP_N_ORDEN_ABIERTA INT = 0
+	SELECT @VP_N_ORDEN_ABIERTA = COUNT(JOBNO) 
+	FROM ccjobhdr_sql
+	WHERE status = 'P' 
+	AND machine = @PP_LOCACION 
+	AND COLOUR = @VP_COLOR_SIN_F 
+	AND ( LOTNO IS NULL OR LOTNO = '' )
+	
+	IF @VP_N_ORDEN_ABIERTA IS NULL
+		SET @VP_N_ORDEN_ABIERTA = 0
+
+	IF @VP_N_ORDEN_ABIERTA > 9
+		SET @VP_RESULTADO = 'Existen ' + CONVERT(VARCHAR(10), @VP_N_ORDEN_ABIERTA) + ' ordenes abiertas para el Color: ' + @PP_COLOR + ' en la Locación: ' + @PP_LOCACION + '.'
+	
+	-- /////////////////////////////////////////////////////
+	--SELECT @VP_RESULTADO
+	SET @OU_RESULTADO_VALIDACION = @VP_RESULTADO
+
+	-- /////////////////////////////////////////////////////
+GO
+
+
 
 
 -- //////////////////////////////////////////////////////////////
@@ -32,8 +80,8 @@ CREATE PROCEDURE [dbo].[PG_RN_PLANNING_VALIDA_SQF_TRANSFERIDO_A_LOCACION]
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================	
 	@PP_ORDEN					VARCHAR(10),
-	@PP_COLOR					VARCHAR(20),
-	@PP_LACACION				VARCHAR(50),
+	@PP_COLOR					VARCHAR(50),
+	@PP_LOCACION				VARCHAR(50),
 	-- ===========================		
 	@OU_RESULTADO_VALIDACION	VARCHAR(300)	OUTPUT
 AS
@@ -63,7 +111,7 @@ AS
 			     AND IMLSTRX_SQL.seq_no = IMINVTRX_SQL.seq_no
 			-- ===========================
 			 WHERE IMINVTRX_SQL.item_no = @PP_COLOR
-			 AND LTRIM(RTRIM(IMINVTRX_SQL.loc)) = @PP_LACACION
+			 AND LTRIM(RTRIM(IMINVTRX_SQL.loc)) = @PP_LOCACION
 			 -- ===========================
 			 AND (	LTRIM(RTRIM(IMINVTRX_SQL.doc_ord_no)) = @PP_ORDEN
 					OR	LTRIM(RTRIM(IMINVTRX_SQL.doc_ord_no)) = 'J' + @PP_ORDEN

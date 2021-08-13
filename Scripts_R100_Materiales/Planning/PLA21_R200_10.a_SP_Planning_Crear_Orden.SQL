@@ -47,10 +47,10 @@ AS
 	DECLARE @VP_ORDEN VARCHAR(10) = ''
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
-	--IF @PP_ORDEN_2_TONO <> ''
-	--	EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-	--														@PP_ORDEN_2_TONO,
-	--														@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
+	IF ( @PP_COLOR = 'FCNPDX9' OR @PP_COLOR = 'FNRUDX9' )
+		EXECUTE [dbo].[PG_RN_PLANNING_VALIDA_ORDEN_ABIERTA_X_COLOR_LOCACION]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																					@PP_COLOR, @PP_MESA,
+																					@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
