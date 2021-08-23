@@ -53,7 +53,7 @@ AS
 	IF @VP_N_ORDEN_ABIERTA IS NULL
 		SET @VP_N_ORDEN_ABIERTA = 0
 
-	IF @VP_N_ORDEN_ABIERTA > 9
+	IF @VP_N_ORDEN_ABIERTA > 99
 		SET @VP_RESULTADO = 'Existen ' + CONVERT(VARCHAR(10), @VP_N_ORDEN_ABIERTA) + ' ordenes abiertas para el Color: ' + @PP_COLOR + ' en la Locación: ' + @PP_LOCACION + '.'
 	
 	-- /////////////////////////////////////////////////////
