@@ -43,13 +43,13 @@
 	SELECT * --distinct TAGNO , MOVEMENT
 	FROM RP_SC --_TEMP
 	WHERE 
-	--COLOUR = 'FNRUDX9'   
-	--AND
-	LOT = '68151'
-	--and movement = 'MHI'
+	--COLOUR = 'FWLCPX7'   
+	--AND 
+	LOT = '402782'
+	--and movement = 'MQU'
 	--AND
 	-- TAGNO = 3777313
-	AND convert(int, LTRIM(RTRIM(hide)))  IN ( 202  ) --FWLNPX7
+	AND convert(int, LTRIM(RTRIM(hide)))  IN ( 318,317,193) --FWLNPX7
 	--and convert(int, LTRIM(RTRIM(hide))) between 1 and 200
 	ORDER  BY HIDE asc
 	
@@ -67,12 +67,12 @@
 	--(ORDEN_ORIGEN = '39193' OR  ORDEN_DESTIDO = '39193' )
 	--COLOR = 'FCNPDX9'
 	--AND 
-	LOTE IN (108831)    
+	LOTE IN (108951)    
 	AND          
-	PIEL  IN (443, 444, 445, 446, 447, 448, 449, 450)
+	PIEL  IN (1079, 1082, 1083,1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097)
 	--PIEL  BETWEEN 217 and 218
-	--AND 
-	--PIEL_LOG.K_TIPO_PIEL_LOG IN (4)
+	AND 
+	PIEL_LOG.K_TIPO_PIEL_LOG IN (4)
 	--and usuario <> 'anag'
 	ORDER BY K_PIEL_LOG desc
 
@@ -80,33 +80,27 @@
 
 	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE TAGNO IN ( 3848973) order by HIDE
 	
-	SELECT * FROM RP_SC WHERE TAGNO   IN (3848929)  ORDER BY HIDE
+	SELECT * FROM RP_SC WHERE TAGNO   IN (3850321)  ORDER BY HIDE
 
-	SELECT * FROM RP_Folios (NOLOCK) WHERE TAG IN (3816864) 
+	SELECT * FROM RP_Folios (NOLOCK) WHERE TAG IN (3807491) 
 
-	SELECT * FROM ccjobhdr_sql WHERE folio  IN (3842313,3842316)  
+	SELECT * FROM ccjobhdr_sql WHERE folio  IN (3807491)  
 
-	SELECT * FROM RP_Folios WHERE JOBNO  IN ( '37648')
-
-	SELECT * FROM ccjobhdr_sql WHERE jobno IN ( '39537')
+	SELECT * FROM RP_Folios WHERE JOBNO  IN ( '22628')
+	
+	SELECT * FROM ccjobhdr_sql WHERE jobno IN ( '22628')
 	
 	SELECT * FROM ccjobhdr_sql WHERE colour = 'CPRDX9' AND status = 'P' AND machine = 'Table 16' AND ( LOTNO IS NULL OR LOTNO = '' )
 
 	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '37626' order by ckey
-	
-	use DATA_02
-	SELECT * FROM cccuthst_sql WHERE --jobno IN ('39564') --order by colkey desc
-	--AND 
-	LTRIM(RTRIM(LOTNO)) = '035131' 
-	AND CONVERT(INT, hideno) IN (227)
-	order by hideno
+	 
 
 	--UPDATE cccuthst_sql
-	--SET hidesqm = 32.2000
+	--SET HIDENO = '0000'
 	-- WHERE --jobno IN ('30261') --order by colkey desc
 	----AND 
-	--LTRIM(RTRIM(LOTNO)) = '402841' 
-	--AND CONVERT(INT, hideno) IN (6)
+	--LTRIM(RTRIM(LOTNO)) = '107311' 
+	--AND CONVERT(INT, hideno) IN (292, 293, 294)
 
 
 	SELECT * FROM	IMLSMST_SQL	

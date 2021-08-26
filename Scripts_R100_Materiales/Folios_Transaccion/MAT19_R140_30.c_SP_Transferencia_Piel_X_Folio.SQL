@@ -766,7 +766,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_LI_IMLSTRX_SQL_Y_IMINVTRX_SQL_X_COLOR_LOCACION_Y_ORDEN]
 GO
@@ -784,7 +784,9 @@ AS
 
 	-- ///////////////////////////////////////////
 
-	DECLARE @VP_LI_N_REGISTROS		INT = 10000
+	DECLARE @VP_FECHA DATE = GETDATE()
+	DECLARE @VP_FECHA_YEAR_ANTES DATE =  DATEADD(YEAR, -1, @VP_FECHA)
+	DECLARE @VP_FECHA_MINIMA_BUSQUEDA INT = [dbo].[CONVERT_DATE_TO_INT](@VP_FECHA_YEAR_ANTES, 'yyyyMMdd')
 
 	-- =========================================
 		SELECT	IMLSTRX_SQL.ser_lot_no, IMLSTRX_SQL.lev_no, IMINVTRX_SQL.doc_type, 
@@ -802,8 +804,9 @@ AS
         AND Ltrim(Rtrim(IMINVTRX_SQL.loc)) = Ltrim(Rtrim(@PP_LOCACION)) 
         AND (Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = Ltrim(Rtrim(@PP_ORDEN_NO))
 			OR Ltrim(Rtrim(IMINVTRX_SQL.doc_ord_no)) = 'J' + Ltrim(Rtrim(@PP_ORDEN_NO))
-		--	OR IMINVTRX_SQL.doc_ord_no =  Ltrim(Rtrim(@PP_ORDEN_NO))
         ) 
+		 -- =====================
+		 AND IMLSTRX_SQL.trx_dt >= @VP_FECHA_MINIMA_BUSQUEDA
 		 -- =====================
 		ORDER BY IMLSTRX_SQL.ser_lot_no, IMINVTRX_SQL.lev_no DESC
 
