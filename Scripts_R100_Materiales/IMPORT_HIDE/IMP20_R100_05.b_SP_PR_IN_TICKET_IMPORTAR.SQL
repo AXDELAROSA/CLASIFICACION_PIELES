@@ -36,7 +36,8 @@ CREATE PROCEDURE [dbo].[PG_IN_TICKET_A_IMPORTAR]
 	@PP_TOTAL_SQF				VARCHAR(10),
 	@PP_CONSECUTIVO				INT,
 	@PP_SQF						DECIMAL(13,2),
-	@PP_UOM						VARCHAR(10)
+	@PP_UOM						VARCHAR(10),
+	@PP_MEDIDORA				INT
 	AS
 
 	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
@@ -75,6 +76,7 @@ CREATE PROCEDURE [dbo].[PG_IN_TICKET_A_IMPORTAR]
 								[CONSECUTIVO],				
 								[SQF],		
 								[UOM],
+								[MEDIDORA],
 								-- ===========================
 								[K_USUARIO_ALTA], [F_ALTA], [K_USUARIO_CAMBIO], [F_CAMBIO],
 								[L_BORRADO], [K_USUARIO_BAJA], [F_BAJA]  )	
@@ -93,6 +95,7 @@ CREATE PROCEDURE [dbo].[PG_IN_TICKET_A_IMPORTAR]
 								@PP_CONSECUTIVO,
 								@PP_SQF,
 								@PP_UOM,
+								@PP_MEDIDORA,
 								-- ===========================				
 								@PP_K_USUARIO_ACCION, GETDATE(), @PP_K_USUARIO_ACCION, GETDATE(),
 								0, NULL, NULL )	
