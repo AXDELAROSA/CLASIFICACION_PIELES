@@ -55,13 +55,13 @@ AS
 
 	IF ( @PP_COLOR = 'FCNPDX9' OR @PP_COLOR = 'FNRUDX9' )
 		BEGIN
-			IF @VP_N_ORDEN_ABIERTA > 6
+			IF @VP_N_ORDEN_ABIERTA > 19
 				SET @VP_RESULTADO = 'Existen ' + CONVERT(VARCHAR(10), @VP_N_ORDEN_ABIERTA) + ' ordenes abiertas para el Color: ' + @PP_COLOR + ' en la Locación: ' + @PP_LOCACION + '.'
 		END
 
 	IF ( @PP_COLOR = 'FCPRHL1' OR @PP_COLOR = 'FCPRDX9'  )
 		BEGIN
-			IF @VP_N_ORDEN_ABIERTA > 3
+			IF @VP_N_ORDEN_ABIERTA > 99
 				SET @VP_RESULTADO = 'Existen ' + CONVERT(VARCHAR(10), @VP_N_ORDEN_ABIERTA) + ' ordenes abiertas para el Color: ' + @PP_COLOR + ' en la Locación: ' + @PP_LOCACION + '.'
 		END
 
@@ -71,6 +71,8 @@ AS
 
 	-- /////////////////////////////////////////////////////
 GO
+
+
 
 
 
