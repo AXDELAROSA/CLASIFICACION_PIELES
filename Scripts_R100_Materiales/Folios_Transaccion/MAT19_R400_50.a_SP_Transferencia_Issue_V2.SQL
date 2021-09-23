@@ -125,7 +125,7 @@ AS
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
 				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
-				IF @VP_N_PIEL IS NULL
+				IF ( @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0 ) 
 					RAISERROR ('NO hay pieles seleccionadas.', 16, 1 ) --MENSAJE - Severity -State.
 
 				-- /////////INGRESAMOS LAS PIELES DEL FOLIO A LOS LOS DIFERENTES LOGS PARA SEGUIMINETO ANTES DE BORRARLAS///////
@@ -270,7 +270,7 @@ AS
 
 				-- ////////////////////////////////////////////////////////////////////	
 
-				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = '' -- 'franciscoe@pearlleather.com.mx'
+				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = '' --'franciscoe@pearlleather.com.mx'
 				SET @VP_RECIPIENTS = 'manuelg@pearlleather.com.mx;omard@pearlleather.com.mx;adelaree@pearlleather.com.mx;guillermom@pearlleather.com.mx;jorgeh@pearlleather.com.mx;miguelc@pearlleather.com.mx;pedrov@pearlleather.com.mx'
 
 				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out'

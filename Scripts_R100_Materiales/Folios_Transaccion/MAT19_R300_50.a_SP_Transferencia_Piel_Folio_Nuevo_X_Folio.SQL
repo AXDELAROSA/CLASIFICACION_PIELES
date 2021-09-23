@@ -86,14 +86,14 @@ AS
 							SET @VP_MENSAJE = 'ERROR: // INSERT RP_Folios // '
 					END
 				-- /////////////////////////////////////////////////////////////////////
-				
-				IF @VP_MENSAJE = ''
-					BEGIN
-						EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-													@VP_TAGNO_DESTINO, 1
-					END
-				-- /////////////////////////////////////////////////////////////////////
+				-- CON EL NUEVO FOLIO YA NO SE USA 10/SEP/2021 FEG
+				--IF @VP_MENSAJE = ''
+				--	BEGIN
+				--		EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
+				--									@VP_TAGNO_DESTINO, 1
+				--	END
 
+				-- /////////////////////////////////////////////////////////////////////
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
 						K_PIEL_SELECCIONADA INT IDENTITY(1,1),
 						COLOR		VARCHAR(20),
@@ -146,7 +146,7 @@ AS
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
 				-- /////////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION////////////////////////////////////////////
-				IF @VP_N_PIEL IS NULL
+				IF ( @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0 )
 					RAISERROR ('ERROR: No se seleccionaron pieles para la transferencia.', 16, 1 ) --MENSAJE - Severity -State.
 				-- ///////////////////////////////////////////
 								
@@ -171,19 +171,18 @@ AS
 						DECLARE @VP_SQF_DEC DECIMAL(13,4)	= CAST(@VP_SQF AS DECIMAL(19,4))
 
 						-- ///////////////////INGRESO EL LOG DE LA PIEL//////////////////////////////////////////////////
-
 						EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															3, @PP_TAGNO_ORIGEN, @PP_CB_COLOR,
 															@VP_LOTE_INT, @VP_PIEL_INT, @VP_SQF_DEC, 
 															@VP_LOCACION, 0, 
 															@VP_TAGNO_DESTINO, @VP_LOCACION, 0
-						-- ///////////////////////////////////////////
 
+						-- ///////////////////////////////////////////
 						EXECUTE	[dbo].[PG_UP_RP_SC_TAGNO_Y_MOVEMENT_X_FOLIO_PIEL_LOTE_SQF]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																								@PP_TAGNO_ORIGEN, @VP_TAGNO_DESTINO,
 																								@VP_PIEL, @VP_LOTE, @VP_SQF, @VP_LOCACION
-						-- /////////////////////////////////////////////////////////////////////
-	
+
+						-- /////////////////////////////////////////////////////////////////////	
 						DECLARE @VP_DETAIL VARCHAR(100) = 'Transfer hide: ' + @VP_PIEL + ' to: ' + CONVERT(VARCHAR(20),@VP_TAGNO_DESTINO) + ' Lot: ' + RIGHT('000000' + Ltrim(Rtrim(@VP_LOTE)), 6)
 							
 						EXECUTE [dbo].[PG_IN_PEARL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,

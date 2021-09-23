@@ -82,11 +82,14 @@ AS
 						IF @VP_SQF_ORIGINAL IS NULL 
 							SET @VP_SQF_ORIGINAL = 0
 
-						IF @VP_SQF_ORIGINAL <> @VP_SQF_FOLIO
+						IF @VP_SQF_ORIGINAL > 0
 							BEGIN
-								SET @VP_MENSAJE_TRANSACCION = 'El SQF de la Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' no es igual al Original.'
-								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
-							END	
+								IF @VP_SQF_ORIGINAL <> @VP_SQF_FOLIO
+									BEGIN
+										SET @VP_MENSAJE_TRANSACCION = 'El SQF de la Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' no es igual al Original.'
+										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+									END	
+							END
 
 						---- /////////SE VALIDA QUE EL LOTE Y PIEL NO EXISTA EN EL COLOR NUEVO///////////////////////////////////////////////////////////	
 						DECLARE @VP_N_PIEL_DUPLICADA INT = 0

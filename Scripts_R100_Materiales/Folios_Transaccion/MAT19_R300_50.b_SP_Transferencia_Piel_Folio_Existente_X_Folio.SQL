@@ -179,8 +179,8 @@ AS
 				--IF	@PP_SELECT_TODOS = 1
 				--	EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
 				--											@PP_TAGNO_ORIGEN, 'A', NULL, NULL
-				-- /////////////////////////////////////////////////////////////////////
-								
+
+				-- /////////////////////////////////////////////////////////////////////								
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
 						K_PIEL_SELECCIONADA INT IDENTITY(1,1),
 						COLOR		VARCHAR(20),
@@ -531,7 +531,7 @@ AS
 					EXECUTE [dbo].[PG_UP_RP_SC_MOVEMENT_X_FOLIO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																		@PP_TAGNO_DESTINO, 0, @PP_LOCACION_DESTINO, 0
 					
-					-- ////SE VERIFICA QUE QUEDEN PIELES EN EL FOLIO DESPUES DEL PROCESO SI NO SE DESCAZA EL FOLIO DE LA ORDEN Y VICEVERSA////////////
+					-- ////SE VERIFICA QUE QUEDEN PIELES EN EL FOLIO ORIGEN DESPUES DEL PROCESO SI NO SE DESCAZA EL FOLIO DE LA ORDEN Y VICEVERSA////////////
 					DECLARE @VP_N_PIEL_EN_FOLIO INT = 0
 					SELECT	@VP_N_PIEL_EN_FOLIO	=	COUNT(ID)
 					FROM	RP_SC (NOLOCK)
@@ -553,46 +553,46 @@ AS
 					-- ///////////SE IMPRIME EL FOLIO DE DEVOLUCION/EXTRAS O SE BORRAN LAS PIELES SELECCIONADAS //////////////////////////////////////////////////////////
 					IF @VP_N_PIEL > 1
 						BEGIN
-							-- /////////////////////////SI DESEA IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS////////////////////////////////////////////
-								IF @PP_PRT_FORM_DEV_EXT = 1 -- SI
-									BEGIN
-										DECLARE	@VP_ESTATUS	VARCHAR(5)
+					--		-- /////////////////////////SI DESEA IMPRIMIR EL FORMATO DE DEVOLUCION Y EXTRAS////////////////////////////////////////////
+					--			IF @PP_PRT_FORM_DEV_EXT = 1 -- SI
+					--				BEGIN
+					--					DECLARE	@VP_ESTATUS	VARCHAR(5)
 
-										-- /////////////////VALIDA ESTATUS FOLIO ORIGEN////////////////////////////////////////////////////
-										SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
-															FROM RP_Folios (NOLOCK)
-															WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
+					--					-- /////////////////VALIDA ESTATUS FOLIO ORIGEN////////////////////////////////////////////////////
+					--					SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
+					--										FROM RP_Folios (NOLOCK)
+					--										WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_ORIGEN
 
-										IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
-											BEGIN
-												EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_TAGNO_ORIGEN, 5
-											END
-										ELSE
-											BEGIN
-												EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																							@PP_TAGNO_ORIGEN, 'D'
-											END
+					--					IF @VP_ESTATUS <> 'B' AND @PP_LOCACION_ORIGEN <> 'MHI'
+					--						BEGIN
+					--							EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+					--																@PP_TAGNO_ORIGEN, 5
+					--						END
+					--					ELSE
+					--						BEGIN
+												--EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+												--											@PP_TAGNO_ORIGEN, 'D'
+											--END
 
 										-- /////////////////VALIDA ESTATUS FOLIO DESTINO////////////////////////////////////////////////////
-										SET	@VP_ESTATUS = ''
-										SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
-															FROM RP_Folios (NOLOCK)
-															WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_DESTINO
+										--SET	@VP_ESTATUS = ''
+										--SELECT	@VP_ESTATUS	= LTRIM(RTRIM(STATUS))
+										--					FROM RP_Folios (NOLOCK)
+										--					WHERE LTRIM(RTRIM(TAG)) = @PP_TAGNO_DESTINO
 
-										IF @VP_ESTATUS <> 'B'
-											BEGIN
-												EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																					@PP_TAGNO_DESTINO, 4
-											END
-										ELSE
-											BEGIN
-												EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-																									@PP_TAGNO_DESTINO, 'E', 'C'
-											END
-									END	
-								ELSE
-									BEGIN
+										--IF @VP_ESTATUS <> 'B'
+										--	BEGIN
+												--EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+										--											@PP_TAGNO_DESTINO, 4
+										--	END
+										--ELSE
+										--	BEGIN
+								--				EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+								--																	@PP_TAGNO_DESTINO, 'E', 'C'
+								--			END
+								--	END	
+								--ELSE
+								--	BEGIN
 										-- //////////////////////////////BORRA EL FOLIO ORIGEN///////////////////////////////////////
 										EXECUTE	[dbo].[PG_DL_RP_SC_X_FOLIO_Y_TIPO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																					@PP_TAGNO_ORIGEN, 'D'
@@ -608,7 +608,7 @@ AS
 										-- //////////////////////////////ACTUALIZA EL FOLIO DESTINO A TIPO C ///////////////////////////////////////
 										EXECUTE	[dbo].[PG_UP_RP_SC_TYPE_X_FOLIO_Y_TIPO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																							@PP_TAGNO_DESTINO, 'E', 'C'
-									END
+									--END
 						END			
 								
 			COMMIT TRANSACTION 
