@@ -55,7 +55,7 @@ AS
 
 	IF ( @PP_COLOR = 'FCNPDX9' OR @PP_COLOR = 'FNRUDX9' )
 		BEGIN
-			IF @VP_N_ORDEN_ABIERTA > 19
+			IF @VP_N_ORDEN_ABIERTA > 49
 				SET @VP_RESULTADO = 'Existen ' + CONVERT(VARCHAR(10), @VP_N_ORDEN_ABIERTA) + ' ordenes abiertas para el Color: ' + @PP_COLOR + ' en la Locación: ' + @PP_LOCACION + '.'
 		END
 

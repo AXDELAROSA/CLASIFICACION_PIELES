@@ -2,12 +2,12 @@
 	SELECT CONVERT(DATE, (GETDATE()-(DAY(GETDATE())-1))) 'Primer Dia del Mes SIN HORA'
 
 	-- ////////////////////////////////////////////////////////////// 
-	USE DATA_02Pruebas
+	USE DATA_02 --Pruebas
 
 	SELECT * FROM HIDESHDR_SQL   
 	 inner join HIDESLIN_SQL on  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-	WHERE	LTRIM(RTRIM(PLOT)) IN ('40051')
-	AND CONVERT(INT, LTRIM(RTRIM(HIDE)))  IN (SELECT * FROM RP_SC WHERE TAGNO = 3855669)
+	WHERE	LTRIM(RTRIM(PLOT)) IN ('106251')
+	AND CONVERT(INT, LTRIM(RTRIM(HIDE)))  IN (297)
 	----AND
 	 --PCOLOR = 'FCPRHL1'
 	 --AND SQF < 1
@@ -60,28 +60,15 @@
 	) AND MOVEMENT = 'MHI'
 
 	SELECT * --distinct TAGNO , MOVEMENT
-	FROM RP_SC --_HIDE_DELETE
+	FROM RP_SC_FOLIO_STATUS_XX--_FOLIO_TYPE_2
 	WHERE 
 	--COLOUR = 'FWLCPX7'   
 	--AND 
-	LOT = '108952'
+	LOT = '66761'
 	--and movement = 'MQU'
 	--AND
 	-- TAGNO = 3787747
-	AND convert(int, LTRIM(RTRIM(hide)))  IN (277, 274, 271, 268 )
-	--AND convert(int, LTRIM(RTRIM(hide))) BETWEEN 661 AND 716
-	ORDER  BY HIDE asc
-
-	SELECT * --distinct TAGNO , MOVEMENT
-	FROM RP_SC --_HIDE_DELETE
-	WHERE 
-	--COLOUR = 'FWLCPX7'   
-	--AND 
-	LOT = '108992'
-	--and movement = 'MQU'
-	--AND
-	-- TAGNO = 3787747
-	AND convert(int, LTRIM(RTRIM(hide)))  IN (85, 81)
+	AND convert(int, LTRIM(RTRIM(hide)))  IN (572, 670, 812, 821)
 	--AND convert(int, LTRIM(RTRIM(hide))) BETWEEN 661 AND 716
 	ORDER  BY HIDE asc
 
@@ -91,68 +78,70 @@
 												WHERE EN_NUM_EMP = K_USUARIO_ALTA)
 				ELSE usuario END) AS RESPONSABLE, 
 			PIEL_LOG.*
-	FROM PIEL_LOG 
-	LEFT JOIN users_pearl ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
-	INNER JOIN TIPO_PIEL_LOG ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
+	FROM PIEL_LOG (NOLOCK)
+	LEFT JOIN users_pearl (NOLOCK) ON PIEL_LOG.K_USUARIO_ALTA = users_pearl.codigo
+	INNER JOIN TIPO_PIEL_LOG (NOLOCK) ON PIEL_LOG.K_TIPO_PIEL_LOG = TIPO_PIEL_LOG.K_TIPO_PIEL_LOG
 	WHERE -- ( FOLIO_ORIGEN = 3847472 OR  FOLIO_DESTINO = 3847472 )
 	--(ORDEN_ORIGEN = '30945' OR  ORDEN_DESTIDO = '30945' )
 	--COLOR = 'FPABLUE'
 	--AND 
-	LOTE IN (66162)    
+	LOTE IN (66761)    
 	AND          
-	PIEL IN (239)
-	--AND PIEL BETWEEN 673 AND 716
-	--AND 
-	--PIEL_LOG.K_TIPO_PIEL_LOG  IN (1)
-	--and usuario <> 'anag'
+	PIEL IN (572, 670, 812, 821)
+	--AND LOCACION_ORIGEN = 'MHI'
+	--AND PIEL_LOG.K_TIPO_PIEL_LOG  IN (5)
+	--AND  ORDEN_DESTIDO = '40823'
 	ORDER BY K_PIEL_LOG desc
-	-- 48.00
 
-	--DELETE PIEL_LOG WHERE K_PIEL_LOG IN (3054224, 3054223)
-
+--	DELETE PIEL_LOG WHERE K_PIEL_LOG IN (3197204)
+	SELECT * FROM RP_SC_PRT
 	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE TAGNO IN ( 3852943) order by HIDE
 	
 	SELECT * FROM RP_SC (NOLOCK) WHERE COLOUR IN (SELECT COLOR FROM COLORES_CONTROLADOS) AND TYPE IN ('D', 'E') ORDER BY HIDE
 	
-	SELECT * FROM RP_SC WHERE TAGNO = 3855669 ORDER BY HIDE
+	SELECT * FROM RP_SC WHERE TAGNO IN (3849665 ) ORDER BY HIDE
 	
-	SELECT * FROM RP_Folios (NOLOCK) WHERE TAG  IN (3855669) 
+	SELECT * FROM RP_Folios (NOLOCK) WHERE TAG  IN (3858194 ) 
 
-	SELECT * FROM ccjobhdr_sql WHERE folio  IN (3833699)  
+	SELECT * FROM ccjobhdr_sql WHERE folio  IN (3858194 )  
+		
+	SELECT * FROM RP_Folios WHERE JOBNO IN ( '42856')
+
+	SELECT * FROM ccjobhdr_sql WHERE jobno IN ( '42856')
 	
-	SELECT * FROM RP_Folios WHERE JOBNO IN ( '42264')
-
-	SELECT * FROM ccjobhdr_sql WHERE jobno IN ( '42264')
-
-	SELECT * FROM ccjobhdr_sql WHERE colour = 'CNPDX9' AND status = 'P' AND FOLIO IS NOT NULL
+	SELECT * FROM ccjobhdr_sql WHERE colour = 'CNPDX9' 
+	AND status = 'P' 
+	AND FOLIO IS NOT NULL
 	AND machine = 'Table 39' 
 	AND ( LOTNO IS NULL OR LOTNO = '' )
 
-	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '34062' order by ckey
-	 
-	 SELECT * FROM cccuthst_sql
-	 WHERE --jobno IN ('26539') --order by colkey desc
-	--AND 
-	LTRIM(RTRIM(LOTNO)) = '066162' 
-	AND	CONVERT(INT, hideno) IN (239)
-
+	SELECT * FROM pearl_log (NOLOCK) WHERE JOBNO = '36147' order by ckey
+	
+	 SELECT * 
+	 FROM cccuthst_sql
+	 WHERE  --jobno IN ('42850') order by colkey desc
+	----AND 
+	LTRIM(RTRIM(LOTNO)) = '066761' 
+	AND	CONVERT(INT, hideno) IN (572, 670, 812, 821)
+	
 	--UPDATE cccuthst_sql
-	--SET HIDESQM = '36.00'
+	--SET HIDENO = '0000'
 	-- WHERE --jobno IN ('30261') --order by colkey desc
 	----AND 
-	--LTRIM(RTRIM(LOTNO)) = '066162' 
-	--AND	CONVERT(INT, hideno) IN (239)
+	--LTRIM(RTRIM(LOTNO)) = '106251' 
+	--AND	CONVERT(INT, hideno) IN (0297)
 
 
 	SELECT * FROM	IMLSMST_SQL	
-	WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('107751') and loc = 'T39' and item_no = 'FCNPDX9'
+	WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('107781') and loc = 'T39' and item_no = 'FCNPDX9'
 
-	--update IMLSMST_SQL	
-	--	set qty_on_hand = qty_on_hand + 36
-	--WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('107711') and loc = 'T39' and item_no = 'FCNPDX9'
+	--update IMINVLOC_SQL	
+	--	set qty_on_hand = qty_on_hand + 42.3
+	--WHERE	 loc = 'T39' and item_no = 'FCNPDX9'
 
 	SELECT TOP 10 * FROM	IMINVLOC_SQL	
 	WHERE	LTRIM(RTRIM(loc)) IN ('T39') AND item_no = 'FCNPDX9'
+	-- 28126.6000 + 42.3 = 28,168.9
 
 	USE DATA_02PRUEBAS
 	SELECT TOP 100 * FROM IMINVTRX_SQL 

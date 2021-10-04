@@ -44,7 +44,7 @@ AS
 	WHERE	PLOT = @PP_LOTE
 
 	IF @VP_COLOR IS NULL OR @VP_COLOR = ''
-		SET @VP_RESULTADO = 'El Lote no encontrado en registro de importación [HIDESHDR_SQL].'
+		SET @VP_RESULTADO = 'Lote no encontrado en registro de importación [HIDESHDR_SQL].'
 	
 	IF @VP_RESULTADO = ''
 		BEGIN
@@ -249,22 +249,76 @@ CREATE PROCEDURE [dbo].[PG_TRACKING_LOTE_YIELD_RESUMEN_PDF]
 	@PP_LOTE					VARCHAR(20)
 AS
 
-	-- ///////////////////////////////////////////
+	-- /////////SE OBTIENE LA UTILIZACION DE ORDENES CERRADAS//////////////////////////////////
 	DECLARE @VP_NET_SQM DECIMAL(13,2) = 0, @VP_GROSS_SQM DECIMAL(13,2) = 0, @VP_YIELD DECIMAL(13,2) = 0
 
 	SELECT	@VP_NET_SQM = SUM(CONVERT(DECIMAL(13,2),NetSqm)),
 			@VP_GROSS_SQM = SUM(CONVERT(DECIMAL(13,2),GrossSqm)) 
 	FROM JOBSCOMP 
 	WHERE PACKNO = RIGHT('000000' + @PP_LOTE, 6)
+	
+	IF @VP_NET_SQM IS NULL
+		SET @VP_NET_SQM = 0
 
+	IF @VP_GROSS_SQM IS NULL
+		SET @VP_GROSS_SQM = 0
 
-	SET @VP_YIELD =  ( @VP_NET_SQM / @VP_GROSS_SQM ) * 100
+	IF @VP_GROSS_SQM > 0
+		SET @VP_YIELD =  ( @VP_NET_SQM / @VP_GROSS_SQM ) * 100
 
 	SELECT @VP_YIELD AS YIELD
 	-----////////////////////////////////////////////////////////////////
 	-- //////////////////////////////////////////////////////////////////
 GO
 
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT / 
+-- //////////////////////////////////////////////////////////////
+--  USE DATA_02
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_TRACKING_LOTE_YIELD_PROMEDIO_RESUMEN_PDF]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_TRACKING_LOTE_YIELD_PROMEDIO_RESUMEN_PDF]
+GO
+/*
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_RESUMEN_PDF] 0,0, '34301'
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_DETALLE_PDF] 0,0, '34301'
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_YIELD_RESUMEN_PDF] 0,0, '34301'
+
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_RESUMEN_PDF] 0,0, '34331'
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_DETALLE_PDF] 0,0, '34331'
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_YIELD_RESUMEN_PDF] 0,0, '34331'
+ EXECUTE	[dbo].[PG_TRACKING_LOTE_YIELD_PROMEDIO_RESUMEN_PDF] 0,0, '34331'
+*/
+CREATE PROCEDURE [dbo].[PG_TRACKING_LOTE_YIELD_PROMEDIO_RESUMEN_PDF]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_LOTE					VARCHAR(20)
+AS
+
+	-- //////////SE OBTIENE LA UTILIZACION PROMEDIO/////////////////////////////////
+	DECLARE	@VP_UTILIZACION_TOTAL DECIMAL(13,2) = 0, @VP_N_CORTE DECIMAL(13,2) = 0, @VP_PROMEDIO_UTILIZACION DECIMAL(13,2) = 0;
+	SELECT	@VP_UTILIZACION_TOTAL = SUM(CONVERT(DECIMAL(13,4),(rawpatternsqm / hidesqm * 100))),
+			@VP_N_CORTE = COUNT(colkey)
+	FROM cccuthst_sql 
+	WHERE LTRIM(RTRIM(LOTNO)) =  RIGHT('000000' + @PP_LOTE, 6)
+
+	IF @VP_UTILIZACION_TOTAL IS NULL
+		SET @VP_UTILIZACION_TOTAL = 0
+
+	IF @VP_N_CORTE IS NULL
+		SET @VP_N_CORTE = 0
+
+	IF @VP_N_CORTE > 0
+		SET @VP_PROMEDIO_UTILIZACION = CONVERT(DECIMAL(13,2), ( @VP_UTILIZACION_TOTAL / @VP_N_CORTE ) )
+
+	-- //////////SE MUESTRA LA UTILIZACION PROMEDIO/////////////////////////////////
+	SELECT  @VP_PROMEDIO_UTILIZACION AS UTILIZACION_PROMEDIO
+
+	-----////////////////////////////////////////////////////////////////
+	-- //////////////////////////////////////////////////////////////////
+GO
 
 
 
@@ -337,12 +391,6 @@ AS
 	FROM RP_SC_FOLIO_STATUS_XX
 	WHERE LOT = @PP_LOTE
 	ORDER BY MOVEMENT, HIDE
-
-	--SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE LOT = '34331' AND HIDE = 0810
-
-	--UPDATE RP_SC_FOLIO_STATUS_XX --0810 
-	--	SET HIDE = '0810' 
-	--WHERE ID = 5010212
 
 	-- /////SE INGRESAN LAS PIELES QUE NO SE IMPORTARON//////////////////////////////////////
 	INSERT INTO @VP_TBL_PIEL_X_LOTE
