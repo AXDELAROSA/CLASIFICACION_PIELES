@@ -127,7 +127,12 @@ AS
 			''										AS KIT_DESC_2_IMPRIMIR,
 			dbo.CONVERT_INT_TO_DATE(datecreated)	AS FECHA,
 			-- ===========================
-			ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+			--ISNULL(ccjoblin_sql.user_def_fld1, 'N')	AS IMPRESA,
+			(	CASE
+					WHEN	DETAILS_RMA.K_STATUS_ETIQUETA	= 80	THEN	'NO'
+					ELSE	'SI'
+				END
+			)	AS IMPRESA,
 			-- ===========================
 			--CONVERT(INT,ccjoblin_sql.plannedqty)	AS PLANNED_QTY, 
 			DETAILS_RMA.CANTIDAD_ORDENADA			AS PLANNED_QTY, 
@@ -173,7 +178,6 @@ AS
 	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
 	-- ===========================
 	ORDER BY GRUPO_ORDEN, ccjoblin_sql.Ser_No
-
 		-----////////////////////////////////////////////////////////////////
 GO
 
