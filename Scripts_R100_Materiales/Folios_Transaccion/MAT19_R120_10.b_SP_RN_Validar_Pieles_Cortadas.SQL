@@ -311,12 +311,12 @@ GO
 
 
 
---USE DATA_02Pruebas
 
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
+--USE DATA_02Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]
 GO
@@ -507,6 +507,7 @@ AS
 			AND		[COLOR]				=		@PP_CB_COLOR
 			AND		[K_USUARIO_ALTA]    =		@PP_K_USUARIO_ACCION
 			AND		[K_PIEL_A_TRANSFERIR_TRANSACCION] = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION
+			ORDER BY [LOTE]
 		END
 	
 	
