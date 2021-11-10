@@ -361,11 +361,15 @@ AS
 	WHERE	LTRIM(RTRIM(jobno)) = @PP_ORDEN
 
 	IF @VP_N_FOLIO_ASIGNADO IS NULL
+	BEGIN
 		SET @VP_N_FOLIO_ASIGNADO = 0 
+	END
 	
 	IF @VP_N_FOLIO_ASIGNADO > 0
+	BEGIN
 		SET @VP_MENSAJE = 'La orden no puede ser Eliminada porque tiene un Folio asignado'
 		RAISERROR (@VP_MENSAJE, 16, 1 )
+	END
 	
 
 	DECLARE @VP_N_PIEL_CORTADA INT = 0
@@ -374,11 +378,15 @@ AS
 	WHERE JOBNO = @PP_ORDEN
 
 	IF @VP_N_PIEL_CORTADA IS NULL
+	BEGIN
 		SET @VP_N_PIEL_CORTADA = 0
+	END
 
 	IF @VP_N_PIEL_CORTADA > 0
+	BEGIN
 		SET @VP_MENSAJE = 'La orden no puede ser Eliminada porque tiene pieles cortadas.'
 		RAISERROR (@VP_MENSAJE, 16, 1 )
+	END
 
 	-- //////////////////////////////////////////////////////////////
 		--BEGIN TRANSACTION 
@@ -476,23 +484,31 @@ AS
 			FROM @TBL_SQF_EN_ORDEN
 
 			IF @VP_TOTAL_SQF IS NULL
+			BEGIN
 				SET @VP_TOTAL_SQF = 0
+			END
 
 				IF @VP_TOTAL_SQF > 0
-				RAISERROR ('ERROR: No fue posible eliminar la Orden porque tiene Pies Cuadrados asignados.', 16, 1 ) --MENSAJE - Severity -State
+				BEGIN
+					RAISERROR ('ERROR: No fue posible eliminar la Orden porque tiene Pies Cuadrados asignados.', 16, 1 ) --MENSAJE - Severity -State
+				END
 
 			-- ///////SE ELIMINAN LOS KITS DE LA ORDEN///////////////////////////////////////////////////////
 			DELETE ccjoblin_sql 
 			WHERE JOBNO = @PP_ORDEN
 
 			IF @@ROWCOUNT = 0
+			BEGIN
 				RAISERROR ('ERROR: No fue posible eliminar la Orden en [ccjoblin_sql].', 16, 1 ) --MENSAJE - Severity -State
+			END
 
 			DELETE ccjobhdr_sql 
 			WHERE JOBNO = @PP_ORDEN
 
 			IF @@ROWCOUNT = 0
+			BEGIN
 				RAISERROR ('ERROR: No fue posible eliminar la Orden en [ccjobhdr_sql].', 16, 1 ) --MENSAJE - Severity -State
+			END
 
 			-- ///////SE ELIMINAN LOS KITS LOS CODIGOS DE LA CAMARA DEL CAMPO SERIAL///////////////////////////////////////////////////////
 			INSERT INTO SERIALCAM_SQL 
@@ -501,13 +517,17 @@ AS
 			WHERE SERIAL LIKE @PP_ORDEN	+ '%'
 
 			IF @@ROWCOUNT > 50
+			BEGIN
 				RAISERROR ('ERROR: Verifique el numero de Kits a Ingresar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
+			END
 
 			DELETE SERIALCAM_SQL 
 			WHERE SERIAL LIKE @PP_ORDEN	+ '%'
 
 			IF @@ROWCOUNT > 50
+			BEGIN
 				RAISERROR ('ERROR: Verifique el numero de Kits a Eliminar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
+			END
 
 			INSERT INTO SERIALCAM_SQL 
 			SELECT code, NULL, NULL 
@@ -515,13 +535,17 @@ AS
 			WHERE SERIAL2 LIKE @PP_ORDEN	+ '%'
 
 			IF @@ROWCOUNT > 50
+			BEGIN
 				RAISERROR ('ERROR: Verifique el numero de Kits a Ingresar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
+			END
 
 			DELETE SERIALCAM_SQL 
 			WHERE SERIAL2 LIKE @PP_ORDEN	+ '%'
 				
 			IF @@ROWCOUNT > 50
+			BEGIN
 				RAISERROR ('ERROR: Verifique el numero de Kits a Eliminar en [SERIALCAM_SQL].', 16, 1 ) --MENSAJE - Severity -State
+			END
 
 			-- /////////////////////////INGRESO EL LOG////////////////////////////////////////////
 			DECLARE @VP_DETAIL VARCHAR(100) = 'Eliminacion de Orden: ' + @PP_ORDEN
