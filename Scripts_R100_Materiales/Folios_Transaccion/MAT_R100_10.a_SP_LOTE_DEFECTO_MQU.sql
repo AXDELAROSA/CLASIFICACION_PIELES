@@ -37,7 +37,7 @@ AS
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
 	DECLARE @VP_DEFECTO VARCHAR(255) = ''
-	SELECT @VP_DEFECTO = LTRIM(RTRIM(DEFECTO)) 
+	SELECT @VP_DEFECTO = LTRIM(RTRIM(clave)) 
 	FROM PPMS_PEARL.DBO.def 
 	WHERE descripcion='NATURAL'
 	AND clave = @PP_CLAVE_DEFECTO

@@ -134,7 +134,7 @@ AS
 	AND PRINTED = 1  
 
 	-- ///////////////////////////////////////////
-	SELECT	TOP 10000	
+	SELECT	TOP 15000	
 			FILENO as Name,
 			PCOLOR as Color,
 			LDATE as LoadDate,

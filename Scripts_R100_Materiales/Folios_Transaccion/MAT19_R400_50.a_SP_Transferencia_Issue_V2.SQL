@@ -271,7 +271,7 @@ AS
 				-- ////////////////////////////////////////////////////////////////////	
 
 				DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = '' --'franciscoe@pearlleather.com.mx'
-				SET @VP_RECIPIENTS = 'manuelg@pearlleather.com.mx;omard@pearlleather.com.mx;adelaree@pearlleather.com.mx;guillermom@pearlleather.com.mx;jorgeh@pearlleather.com.mx;miguelc@pearlleather.com.mx;pedrov@pearlleather.com.mx'
+				SET @VP_RECIPIENTS = 'manuelg@pearlleather.com.mx;omard@pearlleather.com.mx;adelaree@pearlleather.com.mx;guillermom@pearlleather.com.mx;jorgeh@pearlleather.com.mx;miguelc@pearlleather.com.mx;pedrov@pearlleather.com.mx;rafaelf@pearlleather.com.mx;franciscoe@pearlleather.com.mx'
 
 				DECLARE @VP_SUBJECT		VARCHAR(255) = 'Issue Out'
 				DECLARE @VP_FECHA		VARCHAR(10) = CONVERT(VARCHAR(10), GETDATE(),103)

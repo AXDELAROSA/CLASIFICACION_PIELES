@@ -178,7 +178,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE DATA_02Pruebas
+-- USE DATA_02 --Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]
 GO
@@ -189,13 +189,18 @@ CREATE PROCEDURE [dbo].[PG_GET_IMINVTRX_SQL_LOTE_X_COLOR_LOCACION_ORDEN]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
-	@PP_COLOR					VARCHAR(20),
-	@PP_LOCACION				VARCHAR(5),
-	@PP_ORDEN_NO				VARCHAR(10)
+	@PP_FOLIO					INT
+	--@PP_COLOR					VARCHAR(20),
+	--@PP_LOCACION				VARCHAR(5),
+	--@PP_ORDEN_NO				VARCHAR(10)
 AS
 
-	-- ///////////////////////////////////////////
+	SELECT	DISTINCT RIGHT('000000' + LTRIM(RTRIM(LOT)), 6) AS LOTE
+	FROM	RP_SC (NOLOCK)
+	WHERE TAGNO = @PP_FOLIO
 
+	-- //////////LOGICA ANTERIOR/////////////////////////////////
+	/*
 	DECLARE @VP_LI_N_REGISTROS		INT = 10000
 
 	-- =========================================
@@ -221,7 +226,7 @@ AS
 														WHERE	LTRIM(RTRIM(CCJOBHDR_SQL.JOBNO))= @PP_ORDEN_NO
 														AND	LTRIM(RTRIM(RP_SC.COLOUR)) = @PP_COLOR
 														 )
-
+	*/
 	-- ////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////
 GO
