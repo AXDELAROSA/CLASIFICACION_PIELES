@@ -231,7 +231,22 @@ AS
 					-- ///////SE AUMENTA EL CONSECUTIVO//////////////////////////////////////////////
 					SET @VP_CONSECUTIVO = @VP_CONSECUTIVO + 1
 				END
-			
+				--====================================================================================================================================
+				--====================================================================================================================================
+				--	SE DESACTIVA EL COMPONENTE ACTIVADO DE MANERA MANUAL POR PARTE DE PROYECTOS
+					IF ( (	SELECT	COUNT(ITEM_NO) 
+							FROM	LOG_ACTIVAR_COMPONENTE (NOLOCK) 
+							WHERE	ITEM_NO		= @VP_ITEM_NO_COMPLEMENTO 
+							AND		L_ACTIVO	= 1	
+							AND		MODELNO		= @VP_MODELO )
+						) > 0
+					BEGIN	
+						EXECUTE	[dbo].[PG_UP_DESACTIVAR_COMPONENTE_LOG]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
+																		-- ===========================
+																		@VP_ITEM_NO_COMPLEMENTO,		@VP_MODELO
+					END
+				--====================================================================================================================================
+				--====================================================================================================================================
 			FETCH NEXT FROM CU_ORDEN_2_TONO_A_PROGRAMAR INTO @VP_KIT, @VP_U_ITEM_NO, @VP_ITEM_NO, @VP_CANTIDAD
 		END
 	

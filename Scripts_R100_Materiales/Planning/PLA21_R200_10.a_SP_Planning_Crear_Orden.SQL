@@ -184,8 +184,8 @@ AS
 
 						-- ////////SE OBTIENE EL MODELO Y ULTIMA VERSION DEL KIT///////////////////////////////////
 						SELECT	DISTINCT TOP (1) PERCENT 
-							 @VP_VERSION = ccverhdr_sql.versionno, 
-							 @VP_MODELO = ccverhdr_sql.modelno
+							 @VP_VERSION	= ccverhdr_sql.versionno, 
+							 @VP_MODELO		= ccverhdr_sql.modelno
 						FROM	dbo.ccverhdr_sql (NOLOCK)
 						INNER JOIN cccusitm_sql (NOLOCK) ON CONCAT(ccverhdr_sql.modelno, ccverhdr_sql.versionno ) = CONCAT(cccusitm_sql.modelno, cccusitm_sql.versionno ) 
 							AND SUBSTRING(LTRIM(RTRIM(cccusitm_sql.item_no)) ,1 ,1)  = 'P' 
@@ -305,7 +305,22 @@ AS
 								-- ///////SE AUMENTA EL CONSECUTIVO//////////////////////////////////////////////
 								SET @VP_CONSECUTIVO = @VP_CONSECUTIVO + 1
 							END
-						
+						--====================================================================================================================================
+						--====================================================================================================================================
+						--	SE DESACTIVA EL COMPONENTE ACTIVADO DE MANERA MANUAL POR PARTE DE PROYECTOS
+							IF ( (	SELECT	COUNT(ITEM_NO) 
+									FROM	LOG_ACTIVAR_COMPONENTE (NOLOCK) 
+									WHERE	ITEM_NO		= @VP_ITEM_NO 
+									AND		L_ACTIVO	= 1	
+									AND		MODELNO		= @VP_MODELO )
+								) > 0
+							BEGIN	
+								EXECUTE	[dbo].[PG_UP_DESACTIVAR_COMPONENTE_LOG]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
+																				-- ===========================
+																				@VP_ITEM_NO,		@VP_MODELO
+							END
+						--====================================================================================================================================
+						--====================================================================================================================================
 						FETCH NEXT FROM CU_KIT_A_PROGRAMAR INTO @VP_KIT, @VP_ITEM_NO, @VP_CANTIDAD
 					END
 				
