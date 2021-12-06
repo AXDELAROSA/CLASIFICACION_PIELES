@@ -38,6 +38,7 @@ AS
 		-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
 
+	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
 	IF @PP_K_USUARIO_ACCION <> 139
 	BEGIN
 		IF	(	SELECT	COUNT(K_DETAILS_RMA)
@@ -45,7 +46,7 @@ AS
 				WHERE	JOBNO	= @PP_ORDEN	) > 0
 				SET @VP_MENSAJE = 'ERROR: La orden [RMA] no se puede eliminar.'
 	END
-	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
+
 	IF @VP_MENSAJE=''
 		EXECUTE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@PP_ORDEN,
@@ -83,6 +84,21 @@ AS
 			IF @VP_N_PIEL_CORTADA > 0
 				SET @VP_MENSAJE = 'La orden no puede ser Eliminada porque tiene pieles cortadas.'
 		END	
+
+	IF @VP_MENSAJE=''
+		BEGIN 
+			DECLARE @VP_ORDEN_BUSCAR VARCHAR(50) = @PP_ORDEN + '%'
+			DECLARE @VP_N_KIT_MFP INT = 0
+			SELECT @VP_N_KIT_MFP = COUNT(K_INVENTARIO_EMBARQUE)			
+			FROM [INVENTARIO_EMBARQUE] 
+			WHERE SERIAL_1 LIKE @VP_ORDEN_BUSCAR
+
+			IF @VP_N_KIT_MFP IS NULL
+				SET @VP_N_KIT_MFP = 0
+
+			IF @VP_N_KIT_MFP > 0
+				SET @VP_MENSAJE = 'La orden no puede ser Eliminada porque tiene Kits en MFP.'
+		END
 
 	-- //////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
