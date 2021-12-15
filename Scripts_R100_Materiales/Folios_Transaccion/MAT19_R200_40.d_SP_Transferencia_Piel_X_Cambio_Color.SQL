@@ -71,6 +71,22 @@ AS
 					
 				WHILE @@FETCH_STATUS = 0
 					BEGIN
+						-- /////////SE VALIDA QUE LA PIEL NO ESTE CORTADA///////////////////////////////////////////////////////////	
+						DECLARE @VP_N_PIEL_CORTADA INT = 0
+						SELECT @VP_N_PIEL_CORTADA = COUNT(COLKEY) 
+						FROM cccuthst_sql (NOLOCK)
+						WHERE LTRIM(RTRIM(LOTNO)) = RIGHT('000000' + @VP_LOTE, 6)
+						AND	LTRIM(RTRIM(hideno)) = @VP_PIEL
+
+						IF @VP_N_PIEL_CORTADA IS NULL 
+							SET @VP_N_PIEL_CORTADA = 0
+
+						IF @VP_N_PIEL_CORTADA > 0
+							BEGIN
+								SET @VP_MENSAJE_TRANSACCION = ' La Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' ya fue cortada.'
+								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+							END	
+
 						-- /////////SE VALIDA QUE EL SQF DE LA PIEL A CAMBIAR DE COLOR SE IGUAL AL ORIGINAL///////////////////////////////////////////////////////////	
 						DECLARE @VP_SQF_ORIGINAL	DECIMAL(5,2) = 0 
 						SELECT TOP 1 @VP_SQF_ORIGINAL = ISNULL(SQF,0) 
@@ -91,13 +107,14 @@ AS
 									END	
 							END
 
-						---- /////////SE VALIDA QUE EL LOTE Y PIEL NO EXISTA EN EL COLOR NUEVO///////////////////////////////////////////////////////////	
+						---- /////////SE VALIDA QUE EL LOTE Y PIEL NO EXISTA EN OTRO COLOR///////////////////////////////////////////////////////////	
 						DECLARE @VP_N_PIEL_DUPLICADA INT = 0
 						SELECT	@VP_N_PIEL_DUPLICADA = COUNT(ID)
 						FROM	RP_SC
-						WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR_DESTINO
+						WHERE LTRIM(RTRIM(COLOUR)) <> @PP_COLOR_ORIGEN 
 						AND	LTRIM(RTRIM(LOT)) = @VP_LOTE
 						AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL
+						--WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR_DESTINO
 						
 						IF @VP_N_PIEL_DUPLICADA IS NULL
 							SET @VP_N_PIEL_DUPLICADA = 0
@@ -121,7 +138,7 @@ AS
 						GROUP BY TAG, COLOUR
 						
 						-- /////////SI NO EXISTE UN FOLIO BASE PARA EL COLOR NUEVO SE CREA///////////////////////////////////////////////////////////	
-						IF @VP_FOLIO IS NULL OR @VP_FOLIO = ''
+						IF @VP_FOLIO IS NULL OR @VP_FOLIO = 0
 							BEGIN
 								EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
 																					'DATA_02', 'RP_FOLIOS', 'TAG',

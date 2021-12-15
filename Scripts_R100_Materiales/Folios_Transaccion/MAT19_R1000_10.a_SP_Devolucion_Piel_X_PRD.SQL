@@ -166,7 +166,7 @@ AS
 				BEGIN
 				-- //////SE VALIDA QUE EL FOLIO NO SEA TIPO BASE///////////////////////////////////////////////////////////////
 				SELECT @VP_TIPO_FOLIO = STATUS 
-				FROM RP_FOLIOS 
+				FROM RP_FOLIOS (NOLOCK)
 				WHERE TAG = @PP_FOLIO
 
 				IF @VP_TIPO_FOLIO = 'B'
@@ -215,7 +215,7 @@ AS
 				BEGIN
 					-- //////SE VALIDA QUE EL FOLIO NO SEA TIPO BASE///////////////////////////////////////////////////////////////
 					SELECT TOP 1 @VP_TIPO_FOLIO = STATUS
-					FROM RP_FOLIOS
+					FROM RP_FOLIOS (NOLOCK)
 					INNER JOIN RP_SC ON TAG = TAGNO
 					WHERE TAGNO = @PP_FOLIO
 
@@ -284,7 +284,7 @@ AS
 				BEGIN
 					-- //////SE VALIDA QUE EL FOLIO NO SEA TIPO BASE///////////////////////////////////////////////////////////////
 					SELECT @VP_TIPO_FOLIO = STATUS 
-					FROM RP_FOLIOS 
+					FROM RP_FOLIOS (NOLOCK)
 					WHERE TAG = @PP_FOLIO
 
 					IF @VP_TIPO_FOLIO = 'B'
@@ -408,7 +408,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE [DATA_02PRUEBAS] 
+-- USE [DATA_02] 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_TRANSFER_PIEL_X_DEVOLUCION_MESA_A_MHI]
 GO
@@ -460,18 +460,19 @@ AS
 		BEGIN
 			DECLARE @VP_TIPO_FOLIO VARCHAR(10) = ''
 			SELECT @VP_TIPO_FOLIO = STATUS 
-			FROM RP_FOLIOS 
+			FROM RP_FOLIOS (NOLOCK)
 			WHERE TAG = @PP_FOLIO_ORIGEN
 
 			IF @VP_TIPO_FOLIO = 'B'
 				SET @VP_MENSAJE = 'El folio es tipo Base.'	
 		END
+
 	-- //////////SE OBTIENE LA LOCACION DE LA ORDEN/////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
 			SELECT	@PP_LOCACION_ORIGEN = LTRIM(RTRIM(LOC))
-			FROM	imlocfil_sql 
-			INNER	JOIN CCJOBHDR_SQL ON CCJOBHDR_SQL.machine = IMLOCFIL_SQL.loc_desc
+			FROM	imlocfil_sql (NOLOCK)
+			INNER	JOIN CCJOBHDR_SQL (NOLOCK) ON CCJOBHDR_SQL.machine = IMLOCFIL_SQL.loc_desc
 			WHERE	JOBNO = @PP_ORDEN_ORIGEN
 
 			IF ( @PP_LOCACION_ORIGEN = '' OR @PP_LOCACION_ORIGEN IS NULL )
@@ -508,7 +509,7 @@ AS
 				DECLARE @VP_FOLIO_DESTINO INT = 0
 				SELECT	TOP 1 @VP_FOLIO_DESTINO = TAG	
 				FROM RP_Folios  (NOLOCK)
-				INNER JOIN RP_SC ON TAG=TAGNO 
+				INNER JOIN RP_SC (NOLOCK) ON TAG=TAGNO 
 				WHERE STATUS = 'B' 
 				AND COLOUR = @PP_COLOR
 
@@ -516,8 +517,8 @@ AS
 				IF ( @VP_FOLIO_DESTINO IS NULL OR @VP_FOLIO_DESTINO = 0 )
 					BEGIN
 						EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-														--'DATA_02', 
-														'DATA_02PRUEBAS',
+														'DATA_02', 
+														--'DATA_02PRUEBAS', -- PARA PRUEBAS
 														'RP_FOLIOS', 'TAG',
 														@OU_K_TABLA_DISPONIBLE = @VP_FOLIO_DESTINO	OUTPUT
 
@@ -544,7 +545,7 @@ AS
 				--AND		TYPE = 'D'
 				AND	CONVERT(DECIMAL(12,2), ISNULL(SQF, 0)) > CONVERT(DECIMAL(12,2), ISNULL(hidesqm, 0)) -- PARA MOSTRAR PIELES QUE NO ESTEN CORTADAS COMPLETAS
 
-				IF @VP_N_PIEL IS NULL
+				IF ( @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0 )
 					RAISERROR ('NO hay pieles para devolución.', 16, 1 ) --MENSAJE - Severity -State.							
 															
 				-- ///////SE DECLARAN VARIABLES A USAR//////////////////////////////////////////////////////////////////////////////
@@ -554,6 +555,7 @@ AS
 				DECLARE @VP_SQF_TRANSFERIR		VARCHAR(10)
 				DECLARE @VP_SQF_DISPONIBLE_TBL	VARCHAR(10)
 				DECLARE @VP_SQF_CORTADO_TBL		VARCHAR(10)
+				DECLARE @VP_N_COLOR_CONTROLADO	INT = 0
 
 				-- /////////////////////////SE CREA CURSOR PARA RECORER LAS PIELES DE DEVOLUCION////////////////////////////////////////////
 				DECLARE CU_PIEL_DEVOLUCION CURSOR 
@@ -612,8 +614,7 @@ AS
 															@PP_LOCACION_ORIGEN, @PP_ORDEN_ORIGEN, 
 															@VP_FOLIO_DESTINO, @VP_LOCACION_DESTINO, @VP_ORDEN_DESTINO --0 -- ORDER_DESTINO
 						
-						-- /////////////////////////SE VALIDA SI EL COLOR ES CONTROLADO////////////////////////////////////////////
-						DECLARE @VP_N_COLOR_CONTROLADO INT = 0
+						-- /////////////////////////SE VALIDA SI EL COLOR ES CONTROLADO////////////////////////////////////////////						
 						SELECT @VP_N_COLOR_CONTROLADO = COUNT(ID) 
 						FROM COLORES_CONTROLADOS (NOLOCK)
 						WHERE COLOR = @PP_COLOR
@@ -758,7 +759,7 @@ AS
 						@VP_TOTAL_SQF_DEVOLUCION = SUM(CONVERT(DECIMAL(13,2),LTRIM(RTRIM(SQF))))
 				FROM	RP_SC (NOLOCK)
 				WHERE	TAGNO = @PP_FOLIO_ORIGEN
-				AND		TYPE = 'D'	
+				AND		[TYPE] = 'D'	
 
 				IF @PP_TOTAL_PIEL <> @VP_N_PIEL_DEVOLUCION
 					RAISERROR ('El total de Pieles a Transferir no es correcto.', 16, 1 ) --MENSAJE - Severity -State.
@@ -779,9 +780,8 @@ AS
 				-- =====================
 				FROM	RP_SC (NOLOCK)
 				WHERE	TAGNO = @PP_FOLIO_ORIGEN 
-				AND		TYPE <> 'D'
+				AND		[TYPE] <> 'D'
 
-				--IF	@VP_N_PIEL_FOLIO = @VP_N_PIEL_A_TRANSFERIR_COMPLETA
 				IF	( @VP_N_PIEL_FOLIO IS NULL OR @VP_N_PIEL_FOLIO = 0 )
 					BEGIN
 						EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
@@ -796,10 +796,18 @@ AS
 							RAISERROR ('No fue posible quitar el folio de la Orden.', 16, 1 ) --MENSAJE - Severity -State.
 					END		
 
-				-- ////////////SIEMPRE SE DEBE DE IMPRIMIR EL FORMATO DE DEVOLUCION PARA ESTE PROCESO/////////////////////////////////////////////////////////
-				EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													@PP_FOLIO_ORIGEN, 5
-
+				-- /////////////////////////SE VALIDA SI EL COLOR ES CONTROLADO////////////////////////////////////////////
+				IF (@VP_N_COLOR_CONTROLADO IS NULL OR @VP_N_COLOR_CONTROLADO = 0 )
+					BEGIN
+						EXECUTE [dbo].[PG_IN_RP_SC_PRT]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+															@PP_FOLIO_ORIGEN, 5
+					END
+				ELSE
+					BEGIN
+						DELETE RP_SC  
+						WHERE	TAGNO = @PP_FOLIO_ORIGEN 
+						AND		[TYPE] = 'D'
+					END
 			COMMIT TRANSACTION 
 			END TRY
 	
@@ -828,18 +836,18 @@ AS
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'PROCESO',
-													'',
-													-- ===========================================
-													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_FOLIO_ORIGEN, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
+	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'PROCESO',
+	--												'',
+	--												-- ===========================================
+	--												'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_FOLIO_ORIGEN, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO

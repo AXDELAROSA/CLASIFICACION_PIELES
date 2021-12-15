@@ -87,8 +87,7 @@ AS
 								
 							
 							-- /////////////////////SE OBTINE EL ULTIMO NUMERO DE LINEA///////////////////////////////////////
-							DECLARE @VP_N_PIEL_CORTADA	INT = 0
-																		
+							DECLARE @VP_N_PIEL_CORTADA	INT = 0																		
 																
 							DECLARE @VP_LOCACION_DESC VARCHAR(50) = ''
 							SELECT @VP_LOCACION_DESC = LTRIM(RTRIM(LOC_DESC))
