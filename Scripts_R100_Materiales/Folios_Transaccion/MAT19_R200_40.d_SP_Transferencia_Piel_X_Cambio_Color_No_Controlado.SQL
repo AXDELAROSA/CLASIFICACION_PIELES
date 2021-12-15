@@ -154,9 +154,10 @@ AS
 						DECLARE @VP_N_PIEL_DUPLICADA INT = 0
 						SELECT	@VP_N_PIEL_DUPLICADA = COUNT(ID)
 						FROM	RP_SC (NOLOCK)
-						WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR_DESTINO
+						WHERE LTRIM(RTRIM(COLOUR)) <> @VP_COLOR_ORIGEN
 						AND	LTRIM(RTRIM(LOT)) = @VP_LOTE
 						AND	LTRIM(RTRIM(HIDE)) = @VP_PIEL
+						--WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR_DESTINO
 						
 						IF @VP_N_PIEL_DUPLICADA IS NULL
 							SET @VP_N_PIEL_DUPLICADA = 0
@@ -186,25 +187,21 @@ AS
 								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
 							END	
 						
-						-- /////////SE ELIMINAN LAS PIELES QUE ESTEN EN FOLIOS DIFERENTE AL ORIGEN///////////////////////////////////////////////////////////
-						DELETE RP_SC 
-						WHERE LOT = @VP_LOTE 
-						AND HIDE = @VP_PIEL
-						AND TAGNO <> @PP_TAGNO_ORIGEN
+						-- /////////SE VALIDA QUE LA PIEL NO ESTE CORTADA///////////////////////////////////////////////////////////	
+						DECLARE @VP_N_PIEL_CORTADA INT = 0
+						SELECT @VP_N_PIEL_CORTADA = COUNT(COLKEY) 
+						FROM cccuthst_sql (NOLOCK)
+						WHERE LTRIM(RTRIM(LOTNO)) = RIGHT('000000' + @VP_LOTE, 6)
+						AND	LTRIM(RTRIM(hideno)) = @VP_PIEL
 
-						-- AGREGADO PARA PRUEBAS FEG
-						--IF @@ROWCOUNT = 0
-						--	SET @VP_MENSAJE_TRANSACCION = ''
+						IF @VP_N_PIEL_CORTADA IS NULL 
+							SET @VP_N_PIEL_CORTADA = 0
 
-						-- /////////SE ELIMINA EL REGISTRO DE REIMPRESION PARA QUE PUEDEN IMPRIMIR LA ETIQUETA//////////////////////////////////////////////////////////
-						DELETE PIEL_LOG 
-						WHERE LOTE IN (@VP_LOTE)    
-						AND  PIEL = @VP_PIEL 
-						AND PIEL_LOG.K_TIPO_PIEL_LOG IN (8) -- REIMPRESION
-						
-						-- AGREGADO PARA PRUEBAS FEG
-						--IF @@ROWCOUNT = 0
-						--	SET @VP_MENSAJE_TRANSACCION = ''
+						IF @VP_N_PIEL_CORTADA > 0
+							BEGIN
+								SET @VP_MENSAJE_TRANSACCION = ' La Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' ya fue cortada.'
+								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+							END	
 
 						-- /////////SE VALIDA QUE EL SQF DE LA PIEL A CAMBIAR DE COLOR SE IGUAL AL ORIGINAL///////////////////////////////////////////////////////////	
 						DECLARE @VP_SQF_ORIGINAL	DECIMAL(5,2) = 0 
@@ -226,6 +223,19 @@ AS
 									END																	
 							END
 
+						-- /////////SE ELIMINAN LAS PIELES QUE ESTEN EN FOLIOS DIFERENTE AL ORIGEN///////////////////////////////////////////////////////////
+						DELETE RP_SC 
+						WHERE LOT = @VP_LOTE 
+						AND HIDE = @VP_PIEL
+						AND TAGNO <> @PP_TAGNO_ORIGEN
+
+						-- /////////SE ELIMINA EL REGISTRO DE REIMPRESION PARA QUE PUEDEN IMPRIMIR LA ETIQUETA//////////////////////////////////////////////////////////
+						DELETE PIEL_LOG 
+						WHERE LOTE IN (@VP_LOTE)    
+						AND  PIEL = @VP_PIEL 
+						AND PIEL_LOG.K_TIPO_PIEL_LOG IN (8) -- REIMPRESION
+											
+
 						-- /////////SE OBTIENE EL FOLIO BASE DEL COLOR NUEVO///////////////////////////////////////////////////////////	
 						DECLARE @VP_FOLIO	INT = 0
 						SELECT	TOP 1 @VP_FOLIO=TAG
@@ -239,7 +249,7 @@ AS
 						GROUP BY TAG, COLOUR
 						
 						-- /////////SI NO EXISTE UN FOLIO BASE PARA EL COLOR NUEVO SE CREA///////////////////////////////////////////////////////////	
-						IF @VP_FOLIO IS NULL OR @VP_FOLIO = ''
+						IF @VP_FOLIO IS NULL OR @VP_FOLIO = 0
 							BEGIN
 								EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
 																					'DATA_02', 'RP_FOLIOS', 'TAG',
