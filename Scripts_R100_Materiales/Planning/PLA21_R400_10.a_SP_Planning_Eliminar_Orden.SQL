@@ -42,7 +42,7 @@ AS
 	IF @PP_K_USUARIO_ACCION <> 139
 	BEGIN
 		IF	(	SELECT	COUNT(K_DETAILS_RMA)
-				FROM	DETAILS_RMA
+				FROM	DETAILS_RMA (NOLOCK)
 				WHERE	JOBNO	= @PP_ORDEN	) > 0
 				SET @VP_MENSAJE = 'ERROR: La orden [RMA] no se puede eliminar.'
 	END
@@ -90,7 +90,7 @@ AS
 			DECLARE @VP_ORDEN_BUSCAR VARCHAR(50) = @PP_ORDEN + '%'
 			DECLARE @VP_N_KIT_MFP INT = 0
 			SELECT @VP_N_KIT_MFP = COUNT(K_INVENTARIO_EMBARQUE)			
-			FROM [INVENTARIO_EMBARQUE] 
+			FROM [INVENTARIO_EMBARQUE] (NOLOCK)
 			WHERE SERIAL_1 LIKE @VP_ORDEN_BUSCAR
 
 			IF @VP_N_KIT_MFP IS NULL
@@ -281,18 +281,18 @@ AS
 	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'PROCESO',
-													'',
-													-- ===========================================
-													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_ORDEN, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
+	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'PROCESO',
+	--												'',
+	--												-- ===========================================
+	--												'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_ORDEN, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO

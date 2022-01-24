@@ -41,15 +41,9 @@ WHERE	LTRIM(RTRIM(PLOT)) = '34581'
  --select * from HIDESLIN_SQL where FILENO = '20210322150141      '
   
 SELECT TOP 100	* FROM	IncInsp_sql --ORDER BY Date DESC
-WHERE --	LTRIM(RTRIM([Date])) = 20201221
-----AND		
-LTRIM(RTRIM(Lot)) = '750131' 
-
---UPDATE IncInsp_sql
---	SET Lot_size = 100
---WHERE ID = 6397
-
-select ID,Date,Lot,Description,Lot_size,Sample_size,Status,Accepted,Thickness,Defecto from IncInsp_sql where status<>'C' order by id desc
+WHERE 	LTRIM(RTRIM([Date])) = '20211222'
+AND		
+LTRIM(RTRIM(Lot)) = '403451' 
 
  SELECT D_TIPO_PIEL_LOG,PIEL_LOG.* 
  FROM PIEL_LOG 

@@ -9,7 +9,7 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02PRUEBAS] 
+USE [DATA_02] 
 GO
 
 
@@ -96,10 +96,9 @@ AS
 		EXECUTE [dbo].[PG_IN_UP_IMINVLOC_SQL_X_LOCACION_COLOR_AGREGAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																			@PP_CB_LOCACION, @VP_COLOR_TBL, @VP_SQF_TBL
 
-		-- ////////////////////////////////////////////////////////////////////
-	
+		-- ////////////////////////////////////////////////////////////////////	
 		DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
-		DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_CB_ORDEN + '00000' , 5)
+		DECLARE @VP_ORDERNO VARCHAR (50) =  @PP_CB_ORDEN --LEFT(@PP_CB_ORDEN + '00000' , 5) --// FEG: COMENTADO POR CAMBIO DE TAMAÑO DE LA ORDEN
 
 		EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 												@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 
@@ -107,18 +106,22 @@ AS
 												@PP_USER, @PP_COMENTARIO, 0, @VP_INDICE,
 												'T', 'M', @PP_TB_SQF
 		
-		-- ////////////////////////////////////////////////////////////////////
+		-- /////////////FEG: COMENTADO POR CAMBIO DE TAMAÑO DE LA ORDEN///////////////////////////////////////////////////////
+		--DECLARE @PP_ORDEN_DEFAULT VARCHAR(10) = '00000'
 
-		DECLARE @PP_ORDEN_DEFAULT VARCHAR(10) = '00000'
+		--IF @PP_ORDEN_DESTINO <> '' 
+		--	BEGIN
+		--         SET	@VP_ORDERNO = @PP_ORDEN_DESTINO
+		--	END
+		--ELSE
+		--	BEGIN
+		--         SET	@VP_ORDERNO = @PP_ORDEN_DEFAULT
+		--    END
+
+		SET	@VP_ORDERNO = ''
 
 		IF @PP_ORDEN_DESTINO <> '' 
-			BEGIN
-		         SET	@VP_ORDERNO = @PP_ORDEN_DESTINO
-			END
-		ELSE
-			BEGIN
-		         SET	@VP_ORDERNO = @PP_ORDEN_DEFAULT
-		    END
+			SET	@VP_ORDERNO = @PP_ORDEN_DESTINO
 
 		SET @VP_TRXIDNO = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000010000'
 
@@ -128,7 +131,6 @@ AS
 												@PP_USER, @PP_COMENTARIO, 1, @VP_INDICE,
 												'T', 'M', @PP_TB_SQF
 
-	-- ////////////////////////////////////////////////////////////////////
 		-- ///////////////////////////////////////////
 		SET @VP_CONTADOR = @VP_CONTADOR + 1
 		-- ///////////////////////////////////////////

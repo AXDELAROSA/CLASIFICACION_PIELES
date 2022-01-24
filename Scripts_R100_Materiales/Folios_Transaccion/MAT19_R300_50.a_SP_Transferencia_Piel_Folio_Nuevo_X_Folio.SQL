@@ -22,11 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PM_
 	DROP PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_NUEVO]
 GO
 /*
-EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_NUEVO]	0,0,  FMCKTX7 , 2137674 , '-' , '-' , 0 , 
-					'103741/103741/103741/103741/103741/103741/103741/103741/103741/103741' , 
-					'0025/0061/0059/0062/0063/0064/0065/0066/0067/0022' , 
-					'franciscoe' , 'ITX-002' 
-
+EXECUTE  [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_NUEVO]	0, 144,  'FMCKTX7' , 3882215 , 'MHI' , '-' , '-' , 1 , '35771' , '1375' , '38.80' , 'franciscoe' , 'IT-010' 
 */
 CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_NUEVO]
 	@PP_K_SISTEMA_EXE			INT,
@@ -48,50 +44,47 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_PIEL_A_FOLIO_NUEVO]
 AS
 
 	-- ///////////////////////////////////////////
-
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
+	DECLARE @VP_TAGNO_DESTINO		INT = 0
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		IF SUBSTRING(@PP_LOCACION_ORIGEN,1,1) IN ('T', 'G')
 			SET @VP_MENSAJE = 'No se puede crear folio nuevo con pieles asignadas a una Mesa/Gerber.'
 	
-	-- /////////////////////////////////////////////////////////////////////
-	
+	-- /////////////////////////////////////////////////////////////////////	
 	IF @VP_MENSAJE=''
 		BEGIN
 			BEGIN TRANSACTION 
-			BEGIN TRY
-			
+			BEGIN TRY			
 				-- /////////////////////////////////////////////////////////////////////
 				IF	@PP_SELECT_TODOS = 1
 					EXECUTE	[dbo].[PG_UP_RP_FOLIO_X_FOLIO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
 															@PP_TAGNO_ORIGEN, 'A', NULL, NULL
-				-- /////////////////////////////////////////////////////////////////////
-				
-				DECLARE @VP_TAGNO_DESTINO		INT = 0
+
+				-- ///////////FUNCION PARA OBTENER LA BASE DE DATOS ACTUAL//////////////////////////////////////////////////////////
+				DECLARE @VP_BD_NAME VARCHAR(100) = DB_NAME();
+
+				--IF @VP_BD_NAME <> 'DATA_02PRUEBAS'
+				--	RAISERROR ('Base de Datos Incorrecta.', 16, 1 ) --MENSAJE - Severity -State.
+									
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																	'DATA_02', 'RP_FOLIOS', 'TAG',
+																	--'DATA_02Pruebas', 
+																	@VP_BD_NAME,
+																	'RP_FOLIOS', 'TAG',
 																	@OU_K_TABLA_DISPONIBLE = @VP_TAGNO_DESTINO	OUTPUT
+
+				IF ( @VP_TAGNO_DESTINO IS NULL OR @VP_TAGNO_DESTINO = 0 )
+					RAISERROR ('ERROR: No fue posible obtener un folio nuevo.', 16, 1 ) --MENSAJE - Severity -State.
 				-- =====================
 
-				IF @VP_MENSAJE = ''
-					BEGIN
-						INSERT INTO RP_Folios (	
-								TAG, STATUS, MACHINE, JOBNO	) 
-						VALUES(
-								@VP_TAGNO_DESTINO, 'A', @PP_TB_MAQUINA, @PP_TB_ORDEN	)
-						
-						IF @@ROWCOUNT = 0
-							SET @VP_MENSAJE = 'ERROR: // INSERT RP_Folios // '
-					END
-				-- /////////////////////////////////////////////////////////////////////
-				-- CON EL NUEVO FOLIO YA NO SE USA 10/SEP/2021 FEG
-				--IF @VP_MENSAJE = ''
-				--	BEGIN
-				--		EXECUTE [PG_IN_RP_SC_PRT]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION, 
-				--									@VP_TAGNO_DESTINO, 1
-				--	END
+				INSERT INTO RP_Folios (	
+						TAG, STATUS, MACHINE, JOBNO	) 
+				VALUES(
+						@VP_TAGNO_DESTINO, 'A', @PP_TB_MAQUINA, @PP_TB_ORDEN	)
+				
+				IF @@ROWCOUNT = 0
+					RAISERROR ('ERROR: No fue posible crear el folio en [RP_Folios].', 16, 1 ) --MENSAJE - Severity -State.
 
 				-- /////////////////////////////////////////////////////////////////////
 				DECLARE @TBL_PIEL_SELECCIONADAS TABLE (
@@ -103,13 +96,8 @@ AS
 					)
 				SET NOCOUNT ON
 				
-				DECLARE @VP_POSICION_PIEL			INT
-				DECLARE @VP_POSICION_LOTE			INT
-				DECLARE @VP_POSICION_SQF			INT
-
-				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
-				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
-				DECLARE @VP_SQF_VALOR				VARCHAR(20)
+				DECLARE @VP_POSICION_PIEL INT = 0, @VP_POSICION_LOTE INT = 0, @VP_POSICION_SQF INT = 0;
+				DECLARE @VP_LOTE_VALOR VARCHAR(20) = '', @VP_PIEL_VALOR	VARCHAR(20) = '', @VP_SQF_VALOR VARCHAR(20) = '';
 								
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
 				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
@@ -142,17 +130,15 @@ AS
 
 					END
 								
+				-- /////////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION////////////////////////////////////////////
 				DECLARE @VP_N_PIEL INT = 0
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
-				-- /////////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION////////////////////////////////////////////
 				IF ( @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0 )
 					RAISERROR ('ERROR: No se seleccionaron pieles para la transferencia.', 16, 1 ) --MENSAJE - Severity -State.
-				-- ///////////////////////////////////////////
-								
-				DECLARE @VP_LOTE AS VARCHAR(20)
-				DECLARE @VP_PIEL AS VARCHAR(20)
-				DECLARE @VP_SQF AS VARCHAR(20)
+
+				-- ///////////////////////////////////////////								
+				DECLARE @VP_LOTE VARCHAR(20) = '', @VP_PIEL VARCHAR(20) = '', @VP_SQF VARCHAR(20) = '';
 
 				DECLARE CU_PIEL_SELECCIONADA CURSOR 
 				FOR SELECT LOTE, PIEL, SQF FROM @TBL_PIEL_SELECCIONADAS
@@ -163,7 +149,7 @@ AS
 				WHILE @@FETCH_STATUS = 0
 					BEGIN
 						-- ///////////////////////////////////////////
-						DECLARE @VP_LOCACION AS VARCHAR(5) = @PP_LOCACION_ORIGEN
+						DECLARE @VP_LOCACION VARCHAR(5) = @PP_LOCACION_ORIGEN
 
 						-- ///////////////////////////////////////////
 						DECLARE @VP_LOTE_INT INT			= CAST(@VP_LOTE AS INT)
@@ -196,8 +182,6 @@ AS
 	
 				CLOSE CU_PIEL_SELECCIONADA
 				DEALLOCATE CU_PIEL_SELECCIONADA
-			
-	-- ////////////////////////////////////////////////////////////////////	
 								
 			COMMIT TRANSACTION 
 			END TRY
@@ -211,7 +195,7 @@ AS
 			END CATCH
 			
 		END
-	-- /////////////////////////////////////////////////////////////////////
+
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE<>''
 		BEGIN
@@ -223,22 +207,21 @@ AS
 		
 		END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @VP_TAGNO_DESTINO AS CLAVE
-	
+	SELECT	@VP_MENSAJE AS MENSAJE, @VP_TAGNO_DESTINO AS CLAVE	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'PROCESO',
-													'',
-													-- ===========================================
-													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @VP_TAGNO_DESTINO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
+	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'PROCESO',
+	--												'',
+	--												-- ===========================================
+	--												'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @VP_TAGNO_DESTINO, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO

@@ -22,9 +22,7 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 GO
 
 /*
-	 EXEC [PG_PR_PLANNING_CREAR_ORDER] 0 ,144, 'MAGN03' , 'FCNPJRR' , 'Table 38' , 
-								'PLMWARM/PWD2TFB/PWD2TBL/PWD2TCR/PWD2TCL/PW2RB40/PW2RB60/PW2RC40/PWDRC60' , 
-								'30/30/30/30/30/30/30/30/30' , '' , 'ORDEN GENERADA POR SISTEMAS PARA PRUEBAS' , 'franciscoe' , 'IT-010'  
+	 EXEC [PG_PR_PLANNING_CREAR_ORDER] 0 ,144,  'IRVI02' , 'FMCKTX7' , 'Table 01' , 'PJL2RC6/PJL2RC4/PJLFCRL/PJLSFBR' , '30/30/30/30' , '(FEG) ORDEN PARA PRUEBA DE SISTEMAS.' , 'franciscoe' , 'IT-010' 
 */
 
 CREATE PROCEDURE [dbo].[PG_PR_PLANNING_CREAR_ORDER]
@@ -52,21 +50,56 @@ AS
 																					@PP_COLOR, @PP_MESA,
 																					@OU_RESULTADO_VALIDACION = @VP_MENSAJE		OUTPUT
 
-	-- //////////////////////////////////////////////////////////////
+	-- ////////SECCION #2 ACCIONES A REALIZAR//////////////////////////////////////////////////////
 	IF @VP_MENSAJE=''
 		BEGIN
 			BEGIN TRANSACTION 
 			BEGIN TRY
 				-- ///////SE OBTIENE EL NUMERO DE LA ULTIMA ORDEN GENERADA//////////////////////////////////////////////
 				SELECT	TOP 1 @VP_ORDEN = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
-				FROM	imlocfil_sql (NOLOCK)
+				FROM	imlocfil_sql 
 				WHERE LOC = 'MFP'
 
 				IF @VP_ORDEN IS NULL
 					RAISERROR ('ERROR: No fue posible obtener el numero de orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
 
+				IF @VP_ORDEN = '999999'
+					SET @VP_ORDEN = 0
+
 				SET @VP_ORDEN = @VP_ORDEN + 1
-				SET @VP_ORDEN = RIGHT('00000' + @VP_ORDEN, 5)
+					-- =====================
+
+				--// FEG: COMENTADO POR CAMBIO DE TAMAÑO DE LA ORDEN
+				--SET @VP_ORDEN = RIGHT('00000' + @VP_ORDEN, 5)
+
+				--// FEG: ADD POR CAMBIO DE TAMAÑO DE LA ORDEN
+				--SET @VP_ORDEN = RIGHT('000000' + @VP_ORDEN, 6)
+
+				IF @VP_ORDEN >= 200000
+					BEGIN
+						-- ///////SE ENVIA CORREO PARA REALIZAR EL CAMBIO DE LA ORDEN A 6 DIGITOS////////////////////////////////////////////	
+						DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)	= 'franciscoe@pearlleather.com.mx;rafaelf@pearlleather.com.mx;Alejandrod@pearlleather.com.mx'
+						DECLARE @VP_SUBJECT		VARCHAR(255)	= 'Cambiar logica para ordenes de 6 Digitos...'
+						DECLARE @VP_BODY		NVARCHAR(MAX)	=  N'<table  border="1" align="center" cellspacing="0">' + 
+											N'<thead>' + 
+											  N'<tr BGCOLOR="#ADD8E6">' + 
+											    N'<th colspan="1">Cambiar logica para ordenes de 6 Digitos...</th>' + 
+											  N'</tr>' + 
+											  N'<tr BGCOLOR="#48D1CC">' + 
+											    N'<th>Ruta de archivo de cambios a Realizar</th>' + 
+											  N'</tr>' + 
+											N'</thead>' + 
+											N'<tbody>' + 
+											  N'<tr>' + 
+											  N'<td>P:\IT\001_DEVELOPER_FILES\CAMBIO_ORDEN</td>' + 
+											  N'</tr>' + 
+											N'</tbody>' + 
+										N'</table>' ;
+						SET ROWCOUNT 0
+						 				
+						EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	0, 0,
+																	@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY				
+					END
 
 				-- ///////SE ACTUALIZA LA LOCACION MFP CON LA ORDEN CREADA//////////////////////////////////////////////	
 				UPDATE imlocfil_sql 
@@ -315,9 +348,9 @@ AS
 									AND		MODELNO		= @VP_MODELO )
 								) > 0
 							BEGIN	
-								EXECUTE	[dbo].[PG_UP_DESACTIVAR_COMPONENTE_LOG]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
-																				-- ===========================
-																				@VP_ITEM_NO,		@VP_MODELO
+								EXECUTE	[dbo].[PG_UP_DESACTIVAR_COMPONENTE_LOG_ORDEN]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
+																						-- ===========================
+																						@VP_ITEM_NO,		@VP_MODELO
 							END
 						--====================================================================================================================================
 						--====================================================================================================================================
@@ -392,8 +425,8 @@ AS
 			END CATCH
 			
 		END
-	-- /////////////////////////////////////////////////////////////////////
-	-- /////////////////////////////////////////////////////////////////////
+
+	-- //////////SECCION #3 RESULTADO///////////////////////////////////////////////////////////
 	IF @VP_MENSAJE<>''
 		BEGIN
 		

@@ -9,7 +9,7 @@
 -- // Fecha creación:	16/JUN/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -105,7 +105,7 @@ AS
 		-- ////////////////////////////////////////////////////////////////////
 	
 		DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
-		DECLARE @VP_ORDERNO VARCHAR (50) =  LEFT(@PP_ORDEN_ORIGEN + '00000' , 5)
+		DECLARE @VP_ORDERNO VARCHAR (50) =  @PP_ORDEN_ORIGEN --LEFT(@PP_ORDEN_ORIGEN + '00000' , 5) -- CAMBIAR??
 
 		EXECUTE [dbo].[PG_IN_IMINVTRX_SQL]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 												@VP_TRXIDNO, @VP_TRANSACCION_DOC, @VP_COLOR_TBL, 

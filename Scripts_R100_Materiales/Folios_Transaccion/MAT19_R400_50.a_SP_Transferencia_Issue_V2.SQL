@@ -13,7 +13,6 @@ USE [DATA_02]
 GO
 
 
-
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
@@ -44,18 +43,22 @@ CREATE PROCEDURE [dbo].[PG_PM_TRANSFER_ISSUE_V2]
 AS
 
 	-- ///////////////////////////////////////////
-
 	DECLARE @VP_MENSAJE VARCHAR(255) = ''
 
 	-- /////////////////////////// RN - VALIDACIONES //////////////////////////////////////////
-	IF LTRIM(RTRIM(@PP_COMENTARIO)) = '' OR @PP_COMENTARIO IS NULL
+	IF ( LTRIM(RTRIM(@PP_COMENTARIO)) = '' OR @PP_COMENTARIO IS NULL )
 		SET  @VP_MENSAJE = 'Es necesario agregar un comentario para poder realizar la acción.'
+
+	IF @VP_MENSAJE = ''
+		IF ( SUBSTRING( @PP_LOCACION, 1, 1 ) IN ('T', 'G') AND LEN( @PP_ORDEN ) < 5 )
+			SET @VP_MENSAJE = 'El folio Origen: ' + CONVERT(VARCHAR(30), @PP_FOLIO_ORIGEN) + ' de la Locacion: ' + @PP_LOCACION + ' no tiene una orden asignada!'
+
 
 	IF @VP_MENSAJE=''
 		BEGIN
 			DECLARE @VP_N_FOLIO_BASE INT = 0
 			SELECT @VP_N_FOLIO_BASE = COUNT(ID) 
-			FROM RP_Folios 
+			FROM RP_Folios (NOLOCK)
 			WHERE TAG = @PP_FOLIO_ORIGEN 
 			AND STATUS = 'B'
 
@@ -80,13 +83,8 @@ AS
 						SQF			VARCHAR(20)
 					)
 
-				DECLARE @VP_POSICION_PIEL			INT
-				DECLARE @VP_POSICION_LOTE			INT
-				DECLARE @VP_POSICION_SQF			INT
-
-				DECLARE @VP_LOTE_VALOR				VARCHAR(20)
-				DECLARE @VP_PIEL_VALOR				VARCHAR(20)
-				DECLARE @VP_SQF_VALOR				VARCHAR(20)
+				DECLARE @VP_POSICION_PIEL INT = 0, @VP_POSICION_LOTE INT = 0, @VP_POSICION_SQF INT = 0;
+				DECLARE @VP_LOTE_VALOR VARCHAR(20) = '', @VP_PIEL_VALOR	VARCHAR(20) = '', @VP_SQF_VALOR	VARCHAR(20) = '';
 								
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
 				SET	@PP_LOTE_ARRAY			= @PP_LOTE_ARRAY		+ '/'		
@@ -105,7 +103,6 @@ AS
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
 						SELECT @VP_SQF_VALOR		= LEFT(@PP_SQF_ARRAY,  @VP_POSICION_SQF - 1)
 						
-
 						INSERT	INTO	@TBL_PIEL_SELECCIONADAS
 								VALUES	(
 											@PP_COLOR,
@@ -118,21 +115,17 @@ AS
 						SELECT @PP_PIEL_ARRAY			= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
 						SELECT @PP_LOTE_ARRAY			= STUFF(@PP_LOTE_ARRAY, 1, @VP_POSICION_LOTE, '')
 						SELECT @PP_SQF_ARRAY			= STUFF(@PP_SQF_ARRAY, 1, @VP_POSICION_SQF, '')
-
 					END
 
+				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
 				DECLARE @VP_N_PIEL INT = 0
 				SELECT @VP_N_PIEL = COUNT(K_PIEL_SELECCIONADA) FROM @TBL_PIEL_SELECCIONADAS
 
-				-- ////////////////////SI NO HAY PIELES SELECCIONADAS GENERAMOS UN ERROR DE TRANSACCION//////////////////////////
 				IF ( @VP_N_PIEL IS NULL OR @VP_N_PIEL = 0 ) 
 					RAISERROR ('NO hay pieles seleccionadas.', 16, 1 ) --MENSAJE - Severity -State.
 
-				-- /////////INGRESAMOS LAS PIELES DEL FOLIO A LOS LOS DIFERENTES LOGS PARA SEGUIMINETO ANTES DE BORRARLAS///////
-				DECLARE @VP_COLOR	VARCHAR(10)
-				DECLARE @VP_LOTE	INT
-				DECLARE @VP_PIEL	INT
-				DECLARE @VP_SQF		DECIMAL(13,4)
+				-- /////////INGRESAMOS LAS PIELES DEL FOLIO A LOS DIFERENTES LOGS PARA SEGUIMINETO ANTES DE BORRARLAS///////
+				DECLARE @VP_COLOR VARCHAR(10) = '', @VP_LOTE INT = 0, @VP_PIEL INT = 0, @VP_SQF DECIMAL(13,4) = 0;
 
 				DECLARE CU_PIEL_ISSUE_OUT CURSOR 
 				FOR SELECT	LTRIM(RTRIM(COLOR)), LTRIM(RTRIM(LOTE)), LTRIM(RTRIM(PIEL)), LTRIM(RTRIM(SQF)) 
@@ -147,7 +140,7 @@ AS
 					EXECUTE [dbo].[PG_IN_PIEL_LOG]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 														7, @PP_FOLIO_ORIGEN, @VP_COLOR,
 														@VP_LOTE, @VP_PIEL, @VP_SQF, 
-														@PP_LOCACION, 0, 
+														@PP_LOCACION, @PP_ORDEN, 
 														0, 0, 0
 
 					-- /////////////////////////////////////////////////////////////////////
@@ -167,30 +160,25 @@ AS
 					IF @@ROWCOUNT = 0
 						RAISERROR ('No fue posible borrar las Piles', 16, 1 ) --MENSAJE - Severity -State.
 
-				-- ////////////////////////////////////////////////////////////////////	
-				  FETCH NEXT FROM CU_PIEL_ISSUE_OUT INTO @VP_COLOR, @VP_LOTE, @VP_PIEL, @VP_SQF
-	
+					-- ////////////////////////////////////////////////////////////////////	
+					FETCH NEXT FROM CU_PIEL_ISSUE_OUT INTO @VP_COLOR, @VP_LOTE, @VP_PIEL, @VP_SQF	
 				END
 				
 				CLOSE CU_PIEL_ISSUE_OUT
 				DEALLOCATE CU_PIEL_ISSUE_OUT
-				-- ////////////////////////////////////////////////////////////////////	
-				
-				DECLARE @VP_TRANSACCION_DOC	INT = 0
 
+				-- ////////////////////////////////////////////////////////////////////					
+				DECLARE @VP_TRANSACCION_DOC	INT = 0
 				SELECT	TOP 1
 						@VP_TRANSACCION_DOC  = RIGHT('00000000' + Ltrim(Rtrim(NEXT_DOC_NO)), 8)
 				-- =====================
 				FROM	IMCTLFIL_SQL
-				-- ///////////////////////////////////////////
 
+				-- ///////////////////////////////////////////
 				EXECUTE [dbo].[PG_UP_IMCTLFIL_SQL_NEXT_DOC_NO]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																	1 
 				-- ///////////////////////////////////////////
-				DECLARE @VP_COLOR_TBL	VARCHAR(10)
-				DECLARE @VP_LOTE_TBL	VARCHAR(10)
-				DECLARE @VP_SQF_TBL		VARCHAR(10)
-				DECLARE @VP_CONTADOR	INT = 0
+				DECLARE @VP_COLOR_TBL VARCHAR(10) = '', @VP_LOTE_TBL VARCHAR(10) = '', @VP_SQF_TBL VARCHAR(10) = '', @VP_CONTADOR INT = 0;
 				
 				DECLARE CU_SQF_X_LOTE_ISSUE_OUT CURSOR 
 				FOR SELECT	LTRIM(RTRIM(COLOR)), LTRIM(RTRIM(LOTE)), SUM(CONVERT(DECIMAL(13,4),LTRIM(RTRIM(SQF)))) AS SQF 
@@ -201,13 +189,11 @@ AS
 				FETCH NEXT FROM CU_SQF_X_LOTE_ISSUE_OUT INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL
 				
 				WHILE @@FETCH_STATUS = 0
-				BEGIN
-				
+				BEGIN				
 					DECLARE @VP_INDICE	VARCHAR(10) = CONVERT(VARCHAR(10), @VP_CONTADOR)
 					SET @VP_LOTE_TBL	= RIGHT( '000000' + @VP_LOTE_TBL, 6)
 											
-					-- ///////////////////////////////////////////
-					
+					-- ///////////////////////////////////////////					
 					EXECUTE [dbo].[PG_UP_IMLSMST_SQL_X_LOCACION_COLOR_LOTE_QUITAR]		@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 																						@PP_LOCACION, @VP_COLOR_TBL,
 																						@VP_LOTE_TBL, @VP_SQF_TBL
@@ -223,8 +209,7 @@ AS
 					SET @VP_CONTADOR = @VP_CONTADOR + 1
 					-- ///////////////////////////////////////////
 					
-				    FETCH NEXT FROM CU_SQF_X_LOTE_ISSUE_OUT INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL
-				
+				    FETCH NEXT FROM CU_SQF_X_LOTE_ISSUE_OUT INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_SQF_TBL				
 				END
 				
 				CLOSE CU_SQF_X_LOTE_ISSUE_OUT
@@ -234,7 +219,7 @@ AS
 				DECLARE @VP_TRXIDNO VARCHAR (50) = 'I' + CONVERT(VARCHAR(10),@VP_TRANSACCION_DOC) + '0000000000000000000'
 				DECLARE @VP_F_TRANSACCION INT = DATA_02.[dbo].CONVERT_DATE_TO_INT(GETDATE(),'yyyyMMdd')
 				DECLARE @VP_TIME INT = FORMAT(GETDATE(),  'HHmmss')
-				SET	@PP_ORDEN = LEFT(@PP_ORDEN + '00000' , 5)
+				--SET	@PP_ORDEN = LEFT(@PP_ORDEN + '00000' , 5)
 
 				-- ////////////////////////////////////////////////////////////////////
 				INSERT INTO  IMINVTRX_SQL (	SOURCE, ORD_NO, ITEM_NO, LOC, TRX_DT, 
@@ -302,7 +287,7 @@ AS
 									N'</tbody>' + 
 								N'</table>' ; 
 					SET ROWCOUNT 0
-					 				
+					 			
 				EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
 															@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
 						
@@ -330,22 +315,21 @@ AS
 		
 		END
 	
-	SELECT	@VP_MENSAJE AS MENSAJE, @PP_FOLIO_ORIGEN AS CLAVE
-	
+	SELECT	@VP_MENSAJE AS MENSAJE, @PP_FOLIO_ORIGEN AS CLAVE	
 	-- //////////////////////////////////////////////////////////////
 
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'PROCESO',
-													'',
-													-- ===========================================
-													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_FOLIO_ORIGEN, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
+	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'PROCESO',
+	--												'',
+	--												-- ===========================================
+	--												'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_FOLIO_ORIGEN, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO

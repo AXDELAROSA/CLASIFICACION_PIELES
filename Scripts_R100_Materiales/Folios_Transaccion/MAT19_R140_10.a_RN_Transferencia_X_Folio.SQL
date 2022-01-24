@@ -75,7 +75,7 @@ AS
 													)
 										ELSE	LTRIM(RTRIM(MOVEMENT)) END )
 			-- =====================
-			FROM	RP_SC
+			FROM	RP_SC (NOLOCK)
 			WHERE	TAGNO=@PP_FOLIO 
 
 			-- /////////////////////////////////////////////////////
@@ -121,8 +121,8 @@ CREATE PROCEDURE [dbo].[PG_RN_VALIDA_LOCACION_ORDEN_X_FOLIO]
 AS
 
 	DECLARE @VP_RESULTADO			VARCHAR(300) = '' 
-	DECLARE @VP_LOCACION_ORIGINAL	VARCHAR(5)
-	DECLARE @VP_ORDEN_ORIGINAL		VARCHAR(10)
+	DECLARE @VP_LOCACION_ORIGINAL	VARCHAR(5) = ''
+	DECLARE @VP_ORDEN_ORIGINAL		VARCHAR(10) = ''
 
 	-- /////////////////////////////////////////////////////
 	SELECT	@VP_LOCACION_ORIGINAL = (CASE WHEN ISNUMERIC(MOVEMENT)  = 1 THEN (	SELECT TOP 1	LTRIM(RTRIM(IMINVTRX_SQL.Loc))
@@ -142,13 +142,13 @@ AS
 													)
 										ELSE	LTRIM(RTRIM(MOVEMENT)) END )
 	-- =====================
-	FROM	RP_SC
+	FROM	RP_SC (NOLOCK)
 	WHERE	TAGNO=@PP_FOLIO 
 	AND LTRIM(RTRIM(COLOUR)) = @PP_COLOR
 	-- /////////////////////////////////////////////////////
 
 	IF @VP_RESULTADO = ''
-		IF @VP_LOCACION_ORIGINAL IS NULL OR @VP_LOCACION_ORIGINAL = ''
+		IF ( @VP_LOCACION_ORIGINAL IS NULL OR @VP_LOCACION_ORIGINAL = '' )
 			SET @VP_RESULTADO = 'No fue posible obtener locacion del folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + '.'
 	-- /////////////////////////////////////////////////////
 
@@ -158,17 +158,17 @@ AS
 	-- /////////////////////////////////////////////////////
 	
 	IF @VP_RESULTADO = ''
-		IF SUBSTRING(@VP_LOCACION_ORIGINAL, 1, 1) <> 'T' AND LEN(@PP_ORDEN) = 5
+		IF SUBSTRING(@VP_LOCACION_ORIGINAL, 1, 1) <> 'T' AND LEN(@PP_ORDEN) = 5 -- CAMBIAR??
 			SET @VP_RESULTADO = 'El folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + ' no deberia tener orden asignada'	
 	-- /////////////////////////////////////////////////////
 
 	IF @VP_RESULTADO = ''
-		IF SUBSTRING (@VP_LOCACION_ORIGINAL, 1, 1) = 'T' AND LEN(@PP_ORDEN) <> 5
+		IF SUBSTRING (@VP_LOCACION_ORIGINAL, 1, 1) = 'T' AND LEN(@PP_ORDEN) <> 5 -- CAMBIAR??
 			SET @VP_RESULTADO = 'La orden: ' + @PP_ORDEN + ' no corresponde al folio: '+ CONVERT(VARCHAR(15), @PP_FOLIO) + '.'
 	-- /////////////////////////////////////////////////////
 
 	SELECT	@VP_ORDEN_ORIGINAL = ISNULL(LTRIM(RTRIM(JOBNO)), '')
-	FROM	RP_Folios 
+	FROM	RP_Folios (NOLOCK)
 	WHERE	TAG = @PP_FOLIO
 
 	IF @VP_RESULTADO = ''
@@ -209,12 +209,12 @@ CREATE PROCEDURE [dbo].[PG_RN_VALIDA_PIEL_SCRAP]
 AS
 
 	DECLARE @VP_RESULTADO		VARCHAR(300) = '' 
-	DECLARE @VP_N_PIEL_CORTADA	INT
+	DECLARE @VP_N_PIEL_CORTADA	INT = 0
 
 	-- /////////////////////////////////////////////////////
 
 	SELECT @VP_N_PIEL_CORTADA = COUNT(hideno)
-						FROM cccuthst_sql 
+						FROM cccuthst_sql (NOLOCK)
 						WHERE LTRIM(RTRIM(COLOUR)) = @PP_COLOR   
 						AND	LTRIM(RTRIM(lotno)) = RIGHT('000000' + Ltrim(Rtrim(@PP_LOTE)), 6) 
 						AND LTRIM(RTRIM(hideno))   = @PP_PIEL
@@ -261,7 +261,7 @@ AS
 
 	IF @VP_RESULTADO=''
 		IF NOT EXISTS(	SELECT	K_GRUPO_APROBADOR 
-					FROM	BD_GENERAL.DBO.[GRUPO_APROBADOR] 
+					FROM	BD_GENERAL.DBO.[GRUPO_APROBADOR] (NOLOCK)
 					WHERE	K_USUARIO = @PP_CODIGO_USUARIO	
 					AND		D_GRUPO_APROBADOR = 'AUTORIZAR SALIDA MQU'
 					AND		K_ESTATUS_GRUPO_APROBADOR = 1 -- ACTIVO
@@ -343,14 +343,14 @@ AS
 	DECLARE @VP_TAG_NO		INT = 0
 			
 	SELECT	@VP_TAG_NO	=	TAGNO
-							FROM	RP_SC
+							FROM	RP_SC (NOLOCK)
 							WHERE	TAGNO=@PP_FOLIO
 							AND		LTRIM(RTRIM(COLOUR))=@PP_COLOR
 	-- ===========================
 
 
 	IF @VP_RESULTADO=''
-		IF ( @VP_TAG_NO IS NULL )
+		IF ( @VP_TAG_NO IS NULL OR @VP_TAG_NO = 0 )
 			SET @VP_RESULTADO =  'El <FOLIO> proporcionado no existe....' 
 
 	-- /////////////////////////////////////////////////////
@@ -451,7 +451,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> RN_EXISTE
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02 --PRUEBAS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_JOBNO_EXISTE]
 GO
@@ -473,19 +473,20 @@ AS
 			SET @VP_RESULTADO =  'Numero de <ORDEN> no valido [Campo Vacio]...Transferencia cancelada' 
 	-- /////////////////////////////////////////////////////
 
-	IF @VP_RESULTADO=''
-		IF ( LEN(@PP_ORDEN_DESTINO) <> 5 )
-			SET @VP_RESULTADO =  'Numero de <ORDEN> no valido [Cantidad de Caracteres No Valido]...Transferencia cancelada' 
+	--// FEG: COMENTADO POR CAMBIO DE TAMAÑO DE LA ORDEN
+	--IF @VP_RESULTADO=''
+	--	IF ( LEN(@PP_ORDEN_DESTINO) <> 5 ) -- CAMBIAR??
+	--		SET @VP_RESULTADO =  'Numero de <ORDEN> no valido [Cantidad de Caracteres No Valido]...Transferencia cancelada' 
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_JOBNO		VARCHAR(10)
-	SELECT TOP 1 @VP_JOBNO	=	JOBNO
-							FROM	CCJOBHDR_SQL
+	DECLARE @VP_JOBNO		VARCHAR(10) = ''
+	SELECT TOP 1 @VP_JOBNO	=	LTRIM(RTRIM(JOBNO))
+							FROM	CCJOBHDR_SQL (NOLOCK)
 							WHERE	JOBNO=@PP_ORDEN_DESTINO
 	-- ===========================
 	
 	IF @VP_RESULTADO=''
-		IF ( @VP_JOBNO IS NULL )
+		IF ( @VP_JOBNO IS NULL OR  @VP_JOBNO = '')
 			SET @VP_RESULTADO =  'Numero de <ORDEN> no existente...Transferencia cancelada' 
 
 	-- /////////////////////////////////////////////////////
@@ -500,7 +501,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> RN_EXISTE
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02 --PRUEBAS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_ESTATUS]
 GO
@@ -519,15 +520,18 @@ AS
 	
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_ESTATUS		VARCHAR(3)
+	DECLARE @VP_ESTATUS		VARCHAR(3) = ''
 			
 	SELECT	@VP_ESTATUS	=	LTRIM(RTRIM(STATUS))
-							FROM	CCJOBHDR_SQL
+							FROM	CCJOBHDR_SQL (NOLOCK)
 							WHERE	JOBNO=@PP_ORDEN_DESTINO
 	-- ===========================
 
-	IF @VP_RESULTADO=''
-		IF ( @VP_ESTATUS='C' )
+	IF( @VP_ESTATUS IS NULL OR @VP_ESTATUS = '' )
+		SET @VP_RESULTADO =  'La <ORDEN> no existe...Transferencia cancelada...' 
+
+	IF @VP_RESULTADO = ''
+		IF ( @VP_ESTATUS = 'C' )
 			SET @VP_RESULTADO =  'La <ORDEN> ya fue completada...Transferencia cancelada...' 
 
 	-- /////////////////////////////////////////////////////
@@ -543,7 +547,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> RN_EXISTE
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02PRUEBAS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_CCJOBHDR_SQL_VALIDA_COLOR]
 GO
@@ -563,12 +567,15 @@ AS
 	
 	-- /////////////////////////////////////////////////////
 
-	DECLARE @VP_COLOR_JOBNO_DESTINO		VARCHAR(20)
+	DECLARE @VP_COLOR_JOBNO_DESTINO		VARCHAR(20) = ''
 			
 	SELECT	@VP_COLOR_JOBNO_DESTINO	= CONCAT('F', LTRIM(RTRIM(COLOUR)))
-							FROM	CCJOBHDR_SQL
+							FROM	CCJOBHDR_SQL (NOLOCK)
 							WHERE	JOBNO=@PP_ORDEN_DESTINO
 	-- ===========================
+
+	IF @VP_COLOR_JOBNO_DESTINO IS NULL
+		SET @VP_COLOR_JOBNO_DESTINO = ''
 
 	IF @VP_RESULTADO=''
 		IF ( @VP_COLOR_JOBNO_DESTINO<>@PP_COLOR_ORIGEN )

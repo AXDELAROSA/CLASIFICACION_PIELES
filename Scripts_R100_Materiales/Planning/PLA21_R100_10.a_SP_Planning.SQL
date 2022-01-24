@@ -9,7 +9,7 @@
 -- // Fecha creación:	21/ABR/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02] 
+USE [DATA_02Pruebas] 
 GO
 
 
@@ -321,13 +321,13 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE DATA_02
+-- USE DATA_02PRUEBAS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]
 GO
 
 /*
- EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '18518'
+ EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '50500'
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '29487'
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '25493'
 */

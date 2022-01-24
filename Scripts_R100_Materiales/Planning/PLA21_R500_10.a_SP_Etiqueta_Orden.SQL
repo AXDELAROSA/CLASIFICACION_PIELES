@@ -52,7 +52,7 @@ CREATE PROCEDURE [dbo].[PG_LI_IMPRIMIR_ETIQUETA_ORDEN]
 AS
 	
 	IF	(	SELECT	COUNT(K_DETAILS_RMA)
-			FROM	DETAILS_RMA
+			FROM	DETAILS_RMA (NOLOCK)
 			WHERE	JOBNO	= @PP_ORDEN	) > 0
 	BEGIN
 		EXECUTE	[dbo].[PG_PR_ETIQUETA_ORDEN_RMA]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
@@ -186,11 +186,11 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE DATA_02
+-- USE DATA_02 --PRUEBAS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ETIQUETA_ORDEN_KIT]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT]
 GO
---		EXECUTE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT] 0,144, 36568
+--		EXECUTE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT] 0,144, 123457
 CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_KIT]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
@@ -292,19 +292,9 @@ AS
 					CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
 					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
 					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
-					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
 					-- ===========================
-					--( CASE	WHEN  ( SELECT COUNT(ORDEN) FROM PPMS_PEARL.DBO.Perforacion where LTRIM(RTRIM(noserie)) = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)), 3) ) > 0 THEN 1
-					--		WHEN	( SELECT COUNT(ORDEN) FROM PPMS_PEARL.DBO.Perforacion where LTRIM(RTRIM(noserie)) = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)), 3) ) = 0 
-					--			AND  ( SELECT COUNT(ORDEN) FROM PPMS_PEARL.DBO.certificacion_rpt where LTRIM(RTRIM(noserie_caja)) =  LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)), 3) ) > 0 THEN 1
-					--		WHEN ( SELECT COUNT(ORDEN) FROM PPMS_PEARL.DBO.Perforacion where LTRIM(RTRIM(noserie)) = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)), 3) ) = 0 
-					--			AND  ( SELECT COUNT(ORDEN) FROM PPMS_PEARL.DBO.certificacion_rpt where LTRIM(RTRIM(noserie_caja)) = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)), 3) ) = 0 THEN 0
-					-- END ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA					
-					-- ===========================
-					--(	SELECT COUNT([K_MATERIAL_PROGRAMADO_LOG]) 
-					--	FROM [MATERIAL_PROGRAMADO_LOG] (NOLOCK)
-					--	WHERE SERIAL = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)   
-					--	AND K_TIPO_EVENTO_KIT >= 300 ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA
+					--LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+					LTRIM(RTRIM(ChangeLevel)) AS PROD_CAT,					
 					-- ===========================
 					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
 						FROM INVENTARIO_EMBARQUE (NOLOCK)
@@ -371,12 +361,9 @@ AS
 					CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
 					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
 					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
-					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
 					-- ===========================
-					--(	SELECT COUNT([K_MATERIAL_PROGRAMADO_LOG]) 
-					--	FROM [MATERIAL_PROGRAMADO_LOG] (NOLOCK)
-					--	WHERE SERIAL = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)   
-					--	AND K_TIPO_EVENTO_KIT >= 300 ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA
+					--LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+					LTRIM(RTRIM(ChangeLevel)) AS PROD_CAT,					
 					-- ===========================
 					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
 						FROM INVENTARIO_EMBARQUE (NOLOCK)
@@ -447,12 +434,9 @@ AS
 					CONVERT(INT,ccjoblin_sql.completedqty)	AS COMPLETED_QTY, 
 					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY,
 					RIGHT('000' + CONVERT(VARCHAR(5), ccjoblin_sql.Ser_No), 3)	AS SER_NO,
-					LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
 					-- ===========================
-					--(	SELECT COUNT([K_MATERIAL_PROGRAMADO_LOG]) 
-					--	FROM [MATERIAL_PROGRAMADO_LOG] (NOLOCK)
-					--	WHERE SERIAL = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3)   
-					--	AND K_TIPO_EVENTO_KIT >= 300 ) AS ENVIADO, -- DESDE QUE SE ESCANEA EN INSPEC. PERFO O CERTIFICACION YA NO SE PODRA REIMPRIMIR ETIQUETA
+					--LEFT(LTRIM(RTRIM(ChangeLevel)), 3) AS PROD_CAT,
+					LTRIM(RTRIM(ChangeLevel)) AS PROD_CAT,					
 					-- ===========================
 					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
 						FROM INVENTARIO_EMBARQUE (NOLOCK)
@@ -482,7 +466,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
--- USE DATA_02 
+-- USE DATA_02PRUEBAS 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_PR_ASIGNAR_CODIGO_CAMARA_X_SERIAL]
 GO
@@ -510,7 +494,7 @@ AS
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 
 	DECLARE @VP_N_SERIAL_FACTURADO INT = 0	
 	SELECT @VP_N_SERIAL_FACTURADO = COUNT(K_INVENTARIO_EMBARQUE) 
-	FROM INVENTARIO_EMBARQUE 
+	FROM INVENTARIO_EMBARQUE (NOLOCK)
 	WHERE SERIAL_1 = @PP_SERIAL
 	AND K_ESTATUS_INVENTARIO_EMBARQUE IN (3, 4) -- FACTURADO
 

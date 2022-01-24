@@ -42,14 +42,23 @@ AS
 	-- ///////SE OBTIENE EL NUMERO DE LA ULTIMA ORDEN GENERADA//////////////////////////////////////////////
 	DECLARE @VP_ORDEN_COMPLEMENTO VARCHAR(50) = ''
 	SELECT	TOP 1 @VP_ORDEN_COMPLEMENTO = CONVERT(INT, LTRIM(RTRIM(user_def_fld_4)))
-	FROM	imlocfil_sql (NOLOCK)
+	FROM	imlocfil_sql 
 	WHERE LOC = 'MFP'
 
 	IF @VP_ORDEN_COMPLEMENTO IS NULL
 		RAISERROR ('ERROR: No fue posible obtener el numero de orden en [CCJOBHDR_SQL]', 16, 1 ) --MENSAJE - Severity -State.
 
+	IF @VP_ORDEN_COMPLEMENTO = '999999'
+			SET @VP_ORDEN_COMPLEMENTO = 0
+
 	SET @VP_ORDEN_COMPLEMENTO = @VP_ORDEN_COMPLEMENTO + 1
-	SET @VP_ORDEN_COMPLEMENTO = RIGHT('00000' + @VP_ORDEN_COMPLEMENTO, 5)
+					-- =====================
+
+	--// FEG: COMENTADO POR CAMBIO DE TAMAÑO DE LA ORDEN
+	--SET @VP_ORDEN_COMPLEMENTO = RIGHT('00000' + @VP_ORDEN_COMPLEMENTO, 5)
+
+	--// FEG: ADD POR CAMBIO DE TAMAÑO DE LA ORDEN
+	--SET @VP_ORDEN_COMPLEMENTO = RIGHT('000000' + @VP_ORDEN_COMPLEMENTO, 6)
 
 	-- ///////SE ACTUALIZA LA LOCACION MFP CON LA ORDEN CREADA//////////////////////////////////////////////	
 	UPDATE imlocfil_sql 
@@ -241,9 +250,9 @@ AS
 							AND		MODELNO		= @VP_MODELO )
 						) > 0
 					BEGIN	
-						EXECUTE	[dbo].[PG_UP_DESACTIVAR_COMPONENTE_LOG]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
-																		-- ===========================
-																		@VP_ITEM_NO_COMPLEMENTO,		@VP_MODELO
+						EXECUTE	[dbo].[PG_UP_DESACTIVAR_COMPONENTE_LOG_ORDEN]	@PP_K_SISTEMA_EXE,	@PP_K_USUARIO_ACCION,
+																			-- ===========================
+																			@VP_ITEM_NO_COMPLEMENTO,		@VP_MODELO
 					END
 				--====================================================================================================================================
 				--====================================================================================================================================

@@ -111,7 +111,7 @@ GO
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
-
+-- USE DATA_02PRUEBAS
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_SK_RP_SC_X_RP_FOLIO_STATUS_B]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_SK_RP_SC_X_RP_FOLIO_STATUS_B]
 GO
@@ -141,8 +141,10 @@ AS
 						FROM	RP_Folios (NOLOCK)
 						WHERE	STATUS=@PP_STATUS )
 	-- =====================
+	AND COLOUR IN (SELECT COLOR FROM COLORES_CONTROLADOS (NOLOCK))
+	-- =====================
 	GROUP BY TAGNO, COLOUR
-
+	ORDER BY COLOUR
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
 GO

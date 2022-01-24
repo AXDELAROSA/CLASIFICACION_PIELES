@@ -1,8 +1,8 @@
 
 USE DATA_02PRUEBAS
-	
-	SELECT * FROM ccjobhdr_sql WHERE JOBNO  in ( SELECT jobno FROM pearl_log WHERE screen_opt = 'Planning' AND movement = 'Crear orden' )
-	AND status = 'P' AND FOLIO IS NOT NULL ORDER BY JOBNO
+	SELECT RIGHT('00000' + 123456, 6)
+
+	SELECT TOP 100 * FROM ccjobhdr_sql ORDER BY JOBNO desc
 
 	SELECT * FROM imlocfil_sql WHERE LOC = 'MFP'
 
@@ -17,6 +17,7 @@ USE DATA_02PRUEBAS
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '32104'
 
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('31673') ORDER BY jobno, Ser_No
+
 	SELECT * FROM ccjobhdr_sql WHERE JOBNO = '31673'
 	
 	SELECT * FROM pearl_log WHERE screen_opt = 'Planning' AND JOBNO < 50000  ORDER BY ckey DESC
@@ -29,7 +30,8 @@ USE DATA_02PRUEBAS
 	
 	select imkitfil_sql.* from imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31503') ) -- IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('30958')) ORDER BY item_no
 
-	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('36405') ORDER BY jobno, Ser_No
+	SELECT * FROM  KIT_RUTA (NOLOCK)
+	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('123457') ORDER BY jobno, Ser_No
 	SELECT * FROM ccjoblin_sql WHERE JOBNO IN ('33922') ORDER BY jobno, Ser_No
 	SELECT * FROM  ccjoblin_sql WHERE JOBNO = '31504' AND ITEM_NO NOT IN (SELECT comp_item_no FROM imkitfil_sql where comp_item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('31504') ))
 
@@ -38,17 +40,19 @@ USE DATA_02PRUEBAS
 	FROM imkitfil_sql (NOLOCK)
 	WHERE item_no = 'UW2WQBLCNPWA3'   AND comp_item_no <> 'PW2WQBLCNPWA3'  
 
-	SELECT *
-			FROM imkitfil_sql (NOLOCK)
-			WHERE comp_item_no IN ( SELECT item_no 
-									FROM ccjoblin_sql 
-									WHERE JOBNO = '35403' )
+	select TOP 10 * from IMITMIDX_SQL WHERE item_no IN (SELECT item_no FROM ccjoblin_sql WHERE JOBNO IN ('51572', '51573') )
 
 	SELECT *
 			FROM imkitfil_sql (NOLOCK)
 			WHERE comp_item_no IN ( SELECT item_no 
 									FROM ccjoblin_sql 
-									WHERE JOBNO = '36462' )
+									WHERE JOBNO = '51572' )
+
+	SELECT *
+			FROM imkitfil_sql (NOLOCK)
+			WHERE comp_item_no IN ( SELECT item_no 
+									FROM ccjoblin_sql 
+									WHERE JOBNO = '51573' )
 
 
 	SELECT COUNT(DISTINCT(CONCAT('F', RIGHT(LTRIM(RTRIM(item_no)),6))))
