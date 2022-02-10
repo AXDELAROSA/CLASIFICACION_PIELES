@@ -13,8 +13,6 @@ USE [DATA_02]
 GO
 
 
-
-
 -- //////////////////////////////////////////////////////////////
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
@@ -44,24 +42,38 @@ AS
 	IF @PP_PACKING_NO <> 'CORTADA-111111'
 		BEGIN
 			DECLARE @VP_LOTE_TBL VARCHAR(10) = RIGHT( '000000' + @PP_LOTE, 6)	
-			DECLARE @VP_MUESTRA INT = 3
-			DECLARE @VP_N_LOTE_INSPECCION INT = 0
+			DECLARE @VP_MUESTRA INT = 3, @VP_N_LOTE_INSPECCION INT = 0, @PP_K_INSPECCION_PIEL INT = 0
 
 			SELECT	@VP_N_LOTE_INSPECCION = COUNT(ID)
 			FROM	IncInsp_sql 
 			WHERE	LTRIM(RTRIM(Lot)) = @VP_LOTE_TBL 
 			AND		PACKING_NO = @PP_PACKING_NO 
-			 
+						 
 			IF ( @VP_N_LOTE_INSPECCION IS NULL OR  @VP_N_LOTE_INSPECCION = 0 )
 				BEGIN
 					IF @PP_TOTAL_PIEL_LOTE > 5
 						SET @VP_MUESTRA = 5
 
+					-- ///////SE INGRESA LA INSPECCION///////////////////////////////////////////////////////
 					INSERT INTO IncInsp_sql (	[Date], Lot, [Description], Lot_size, Sample_size, [Status], Accepted, PACKING_NO ) 
 									VALUES (	@PP_PP_FECHA, CONCAT('         ', @VP_LOTE_TBL), @PP_COLOR, @PP_TOTAL_PIEL_LOTE, @VP_MUESTRA, '-', '-', @PP_PACKING_NO)
 
+					-- ///////SE OBTIENE ID DE LA INSPECCION INGRESADA///////////////////////////////////////////////////////	
+					SELECT @PP_K_INSPECCION_PIEL = SCOPE_IDENTITY();
+
+					IF ( @PP_K_INSPECCION_PIEL IS NULL OR @PP_K_INSPECCION_PIEL = 0 )
+						RAISERROR ('Error: Al guardar la inspeccion en la Base Datos.', 16, 1 ) --MENSAJE - Severity -State.
+
+					-- ///////SE ACTUALIZA EL TICKET CON EL ID DE INSPECCION///////////////////////////////////////////////////////
+					UPDATE HIDESHDR_SQL 
+						SET ID_INSPECCION = @PP_K_INSPECCION_PIEL
+					WHERE PLOT = @PP_LOTE
+					AND  FILENO = @PP_FILE_NO
+					AND PCOLOR = @PP_COLOR
+					AND INVOICE = @PP_PACKING_NO
+
 					IF @@ROWCOUNT = 0
-						RAISERROR ('NO fue posible agregar el lote en [IncInsp_sql].', 16, 1 ) --MENSAJE - Severity -State.   
+						RAISERROR ('NO fue posible actualizar el Ticket con el Id de Inspeccion.', 16, 1 ) --MENSAJE - Severity -State.   
 				END
 			ELSE
 				BEGIN
@@ -73,16 +85,29 @@ AS
 					AND		STATUS <> 'C'
 
 					IF ( @VP_N_LOTE_INSPECCION_PENDIENTE IS NULL OR  @VP_N_LOTE_INSPECCION_PENDIENTE = 0 )
-						BEGIN							
-
+						BEGIN
 							IF @PP_TOTAL_PIEL_LOTE > 5
 								SET @VP_MUESTRA = 5
 
 							INSERT INTO IncInsp_sql (	[Date], Lot, [Description], Lot_size, Sample_size, [Status], Accepted, PACKING_NO ) 
 									VALUES (	@PP_PP_FECHA, CONCAT('         ', @VP_LOTE_TBL), @PP_COLOR, @PP_TOTAL_PIEL_LOTE, @VP_MUESTRA, '-', '-', @PP_PACKING_NO)
 							
+							-- ///////SE OBTIENE ID DE LA INSPECCION INGRESADA///////////////////////////////////////////////////////	
+							SELECT @PP_K_INSPECCION_PIEL = SCOPE_IDENTITY();
+
+							IF ( @PP_K_INSPECCION_PIEL IS NULL OR @PP_K_INSPECCION_PIEL = 0 )
+								RAISERROR ('Error: Al guardar la inspeccion en la Base Datos.', 16, 1 ) --MENSAJE - Severity -State.
+
+							-- ///////SE ACTUALIZA EL TICKET CON EL ID DE INSPECCION///////////////////////////////////////////////////////
+							UPDATE HIDESHDR_SQL 
+								SET ID_INSPECCION = @PP_K_INSPECCION_PIEL
+							WHERE PLOT = @PP_LOTE
+							AND  FILENO = @PP_FILE_NO
+							AND PCOLOR = @PP_COLOR
+							AND INVOICE = @PP_PACKING_NO
+
 							IF @@ROWCOUNT = 0
-								RAISERROR ('NO fue posible agregar el lote en [IncInsp_sql].', 16, 1 ) --MENSAJE - Severity -State.   
+								RAISERROR ('NO fue posible actualizar el Ticket con el Id de Inspeccion.', 16, 1 ) --MENSAJE - Severity -State.    
 						END
 					ELSE
 						BEGIN
@@ -109,7 +134,17 @@ AS
 
 							IF @@ROWCOUNT = 0
 								RAISERROR ('NO fue posible actualizar el lote en [IncInsp_sql].', 16, 1 ) --MENSAJE - Severity -State.   
+							
+							-- ///////SE ACTUALIZA EL TICKET CON EL ID DE INSPECCION///////////////////////////////////////////////////////
+							UPDATE HIDESHDR_SQL 
+								SET ID_INSPECCION = @VP_ID
+							WHERE PLOT = @PP_LOTE
+							AND  FILENO = @PP_FILE_NO
+							AND PCOLOR = @PP_COLOR
+							AND INVOICE = @PP_PACKING_NO
 
+							IF @@ROWCOUNT = 0
+								RAISERROR ('NO fue posible actualizar el Ticket con el Id de Inspeccion.', 16, 1 ) --MENSAJE - Severity -State.  
 						END
 				END
 
@@ -119,8 +154,8 @@ AS
 			DECLARE @VP_BODY		NVARCHAR(MAX)  = ''
 
 			SELECT  @VP_RECIPIENTS	=	@VP_RECIPIENTS + ';' + CORREO_USUARIO_PEARL
-							FROM	BD_GENERAL.dbo.USUARIO_PEARL AS USERS
-							INNER	JOIN	BD_GENERAL.dbo.GRUPO_APROBADOR GP_APROB ON GP_APROB.K_USUARIO=USERS.K_USUARIO_PEARL
+							FROM	BD_GENERAL.dbo.USUARIO_PEARL (NOLOCK) AS USERS
+							INNER	JOIN	BD_GENERAL.dbo.GRUPO_APROBADOR (NOLOCK) GP_APROB ON GP_APROB.K_USUARIO=USERS.K_USUARIO_PEARL
 							WHERE   GP_APROB.S_GRUPO_APROBADOR = 'RECIBI_BPO'
 							AND		GP_APROB.K_TIPO_GRUPO_APROBADOR = 7900 -- GRUPO DE CALIDAD QUE INSPECCIONA EL MATERIAL DE BLANKET
 							AND		K_ESTATUS_GRUPO_APROBADOR = 1

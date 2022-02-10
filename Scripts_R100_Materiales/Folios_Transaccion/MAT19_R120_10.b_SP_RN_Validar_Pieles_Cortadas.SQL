@@ -111,9 +111,6 @@ AS
 				-- COMANDO PARA OBTENER LA BASE DE DATOS ACTUAL
 				DECLARE @VP_BD_NAME VARCHAR(100) = DB_NAME();
 
-				--IF @VP_BD_NAME <> 'DATA_02PRUEBAS'
-				--	RAISERROR ('Base de Datos Incorrecta.', 16, 1 ) --MENSAJE - Severity -State.
-
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
 																	--'DATA_02', 
 																	@VP_BD_NAME, 
@@ -145,7 +142,7 @@ AS
 				-- ==========================================
 							
 				DECLARE @VP_POSICION_PIEL INT = 0, @VP_POSICION_LOTE INT = 0;
-				DECLARE @VP_LOTE_VALOR VARCHAR(20) = '', @VP_PIEL_VALOR	VARCHAR(20) = '', @VP_SQF_ORIGINAL VARCHAR(20) = '';
+				DECLARE @VP_LOTE_VALOR VARCHAR(20) = '', @VP_PIEL_VALOR	VARCHAR(20) = '', @VP_SQF_ORIGINAL VARCHAR(20) = '', @VP_INSPECCION INT = 0;	
 				DECLARE @VP_SQF_ENVIAR VARCHAR(20) = '', @VP_SQF_RECIBIR VARCHAR(20) = '', @VP_SQF_CORTADO DECIMAL(13,2) = 0.00;
 						
 				--Colocamos un separador al final de los parametros para que funcione bien nuestro codigo
@@ -162,7 +159,8 @@ AS
 						SELECT @VP_PIEL_VALOR		= LEFT(@PP_PIEL_ARRAY, @VP_POSICION_PIEL - 1)
 						SELECT @VP_LOTE_VALOR		= LEFT(@PP_LOTE_ARRAY, @VP_POSICION_LOTE - 1)
 						
-						SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00') 
+						SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00'),
+								@VP_INSPECCION = ISNULL(ID_INSPECCION, 0)
 						FROM HIDESHDR_SQL (NOLOCK)
 						INNER JOIN HIDESLIN_SQL (NOLOCK) ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
 						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_VALOR
@@ -234,7 +232,7 @@ AS
 										-- ===========================				
 										@PP_K_USUARIO_ACCION, GETDATE(), 
 										@PP_K_USUARIO_ACCION, GETDATE(),
-										0, NULL, NULL	)
+										0, @VP_INSPECCION, NULL	)
 																								
 						--Reemplazamos lo procesado con nada con la funcion stuff
 						SELECT @PP_PIEL_ARRAY	= STUFF(@PP_PIEL_ARRAY, 1, @VP_POSICION_PIEL, '')
@@ -262,6 +260,71 @@ AS
 		END
 	ELSE
 		BEGIN
+			DECLARE @VP_N_INSPECCION_PENDIENTE INT = 0
+
+			SELECT @VP_N_INSPECCION_PENDIENTE = COUNT(ID)
+			FROM IncInsp_sql (NOLOCK)
+			WHERE ID IN (	--7965, 54
+							SELECT DISTINCT(K_USUARIO_BAJA)
+							FROM [PIEL_A_TRANSFERIR] (NOLOCK)
+							WHERE K_PIEL_A_TRANSFERIR_TRANSACCION = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION	
+							AND ISNULL(K_USUARIO_BAJA, 0) > 0
+						)
+			AND [Status] <> 'C'
+
+			IF @VP_N_INSPECCION_PENDIENTE IS NULL
+				SET @VP_N_INSPECCION_PENDIENTE = 0
+
+			IF ( @PP_LOCACION_ORIGEN = 'MHI' AND SUBSTRING(@PP_LOCACION_DESTINO, 1, 1)  IN ('T', 'G') AND @VP_N_INSPECCION_PENDIENTE > 0 )
+				BEGIN
+					--///////SE ENVIA CORREO A CALIDAD PARA QUE REALIZE LA INSPECCION////////////////////////////////////////////
+					SET @VP_RECIPIENTS	= ''	-- 'franciscoe@pearlleather.com.mx'
+					SET @VP_SUBJECT		= 'Pieles enviadas a Producción en espera de inspección...'
+					SET @VP_BODY		= ''
+
+					SELECT  @VP_RECIPIENTS	=	@VP_RECIPIENTS + ';' + CORREO_USUARIO_PEARL
+												FROM	BD_GENERAL.dbo.USUARIO_PEARL (NOLOCK) AS USERS
+												INNER	JOIN	BD_GENERAL.dbo.GRUPO_APROBADOR (NOLOCK) GP_APROB ON GP_APROB.K_USUARIO=USERS.K_USUARIO_PEARL
+												WHERE   GP_APROB.K_TIPO_GRUPO_APROBADOR = 150 
+												AND K_USUARIO IN (173, 208, 129, 86, 185, 102, 144) --PEDROS, HECTORM, MARIOS, JORGEO, DELIAH, EDGARA, FEG
+												AND		K_ESTATUS_GRUPO_APROBADOR = 1
+					
+					SET @VP_RECIPIENTS = SUBSTRING(@VP_RECIPIENTS,2,LEN(@VP_RECIPIENTS))					
+					
+					SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
+									N'<thead>' + 
+									  N'<tr BGCOLOR="#ff6f00">' + 
+									    N'<th colspan="6">Inspecciones pendientes...</th>' + 
+									  N'</tr>' + 
+									  N'<tr BGCOLOR="#ff6f00">' + 
+									    N'<th>ID Inspeccion</th><th>Packing No</th><th>Color</th><th>Lote</th><th>Total Piel</th><th>Fecha Importación</th>' + 
+									  N'</tr>' + 
+									N'</thead>' + 
+									N'<tbody>' + 
+										CAST ( ( SELECT td = id, '',  
+												td = RTRIM(LTRIM(PACKING_NO)), '',
+								                td = RTRIM(LTRIM([Description])), '',  
+								                td = RTRIM(LTRIM(Lot)), '',  
+								                td = Lot_size, '',
+												td = [dbo].[CONVERT_INT_TO_DATE](Date), ''		
+								        FROM IncInsp_sql (NOLOCK)
+										WHERE ID IN (	--7965, 54
+														SELECT DISTINCT(K_USUARIO_BAJA)
+														FROM [PIEL_A_TRANSFERIR] (NOLOCK)
+														WHERE K_PIEL_A_TRANSFERIR_TRANSACCION = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION	
+														AND ISNULL(K_USUARIO_BAJA, 0) > 0
+													)
+										AND [Status] <> 'C'
+								          FOR XML PATH('tr'), TYPE   
+										) AS NVARCHAR(MAX) ) +  
+									N'</tbody>' + 
+								N'</table>' ; 
+					SET ROWCOUNT 0
+
+					EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+				END
+
 			SELECT [PIEL_A_TRANSFERIR].* , D_USUARIO_PEARL AS usuario
 			FROM [PIEL_A_TRANSFERIR] (NOLOCK)
 			INNER JOIN	BD_GENERAL.dbo.USUARIO_PEARL (NOLOCK) ON [PIEL_A_TRANSFERIR].K_USUARIO_ALTA = USUARIO_PEARL.K_USUARIO_PEARL
@@ -304,7 +367,7 @@ GO
 -- // STORED PROCEDURE ---> SELECT / 
 -- //////////////////////////////////////////////////////////////
 
---	USE DATA_02Pruebas
+--	USE DATA_02  --Pruebas
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]') AND type in (N'P', N'PC'))
 	DROP PROCEDURE [dbo].[PG_RN_VALIDAR_PIEL_CORTADA_X_LOCACION]
 GO
@@ -339,9 +402,6 @@ AS
 
 				-- COMANDO PARA OBTENER LA BASE DE DATOS ACTUAL
 				DECLARE @VP_BD_NAME VARCHAR(100) = DB_NAME();
-
-				--IF @VP_BD_NAME <> 'DATA_02PRUEBAS'
-				--	RAISERROR ('Base de Datos Incorrecta.', 16, 1 ) --MENSAJE - Severity -State.
 
 				EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
 																	--'DATA_02', 
@@ -386,9 +446,10 @@ AS
 				
 				WHILE @@FETCH_STATUS = 0
 					BEGIN
-						DECLARE @VP_SQF_ORIGINAL VARCHAR(20) = '', @VP_SQF_RECIBIR VARCHAR(20) = '', @VP_SQF_CORTADO DECIMAL(13,2)	= 0.00;	
+						DECLARE @VP_SQF_ORIGINAL VARCHAR(20) = '', @VP_SQF_RECIBIR VARCHAR(20) = '', @VP_SQF_CORTADO DECIMAL(13,2)	= 0.00, @VP_INSPECCION INT = 0;	
 
-						SELECT @VP_SQF_ORIGINAL = ISNULL(SQF,'0.00') 
+						SELECT	@VP_SQF_ORIGINAL = ISNULL(SQF,'0.00'),
+								@VP_INSPECCION = ISNULL(ID_INSPECCION, 0)
 						FROM HIDESHDR_SQL (NOLOCK)   
 						INNER JOIN HIDESLIN_SQL (NOLOCK)  ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
 						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE_TBL
@@ -450,7 +511,7 @@ AS
 										-- ===========================				
 										@PP_K_USUARIO_ACCION, GETDATE(), 
 										@PP_K_USUARIO_ACCION, GETDATE(),
-										0, NULL, NULL	)
+										0, @VP_INSPECCION, NULL	)
 																								
 					FETCH NEXT FROM CU_PIEL_SELECCIONADA INTO @VP_COLOR_TBL, @VP_LOTE_TBL, @VP_PIEL_TBL, @VP_SQF_ENVIAR
 	
@@ -483,6 +544,71 @@ AS
 		END
 	ELSE
 		BEGIN
+			DECLARE @VP_N_INSPECCION_PENDIENTE INT = 0
+
+			SELECT @VP_N_INSPECCION_PENDIENTE = COUNT(ID)
+			FROM IncInsp_sql (NOLOCK)
+			WHERE ID IN (	--7965, 54
+							SELECT DISTINCT(K_USUARIO_BAJA)
+							FROM [PIEL_A_TRANSFERIR] (NOLOCK)
+							WHERE K_PIEL_A_TRANSFERIR_TRANSACCION = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION	
+							AND ISNULL(K_USUARIO_BAJA, 0) > 0
+						)
+			AND [Status] <> 'C'
+
+			IF @VP_N_INSPECCION_PENDIENTE IS NULL
+				SET @VP_N_INSPECCION_PENDIENTE = 0
+
+			IF ( @PP_LOCACION_ORIGEN = 'MHI' AND SUBSTRING(@PP_LOCACION_DESTINO, 1, 1)  IN ('T', 'G') AND @VP_N_INSPECCION_PENDIENTE > 0 )
+				BEGIN
+					--///////SE ENVIA CORREO A CALIDAD PARA QUE REALIZE LA INSPECCION////////////////////////////////////////////
+					DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = '' --'franciscoe@pearlleather.com.mx'
+					DECLARE @VP_SUBJECT		VARCHAR(255) = 'Pieles enviadas a Producción en espera de inspección...'
+					DECLARE @VP_BODY		NVARCHAR(MAX)  = ''
+
+					SELECT  @VP_RECIPIENTS	=	@VP_RECIPIENTS + ';' + CORREO_USUARIO_PEARL
+												FROM	BD_GENERAL.dbo.USUARIO_PEARL (NOLOCK) AS USERS
+												INNER	JOIN	BD_GENERAL.dbo.GRUPO_APROBADOR (NOLOCK) GP_APROB ON GP_APROB.K_USUARIO=USERS.K_USUARIO_PEARL
+												WHERE   GP_APROB.K_TIPO_GRUPO_APROBADOR = 150 
+												AND K_USUARIO IN (173, 208, 129, 86, 185, 102, 144) --PEDROS, HECTORM, MARIOS, JORGEO, DELIAH, EDGARA, FEG
+												AND		K_ESTATUS_GRUPO_APROBADOR = 1
+					
+					SET @VP_RECIPIENTS = SUBSTRING(@VP_RECIPIENTS,2,LEN(@VP_RECIPIENTS))					
+					
+					SET @VP_BODY = N'<table  border="1" align="center" cellspacing="0">' + 
+									N'<thead>' + 
+									  N'<tr BGCOLOR="#ff6f00">' + 
+									    N'<th colspan="6">Inspecciones pendientes...</th>' + 
+									  N'</tr>' + 
+									  N'<tr BGCOLOR="#ff6f00">' + 
+									    N'<th>ID Inspeccion</th><th>Packing No</th><th>Color</th><th>Lote</th><th>Total Piel</th><th>Fecha Importación</th>' + 
+									  N'</tr>' + 
+									N'</thead>' + 
+									N'<tbody>' + 
+										CAST ( ( SELECT td = id, '',  
+												td = RTRIM(LTRIM(PACKING_NO)), '',
+								                td = RTRIM(LTRIM([Description])), '',  
+								                td = RTRIM(LTRIM(Lot)), '',  
+								                td = Lot_size, '',
+												td = [dbo].[CONVERT_INT_TO_DATE](Date), ''		
+								        FROM IncInsp_sql (NOLOCK)
+										WHERE ID IN (	--7965, 54
+														SELECT DISTINCT(K_USUARIO_BAJA)
+														FROM [PIEL_A_TRANSFERIR] (NOLOCK)
+														WHERE K_PIEL_A_TRANSFERIR_TRANSACCION = @VP_K_PIEL_A_TRANSFERIR_TRANSACCION	
+														AND ISNULL(K_USUARIO_BAJA, 0) > 0
+													)
+										AND [Status] <> 'C'
+								          FOR XML PATH('tr'), TYPE   
+										) AS NVARCHAR(MAX) ) +  
+									N'</tbody>' + 
+								N'</table>' ; 
+					SET ROWCOUNT 0
+
+					EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+				END
+
 			SELECT [PIEL_A_TRANSFERIR].* , D_USUARIO_PEARL AS usuario
 			FROM [PIEL_A_TRANSFERIR] (NOLOCK)
 			INNER JOIN	BD_GENERAL.dbo.USUARIO_PEARL (NOLOCK) ON [PIEL_A_TRANSFERIR].K_USUARIO_ALTA = USUARIO_PEARL.K_USUARIO_PEARL

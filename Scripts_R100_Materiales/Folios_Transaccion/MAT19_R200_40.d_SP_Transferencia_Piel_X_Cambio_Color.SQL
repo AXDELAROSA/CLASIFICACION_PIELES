@@ -9,7 +9,7 @@
 -- // Fecha creación:	14/OCT/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02PRUEBAS] 
+USE [DATA_02] 
 GO
 
 
@@ -67,40 +67,40 @@ AS
 				WHILE @@FETCH_STATUS = 0
 					BEGIN
 						-- /////////SE VALIDA QUE LA PIEL NO ESTE CORTADA///////////////////////////////////////////////////////////	
-						DECLARE @VP_N_PIEL_CORTADA INT = 0
-						SELECT @VP_N_PIEL_CORTADA = COUNT(COLKEY) 
-						FROM cccuthst_sql (NOLOCK)
-						WHERE LTRIM(RTRIM(LOTNO)) = RIGHT('000000' + @VP_LOTE, 6)
-						AND	LTRIM(RTRIM(hideno)) = @VP_PIEL
+						--DECLARE @VP_N_PIEL_CORTADA INT = 0
+						--SELECT @VP_N_PIEL_CORTADA = COUNT(COLKEY) 
+						--FROM cccuthst_sql (NOLOCK)
+						--WHERE LTRIM(RTRIM(LOTNO)) = RIGHT('000000' + @VP_LOTE, 6)
+						--AND	LTRIM(RTRIM(hideno)) = @VP_PIEL
 
-						IF @VP_N_PIEL_CORTADA IS NULL 
-							SET @VP_N_PIEL_CORTADA = 0
+						--IF @VP_N_PIEL_CORTADA IS NULL 
+						--	SET @VP_N_PIEL_CORTADA = 0
 
-						IF @VP_N_PIEL_CORTADA > 0
-							BEGIN
-								SET @VP_MENSAJE_TRANSACCION = ' La Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' ya fue cortada.'
-								RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
-							END	
+						--IF @VP_N_PIEL_CORTADA > 0
+						--	BEGIN
+						--		SET @VP_MENSAJE_TRANSACCION = ' La Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' ya fue cortada.'
+						--		RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+							--END	
 
 						-- /////////SE VALIDA QUE EL SQF DE LA PIEL A CAMBIAR DE COLOR SE IGUAL AL ORIGINAL///////////////////////////////////////////////////////////	
-						DECLARE @VP_SQF_ORIGINAL	DECIMAL(5,2) = 0 
-						SELECT TOP 1 @VP_SQF_ORIGINAL = ISNULL(SQF,0) 
-						FROM HIDESHDR_SQL   
-						INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
-						AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE
-						AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL
+						--DECLARE @VP_SQF_ORIGINAL	DECIMAL(5,2) = 0 
+						--SELECT TOP 1 @VP_SQF_ORIGINAL = ISNULL(SQF,0) 
+						--FROM HIDESHDR_SQL   
+						--INNER JOIN HIDESLIN_SQL ON  HIDESLIN_SQL.FILENO = HIDESHDR_SQL.FILENO
+						--AND	LTRIM(RTRIM(PLOT)) = @VP_LOTE
+						--AND LTRIM(RTRIM(HIDE)) =  @VP_PIEL
 
-						IF @VP_SQF_ORIGINAL IS NULL 
-							SET @VP_SQF_ORIGINAL = 0
+						--IF @VP_SQF_ORIGINAL IS NULL 
+						--	SET @VP_SQF_ORIGINAL = 0
 
-						IF @VP_SQF_ORIGINAL > 0
-							BEGIN
-								IF @VP_SQF_ORIGINAL <> @VP_SQF_FOLIO
-									BEGIN
-										SET @VP_MENSAJE_TRANSACCION = 'El SQF de la Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' no es igual al Original.'
-										RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
-									END	
-							END
+						--IF @VP_SQF_ORIGINAL > 0
+						--	BEGIN
+						--		IF @VP_SQF_ORIGINAL <> @VP_SQF_FOLIO
+						--			BEGIN
+						--				SET @VP_MENSAJE_TRANSACCION = 'El SQF de la Piel:' + @VP_PIEL  + ' Lote:' + @VP_LOTE + ' no es igual al Original.'
+						--				RAISERROR (@VP_MENSAJE_TRANSACCION, 16, 1 ) --MENSAJE - Severity -State.
+						--			END	
+						--	END
 
 						---- /////////SE VALIDA QUE EL LOTE Y PIEL NO EXISTA EN OTRO COLOR///////////////////////////////////////////////////////////	
 						DECLARE @VP_N_PIEL_DUPLICADA INT = 0

@@ -45,12 +45,19 @@ AS
 	
 	-- ////////SE OBTIENE EL COLOR DONDE DEL TICKET IMPORTADO///////////////////////////////////
 	DECLARE @VP_COLOR VARCHAR(20) = '', @VP_LOTE VARCHAR(20) = '', @VP_TOTAL_SQF DECIMAL(13,2) = 0;
+	DECLARE @VP_PACKING	VARCHAR(50) = '', @VP_ID_INSPECCION INT = 0, @VP_TOTAL_PIEL INT = 0;
 	
 	SELECT	@VP_COLOR = LTRIM(RTRIM(PCOLOR)),
 			@VP_LOTE = LTRIM(RTRIM(PLOT)),
-			@VP_TOTAL_SQF = TAREA
-	FROM HIDESHDR_SQL 
+			@VP_TOTAL_PIEL = LTRIM(RTRIM(THIDES)),
+			@VP_TOTAL_SQF = LTRIM(RTRIM(TAREA)),
+			@VP_PACKING = LTRIM(RTRIM(INVOICE)),
+			@VP_ID_INSPECCION = ID_INSPECCION
+	FROM HIDESHDR_SQL (NOLOCK)
 	WHERE FILENO = @PP_FILE_NO
+
+	IF @VP_ID_INSPECCION IS NULL
+		SET @VP_ID_INSPECCION = 0
 
 	IF @VP_MENSAJE = ''
 		BEGIN
@@ -59,7 +66,7 @@ AS
 			FROM RP_SC 
 			WHERE LOT = @VP_LOTE
 			AND HIDE IN (	SELECT HIDE 
-							FROM  HIDESLIN_SQL 
+							FROM  HIDESLIN_SQL (NOLOCK)
 							WHERE FILENO = @PP_FILE_NO )
 
 			IF @VP_N_PIEL_EXISTE > 0
@@ -84,8 +91,8 @@ AS
 
 				IF @PP_LOCACION_DESTINO = 'MHI'
 					SELECT	TOP 1 @VP_FOLIO = TAG
-					FROM	RP_Folios  
-					INNER JOIN RP_SC ON TAG = TAGNO
+					FROM	RP_Folios  (NOLOCK)
+					INNER JOIN RP_SC (NOLOCK) ON TAG = TAGNO
 					AND RTRIM(LTRIM(STATUS)) = 'B' 
 					AND COLOUR = @VP_COLOR
 					GROUP BY TAG, COLOUR
@@ -97,10 +104,13 @@ AS
 
 						IF @PP_LOCACION_DESTINO = 'MRD'
 							SET @VP_TIPO_FOLIO = 'A'
-												
+						
+						-- COMANDO PARA OBTENER LA BASE DE DATOS ACTUAL
+						DECLARE @VP_BD_NAME VARCHAR(100) = DB_NAME();
+											
 						EXECUTE BD_GENERAL.[dbo].[PG_SK_CATALOGO_K_MAX_GET]	@PP_K_SISTEMA_EXE, 
-																			'DATA_02', 
-																			--'DATA_02PRUEBAS', 
+																			--'DATA_02', 
+																			@VP_BD_NAME,
 																			'RP_FOLIOS', 'TAG',
 																			@OU_K_TABLA_DISPONIBLE = @VP_FOLIO	OUTPUT
 
@@ -113,7 +123,7 @@ AS
 									[CDATE], [COLOUR], [LOT], [HIDE], [SQF], [TAGNO], [YARDAS], [YLB], [PESO], [TYPE], [MOVEMENT], [K_CLASIFICACION]
 								)
 							SELECT	GETDATE(), @VP_COLOR, @VP_LOTE, HIDE, [SQF],  @VP_FOLIO, NULL, NULL, NULL, 'C', @PP_LOCACION_DESTINO, 0 
-							FROM	HIDESLIN_SQL 							
+							FROM	HIDESLIN_SQL (NOLOCK)						
 							WHERE FILENO = @PP_FILE_NO
 
 				IF @@ROWCOUNT = 0
@@ -133,7 +143,7 @@ AS
 									-- ===========================
 									@PP_K_USUARIO_ACCION, GETDATE(), @PP_K_USUARIO_ACCION, GETDATE(),
 									0, NULL, NULL
-							FROM	HIDESLIN_SQL
+							FROM	HIDESLIN_SQL (NOLOCK)
 							WHERE FILENO = @PP_FILE_NO 
 				
 				IF @@ROWCOUNT = 0
@@ -203,7 +213,54 @@ AS
 														@PP_USER, @VP_COMENTARIO, 1, @VP_INDICE,
 														'T', 'M', @VP_TOTAL_SQF
 
-				-- ///////////////////////////////////////////
+				-- ///////SE VALIDA SI EL LOTE DEL TICKET YA FUERON INSPECCIONADAS /////////////////////////////////////////////////////////////
+				IF @VP_ID_INSPECCION > 0
+					BEGIN	
+						DECLARE @VP_LOTE_INSPECCIONADO INT = 0					
+						SELECT @VP_LOTE_INSPECCIONADO = COUNT(ID)
+						FROM IncInsp_sql (NOLOCK)
+						WHERE ID = @VP_ID_INSPECCION
+						AND [Status] = 'C' -- COMPLETADO
+
+						IF ( @VP_LOTE_INSPECCIONADO = 0 OR @VP_LOTE_INSPECCIONADO IS NULL )
+							BEGIN	
+								--///////SE ENVIA CORREO A CALIDAD PARA QUE REALIZE LA INSPECCION////////////////////////////////////////////
+								DECLARE @VP_RECIPIENTS	NVARCHAR(MAX)  = ''
+								DECLARE @VP_SUBJECT		VARCHAR(255) = 'Lote transferido a MHI pendiente de inspección por calidad...'
+								DECLARE @VP_BODY		NVARCHAR(MAX)  = ''
+
+								--///////SE OBTIENE LOS CORREOS DE LOS USUARIOS A NOTIFICAR////////////////////////////////////////////
+								SELECT  @VP_RECIPIENTS	=	@VP_RECIPIENTS + ';' + CORREO_USUARIO_PEARL
+												FROM	BD_GENERAL.dbo.USUARIO_PEARL (NOLOCK) AS USERS
+												INNER	JOIN	BD_GENERAL.dbo.GRUPO_APROBADOR (NOLOCK) GP_APROB ON GP_APROB.K_USUARIO=USERS.K_USUARIO_PEARL
+												WHERE   GP_APROB.K_TIPO_GRUPO_APROBADOR = 150 
+												AND K_USUARIO IN (173, 208, 86, 185, 102, 144) --PEDROS, HECTORM, JORGEO, DELIAH, EDGARA, FEG
+												AND		K_ESTATUS_GRUPO_APROBADOR = 1
+
+								SET @VP_RECIPIENTS = SUBSTRING(@VP_RECIPIENTS,2,LEN(@VP_RECIPIENTS))
+							
+								SET @VP_BODY =  N'<table  border="1" align="center" cellspacing="0">' + 
+													N'<thead>' + 
+													  N'<tr BGCOLOR="#fff200">' + 
+													    N'<th colspan="6">Lote transferido a MHI...</th>' + 
+													  N'</tr>' + 
+													  N'<tr BGCOLOR="#fff200">' + 
+													    N'<th>Packing No</th><th>Color</th><th>Lote</th><th>Locación Destino</th><th>Id Inspección</th><th>Usuario</th>' + 
+													  N'</tr>' + 
+													N'</thead>' + 
+													N'<tbody>' + 
+													  N'<tr>' + 
+													  N'<td>'+ @VP_PACKING +'</td><td>'+ @VP_COLOR +'</td><td>'+ @VP_LOTE +'</td><td>'+ @PP_LOCACION_DESTINO +'</td><td>'+ CONVERT(VARCHAR(20), @VP_ID_INSPECCION) +'</td><td>'+  @PP_USER +'</td>' + 
+													  N'</tr>' + 
+													N'</tbody>' + 
+												N'</table>' ;
+								SET ROWCOUNT 0
+									 				
+								EXECUTE	BD_GENERAL.[dbo].[PG_ENVIAR_CORREO]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+																			@VP_RECIPIENTS, @VP_SUBJECT, @VP_BODY
+							END
+					END
+				-- /////////////////////////////////////////////////////////////////////
 			COMMIT TRANSACTION 
 			END TRY
 	
@@ -216,7 +273,7 @@ AS
 			END CATCH
 			
 		END
-	-- /////////////////////////////////////////////////////////////////////
+	
 	-- /////////////////////////////////////////////////////////////////////
 	IF @VP_MENSAJE<>''
 		BEGIN
@@ -231,19 +288,18 @@ AS
 	SELECT	@VP_MENSAJE AS MENSAJE, @PP_FILE_NO AS CLAVE
 	
 	-- //////////////////////////////////////////////////////////////
-
-	EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
-													-- ===========================================
-													2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
-													'PROCESO',
-													'',
-													-- ===========================================
-													'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
-													0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
-													-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
-													0, 0, @PP_FILE_NO, '' , 0.00, 0.00,
-													-- === @PP_VALOR_1 al 6_DATO
-													'', '', '', '', '', ''
+	--EXECUTE BD_GENERAL.[dbo].[PG_IN_BITACORA_SYS_OPERACION]	@PP_K_SISTEMA_EXE, @PP_K_USUARIO_ACCION,
+	--												-- ===========================================
+	--												2,		-- 0 al 6 // @PP_K_IMPORTANCIA_BITACORA_SYS	[INT],	
+	--												'PROCESO',
+	--												'',
+	--												-- ===========================================
+	--												'[PR]', -- @PP_STORED_PROCEDURE			[VARCHAR] (100),
+	--												0, 0, 		-- @PP_K_FOLIO_1, @PP_K_FOLIO_2,
+	--												-- === [INT], [INT], [VARCHAR](100), [VARCHAR](100), DECIMAL(19,4), DECIMAL(19,4),
+	--												0, 0, @PP_FILE_NO, '' , 0.00, 0.00,
+	--												-- === @PP_VALOR_1 al 6_DATO
+	--												'', '', '', '', '', ''
 
 	-- ////////////////////////////////////////////////////////////////////
 GO
