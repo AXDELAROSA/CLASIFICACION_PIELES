@@ -9,7 +9,7 @@
 -- // Fecha creación:	21/ABR/2021
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
 
 
@@ -125,7 +125,7 @@ AS
 	INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = ITEM_X_CLIENTE_COLOR.item_no
 	LEFT JOIN ccjobhdr_sql ON  status='P' AND CONCAT('F', ccjobhdr_sql.colour) = ITEM_X_CLIENTE_COLOR.COLOR
 		AND ccjobhdr_sql.CUSTOMER = ITEM_X_CLIENTE_COLOR.CUSTOMER
-		--AND ccjobhdr_sql.JOBNO < 50000 
+		AND ccjobhdr_sql.JOBNO > 50000 -- FEG: RESTRICCION PARA NO MOSTRAR TANTAS ORDENES ABIERTAS EN PANNING ACCION DE CREAR ORDEN
 		AND LTRIM(RTRIM(ccjobhdr_sql.MACHINE)) = (CASE	WHEN @PP_MESA = '( TODOS )' THEN machine
 														ELSE @PP_MESA END)
 		AND SUBSTRING(LTRIM(RTRIM(ccjobhdr_sql.MACHINE)), 1, 1) = 'T'
