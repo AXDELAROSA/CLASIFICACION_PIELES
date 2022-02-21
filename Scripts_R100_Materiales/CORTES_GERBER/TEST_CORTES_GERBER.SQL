@@ -105,19 +105,20 @@
 
 	SELECT * FROM pearl_log (NOLOCK) WHERE jobno IN ( '51439', '51440' )
 	
-	SELECT * FROM	IMLSMST_SQL	WHERE	item_no = 'FCNPDX9' AND qty_on_hand > 0 and loc = 'MFP' and  LTRIM(RTRIM(SER_LOT_NO)) IN ('109471')  
+	SELECT * FROM	IMLSMST_SQL	WHERE	item_no = 'FCNPDX9'  and loc = 'T21' and  LTRIM(RTRIM(SER_LOT_NO)) IN ('109161')  AND qty_on_hand > 0
 
 	--update IMLSMST_SQL	
 	--	set qty_on_hand = qty_on_hand - 289.2000
 	--WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('068151') and loc = 'GT2' and item_no = 'FNRUDX9'
 
 	SELECT TOP 10 * FROM	IMINVLOC_SQL	
-	WHERE	loc = 'MFP' and item_no = 'FCNPDX9'
+	WHERE	loc = 'T21' and item_no = 'FCNPDX9'
+
 	-- 20401.4000 - 53 = 20454.4
 
 	--update IMINVLOC_SQL	
-	--	set qty_on_hand = qty_on_hand - 289.2000
-	-- WHERE	loc = 'GT2' and item_no = 'FNRUDX9'
+	--	set qty_on_hand = qty_on_hand + 0.0017
+	-- WHERE	loc = 'T21' and item_no = 'FCNPDX9'
 
 	USE DATA_02PRUEBAS
 	SELECT TOP 100 * FROM   IMINVTRX_SQL 
