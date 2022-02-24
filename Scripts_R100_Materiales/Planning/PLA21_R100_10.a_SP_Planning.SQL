@@ -123,12 +123,24 @@ AS
 					ELSE (SELECT SUM(OriginalQty) FROM ccjoblin_sql WHERE JOBNO = ccjobhdr_sql.JOBNO AND ITEM_NO = ITEM_X_CLIENTE_COLOR.ITEM_NO) END ) AS CANTIDAD_PROGRAMADA
 	FROM @TBL_ITEM_X_CLIENTE_COLOR AS ITEM_X_CLIENTE_COLOR
 	INNER JOIN IMITMIDX_SQL ON IMITMIDX_SQL.item_no = ITEM_X_CLIENTE_COLOR.item_no
-	LEFT JOIN ccjobhdr_sql ON  status='P' AND CONCAT('F', ccjobhdr_sql.colour) = ITEM_X_CLIENTE_COLOR.COLOR
+	LEFT JOIN ccjobhdr_sql ON  CONCAT('F', ccjobhdr_sql.colour) = ITEM_X_CLIENTE_COLOR.COLOR
 		AND ccjobhdr_sql.CUSTOMER = ITEM_X_CLIENTE_COLOR.CUSTOMER
-		AND ccjobhdr_sql.JOBNO > 50000 -- FEG: RESTRICCION PARA NO MOSTRAR TANTAS ORDENES ABIERTAS EN PANNING ACCION DE CREAR ORDEN
-		AND LTRIM(RTRIM(ccjobhdr_sql.MACHINE)) = (CASE	WHEN @PP_MESA = '( TODOS )' THEN machine
-														ELSE @PP_MESA END)
+		AND ccjobhdr_sql.JOBNO = (	SELECT TOP 1 JOBNO 
+									FROM ccjobhdr_sql 
+									WHERE CONCAT('F', ccjobhdr_sql.colour) = ITEM_X_CLIENTE_COLOR.COLOR 
+									AND ccjobhdr_sql.CUSTOMER = ITEM_X_CLIENTE_COLOR.CUSTOMER
+									AND LTRIM(RTRIM(ccjobhdr_sql.MACHINE)) = @PP_MESA 
+									ORDER BY datecreated DESC )
 		AND SUBSTRING(LTRIM(RTRIM(ccjobhdr_sql.MACHINE)), 1, 1) = 'T'
+
+	--==================================================
+	--LEFT JOIN ccjobhdr_sql ON  status='P' AND CONCAT('F', ccjobhdr_sql.colour) = ITEM_X_CLIENTE_COLOR.COLOR
+	--	AND ccjobhdr_sql.CUSTOMER = ITEM_X_CLIENTE_COLOR.CUSTOMER
+	--	AND ccjobhdr_sql.JOBNO > 50000 -- FEG: RESTRICCION PARA NO MOSTRAR TANTAS ORDENES ABIERTAS EN PANNING ACCION DE CREAR ORDEN
+	--	AND LTRIM(RTRIM(ccjobhdr_sql.MACHINE)) = (CASE	WHEN @PP_MESA = '( TODOS )' THEN machine
+	--													ELSE @PP_MESA END)
+	--	AND SUBSTRING(LTRIM(RTRIM(ccjobhdr_sql.MACHINE)), 1, 1) = 'T'
+	--==================================================
 	LEFT JOIN ccjoblin_sql ON  ccjoblin_sql.jobno=ccjobhdr_sql.jobno AND ITEM_X_CLIENTE_COLOR.item_no = ccjoblin_sql.item_no
 	ORDER BY ITEM_X_CLIENTE_COLOR.item_no, ccjobhdr_sql.JOBNO
 	
