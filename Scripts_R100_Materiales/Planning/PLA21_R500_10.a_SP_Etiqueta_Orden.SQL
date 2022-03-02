@@ -78,13 +78,61 @@ IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_PR_
 GO
 --		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 34659
 --		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 35515
+-- ============================================================
+--		 EXECUTE [DBO].[PG_PR_ETIQUETA_ORDEN_RMA] 0,139, 54871
 CREATE PROCEDURE [dbo].[PG_PR_ETIQUETA_ORDEN_RMA]
 	@PP_K_SISTEMA_EXE			INT,
 	@PP_K_USUARIO_ACCION		INT,
 	-- ===========================
 	@PP_ORDEN					VARCHAR(50)	
 AS
-	
+	DECLARE @TBL_DETALLE_PACKING  TABLE (
+		L_IMPRIMIR						 INT,
+		ORDEN_PRINCIPAL					 INT,
+		CUSTOMER 						 VARCHAR(250),
+		-- ===========================
+		MESA							 VARCHAR(250),
+		-- ===========================
+		REF_PO							 VARCHAR(250),
+		-- ===========================
+		SUPPLIER						 VARCHAR(250),
+		-- ===========================
+		SHIP_TO							 VARCHAR(250),
+		-- =================================================================================
+		CUS_ITEM_NO						 VARCHAR(250),
+		S_CUS_ITEM_NO					 VARCHAR(250),
+		S_NIVEL							 VARCHAR(250),
+		-- =================================================================================
+		KIT 							 VARCHAR(250),
+		ITEM_NO							 VARCHAR(250),
+		-- ===========================
+		KIT_DESC 						 VARCHAR(250),
+		-- ===========================
+		KIT_DESC_1_IMPRIMIR				 VARCHAR(250),
+		-- ===========================
+		KIT_DESC_2_IMPRIMIR				 VARCHAR(250),
+		FECHA							 VARCHAR(250),
+		-- ===========================
+		IMPRESA							 VARCHAR(250),
+		-- ===========================
+		PLANNED_QTY 					 INT,
+		COMPLETED_QTY 					 INT,
+		ORIGINAL_QTY					 INT,
+		PROD_CAT						 VARCHAR(250),
+		-- ===========================
+		ENVIADO							 VARCHAR(250),
+		-- ===========================
+		TURNO							 VARCHAR(250),
+		-- ===========================
+		JOBNO_COMPLEMENTO				 VARCHAR(250),
+		SER_NO							 VARCHAR(250),
+		GRUPO_ORDEN						 INT,
+		ATENCION_A						 VARCHAR(250),
+		COLOR							 VARCHAR(250),
+		D_MODELNO						 VARCHAR(250)
+	)
+	SET NOCOUNT ON
+
 	-- /////SE OBTIENE EL TURNO EN QUE SE REALIZA LA IMPRESION//////////////////////////////////////
 	DECLARE @VP_HORA	INT = FORMAT(CAST(GETDATE() AS TIME(0)), N'hhmmss');
 	DECLARE @VP_TURNO	VARCHAR(5) = '2'
@@ -94,7 +142,7 @@ AS
 	ELSE IF @VP_HORA > 60001 AND @VP_HORA < 153001
 		SET @VP_TURNO = '1'
 
-
+	INSERT INTO	@TBL_DETALLE_PACKING
 	SELECT	1										AS L_IMPRIMIR,
 			--LTRIM(RTRIM(ccjoblin_sql.jobno))		AS ORDEN_PRINCIPAL, 
 			DETAILS_RMA.JOBNO						AS ORDEN_PRINCIPAL, 
@@ -110,9 +158,28 @@ AS
 			''										AS SUPPLIER,
 			-- ===========================
 			''										AS SHIP_TO,
-			-- ===========================
+			-- =================================================================================
+			-- =================================================================================
+			-- =================================================================================
 			--LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
 			LTRIM(RTRIM(DETAILS_RMA.CUS_ITEM_NO))	AS CUS_ITEM_NO,
+			(	CASE
+					WHEN	DETAILS_RMA.CUS_NO	= 'IRVI02'	THEN	(	SELECT  TOP (1)
+																				LTRIM(RTRIM(CUS_ITEM_NO))
+																		FROM	CCCUSITM_SQL	(NOLOCK)
+																		WHERE	LTRIM(RTRIM(ITEM_NO))	= DETAILS_RMA.S_KIT
+																		AND		CUS_NO					= DETAILS_RMA.CUS_NO
+																		AND		MODELNO					= DETAILS_RMA.MODELNO
+																		--AND		VERSIONNO				= DETAILS_RMA.VERSIONNO
+																		ORDER BY 	VERSIONNO	DESC
+																	)
+					ELSE	''
+				END
+			)												AS	S_CUS_ITEM_NO,
+			RIGHT(LTRIM(RTRIM(DETAILS_RMA.CUS_ITEM_NO)),2)	AS	S_NIVEL,
+			-- =================================================================================
+			-- =================================================================================
+			-- =================================================================================
 			--LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
 			LEFT(DETAILS_RMA.ITEM_NO,8)				AS KIT, 
 			--ccjoblin_sql.item_no					AS ITEM_NO,
@@ -179,6 +246,46 @@ AS
 	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
 	-- ===========================
 	ORDER BY GRUPO_ORDEN, ccjoblin_sql.Ser_No
+
+
+	SELECT	L_IMPRIMIR,	ORDEN_PRINCIPAL,	CUSTOMER,
+		-- ===========================
+			MESA,		REF_PO,				SUPPLIER,
+		-- =================
+			SHIP_TO,
+		-- ========================================================
+			(	CASE
+				WHEN	CUSTOMER	<> 'IRVI02' THEN	CUS_ITEM_NO
+				ELSE	--CONCAT(	--CUS_ITEM_NO,
+								(	CASE
+										WHEN		S_CUS_ITEM_NO	LIKE '%BQW%'	
+												OR	S_CUS_ITEM_NO	LIKE '%BQX%'
+												OR	S_CUS_ITEM_NO	LIKE '%C4X%'
+												OR	S_CUS_ITEM_NO	LIKE '%C6S%'THEN	( CASE 
+																							WHEN	ISNUMERIC(S_NIVEL) = 1	THEN	CONCAT(CUS_ITEM_NO,RIGHT(S_CUS_ITEM_NO,6))
+																							ELSE	CONCAT(	LEFT(CUS_ITEM_NO,LEN(LTRIM(RTRIM(CUS_ITEM_NO)))-2)	,RIGHT(S_CUS_ITEM_NO,6))
+																						END)
+										ELSE	''
+									END
+								)			
+			END ) AS CUS_ITEM_NO,
+		-- ========================================================
+			----END )				AS CUS_ITEM_NO,
+			--CUS_ITEM_NO			,
+			--LEFT(CUS_ITEM_NO,LEN(LTRIM(RTRIM(CUS_ITEM_NO)))-2)	AS ITM,
+			--LEFT(RIGHT(S_CUS_ITEM_NO,6),6) AS CUS,
+			--S_CUS_ITEM_NO		,
+			--S_NIVEL,
+		-- ========================================================
+			KIT,		ITEM_NO,			KIT_DESC,
+			KIT_DESC_1_IMPRIMIR,			KIT_DESC_2_IMPRIMIR	,
+			FECHA,			IMPRESA,		PLANNED_QTY,
+			COMPLETED_QTY,	ORIGINAL_QTY,	PROD_CAT,
+			ENVIADO,		TURNO,			JOBNO_COMPLEMENTO,
+			SER_NO,			GRUPO_ORDEN,	ATENCION_A,
+			COLOR,			D_MODELNO
+	FROM	@TBL_DETALLE_PACKING
+	WHERE	CUS_ITEM_NO	IS NOT NULL
 		-----////////////////////////////////////////////////////////////////
 GO
 

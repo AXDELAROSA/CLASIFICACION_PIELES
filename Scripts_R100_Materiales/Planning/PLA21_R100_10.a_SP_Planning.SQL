@@ -342,6 +342,8 @@ GO
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '50500'
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '29487'
  EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '25493'
+ -- ==============================================================
+ EXEC PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL 0 ,0,  '54871'
 */
 
 CREATE PROCEDURE [dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]
@@ -351,48 +353,171 @@ CREATE PROCEDURE [dbo].[PG_GET_KIT_PROGRAMADO_X_ORDEN_EN_CCJOBLIN_SQL]
 	@PP_ORDEN					VARCHAR(50)	
 AS
 
-		-- ///////////////////////////////////////////
-	SELECT	JOBNO, 
-			(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
-				FROM INVENTARIO_EMBARQUE 
-				WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
-						OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  ) AS MFP,
+	IF	(	SELECT	COUNT(K_DETAILS_RMA)
+			FROM	DETAILS_RMA (NOLOCK)
+			WHERE	JOBNO	= @PP_ORDEN	) > 0
+	BEGIN
+		DECLARE @TBL_DETALLE_ORDEN  TABLE (
+			JOBNO					VARCHAR(250),
+			MFP						VARCHAR(250),
+		-- ===========================
+			KIT						VARCHAR(250),
+			KIT_DESC				VARCHAR(250),
+			PLANNED_QTY				INT,
+			COMPLETED_QTY			VARCHAR(250),
+			ORIGINAL_QTY 			VARCHAR(250),
+			NETSQMPER				DECIMAL(19,4),
+			STDSQMPER				DECIMAL(19,4),
+			PATTERNSPER				VARCHAR(250),
+			CUSTOMER				VARCHAR(250),
+			ITEM_NO					VARCHAR(250),
+			SER_NO					VARCHAR(250),
+		-- ===========================
+			CUS_ITEM_NO				VARCHAR(250),
+			S_CUS_ITEM_NO			VARCHAR(250),
+			S_NIVEL					VARCHAR(250)
+		)
+
+		INSERT INTO @TBL_DETALLE_ORDEN
+		SELECT	JOBNO, 
+					(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+						FROM INVENTARIO_EMBARQUE 
+						WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+								OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  ) AS MFP,
+					-- ===========================
+					LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+					LTRIM(RTRIM(ccjoblin_sql.kitdesc))		AS KIT_DESC, 
+					ccjoblin_sql.plannedqty					AS PLANNED_QTY, 
+					ccjoblin_sql.completedqty				AS COMPLETED_QTY, 
+					CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY, 
+					ccjoblin_sql.netsqmper					AS NETSQMPER, 
+					ccjoblin_sql.stdsqmper					AS STDSQMPER, 
+					ccjoblin_sql.patternsper				AS PATTERNSPER, 
+					LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+					ccjoblin_sql.item_no					AS ITEM_NO,
+					ccjoblin_sql.Ser_No						AS SER_NO,
+					-- ===========================
+					LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO,
+					-- ===========================
+					(	CASE
+							WHEN	CUSTOMER	= 'IRVI02'	THEN	(	SELECT  TOP (1)
+																				LTRIM(RTRIM(CUS_ITEM_NO))
+																		FROM	CCCUSITM_SQL	(NOLOCK)
+																		WHERE	LTRIM(RTRIM(ITEM_NO))	= --ccjoblin_sql.item_no
+																											(	SELECT	top (1)
+																														S_KIT
+																												FROM	DETAILS_RMA
+																												WHERE	SERIAL		= CONCAT(JOBNO,FORMAT(Ser_No,'000')) 
+																												AND		ITEM_NO		= ccjoblin_sql.Item_No	)
+																		ORDER BY 	VERSIONNO	DESC
+																)
+
+							
+							
+							ELSE	''
+						END
+					)												AS	S_CUS_ITEM_NO,
+					RIGHT(LTRIM(RTRIM(CUS_ITEM_NO)),2)	AS	S_NIVEL
+			FROM ccjoblin_sql  
 			-- ===========================
-			LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
-			LTRIM(RTRIM(ccjoblin_sql.kitdesc))		AS KIT_DESC, 
-			ccjoblin_sql.plannedqty					AS PLANNED_QTY, 
-			ccjoblin_sql.completedqty				AS COMPLETED_QTY, 
-			CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY, 
-			ccjoblin_sql.netsqmper					AS NETSQMPER, 
-			ccjoblin_sql.stdsqmper					AS STDSQMPER, 
-			ccjoblin_sql.patternsper				AS PATTERNSPER, 
-			LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
-			ccjoblin_sql.item_no					AS ITEM_NO,
-			ccjoblin_sql.Ser_No						AS SER_NO,
+			--INNER JOIN	part_no_view ON ccjoblin_sql.Item_No = part_no_view.item_no 
+			--	AND		ccjoblin_sql.customer = part_no_view.Customer  
+			--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+			--											FROM	part_no_view 
+			--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+			--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
+			--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
 			-- ===========================
-			LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO
+			INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+			AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+			AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+															FROM	cccusitm_sql (NOLOCK)
+															WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+															AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
 			-- ===========================
-	FROM ccjoblin_sql  
-	-- ===========================
-	--INNER JOIN	part_no_view ON ccjoblin_sql.Item_No = part_no_view.item_no 
-	--	AND		ccjoblin_sql.customer = part_no_view.Customer  
-	--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
-	--											FROM	part_no_view 
-	--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
-	--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
-	--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
-	-- ===========================
-	INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
-	AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
-	AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
-													FROM	cccusitm_sql (NOLOCK)
-													WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
-													AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
-	-- ===========================
-	WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
-	-- ===========================
-    ORDER BY CUS_ITEM_NO
+			WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
+			-- ===========================
+			ORDER BY CUS_ITEM_NO
+			
+			
+			SELECT
+				JOBNO			,	MFP				,
+			-- =================
+				KIT				,	KIT_DESC		,
+				PLANNED_QTY		,	COMPLETED_QTY	,
+				ORIGINAL_QTY 	,	NETSQMPER		,
+				STDSQMPER		,	PATTERNSPER		,
+				CUSTOMER		,	ITEM_NO			,
+				SER_NO			,
+			-- =================
+			-- =================
+				--CUS_ITEM_NO		,	
+				S_NIVEL			,
+			-- ========================================================
+				(	CASE
+					WHEN	CUSTOMER	<> 'IRVI02' THEN	CUS_ITEM_NO
+					ELSE	--CONCAT(	--CUS_ITEM_NO,
+									(	CASE
+											WHEN		S_CUS_ITEM_NO	LIKE '%BQW%'	
+													OR	S_CUS_ITEM_NO	LIKE '%BQX%'
+													OR	S_CUS_ITEM_NO	LIKE '%C4X%'
+													OR	S_CUS_ITEM_NO	LIKE '%C6S%'THEN	( CASE 
+																								WHEN	ISNUMERIC(S_NIVEL) = 1	THEN	CONCAT(CUS_ITEM_NO,RIGHT(S_CUS_ITEM_NO,6))
+																								ELSE	CONCAT(	LEFT(CUS_ITEM_NO,LEN(LTRIM(RTRIM(CUS_ITEM_NO)))-2)	,RIGHT(S_CUS_ITEM_NO,6))
+																							END)
+											ELSE	''
+										END
+									)			
+				END ) AS CUS_ITEM_NO
+			-- ========================================================
+			FROM	@TBL_DETALLE_ORDEN
+	
+	END
+	ELSE
+	BEGIN
+			-- ///////////////////////////////////////////
+		SELECT	JOBNO, 
+				(	SELECT COUNT(K_INVENTARIO_EMBARQUE) 
+					FROM INVENTARIO_EMBARQUE 
+					WHERE (	SERIAL_1 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) 
+							OR SERIAL_2 = LTRIM(RTRIM(jobno)) + RIGHT('000'+ LTRIM(RTRIM(ser_no)),3) )  ) AS MFP,
+				-- ===========================
+				LTRIM(RTRIM(ccjoblin_sql.kit))			AS KIT, 
+				LTRIM(RTRIM(ccjoblin_sql.kitdesc))		AS KIT_DESC, 
+				ccjoblin_sql.plannedqty					AS PLANNED_QTY, 
+				ccjoblin_sql.completedqty				AS COMPLETED_QTY, 
+				CONVERT(INT,ccjoblin_sql.originalqty)	AS ORIGINAL_QTY, 
+				ccjoblin_sql.netsqmper					AS NETSQMPER, 
+				ccjoblin_sql.stdsqmper					AS STDSQMPER, 
+				ccjoblin_sql.patternsper				AS PATTERNSPER, 
+				LTRIM(RTRIM(ccjoblin_sql.customer))		AS CUSTOMER, 
+				ccjoblin_sql.item_no					AS ITEM_NO,
+				ccjoblin_sql.Ser_No						AS SER_NO,
+				-- ===========================
+				LTRIM(RTRIM(cccusitm_sql.cus_item_no))	AS CUS_ITEM_NO
+				-- ===========================
+		FROM ccjoblin_sql  
+		-- ===========================
+		--INNER JOIN	part_no_view ON ccjoblin_sql.Item_No = part_no_view.item_no 
+		--	AND		ccjoblin_sql.customer = part_no_view.Customer  
+		--	AND		part_no_view.versionno = (	SELECT	MAX(versionno) 
+		--											FROM	part_no_view 
+		--											WHERE	ccjoblin_sql.Item_No = part_no_view.item_no  
+		--											AND		ccjoblin_sql.customer = part_no_view.Customer	)
+		--	AND SUBSTRING(LTRIM(RTRIM(CHANGELEVEL)), 1, 3) = LTRIM(RTRIM(MODELNO))
+		-- ===========================
+		INNER JOIN	cccusitm_sql ON ccjoblin_sql.Item_No = cccusitm_sql.item_no 
+		AND		ccjoblin_sql.customer = cccusitm_sql.cus_no
+		AND		cccusitm_sql.versionno = (	SELECT	MAX(CONVERT(INT, versionno)) 
+														FROM	cccusitm_sql (NOLOCK)
+														WHERE	cccusitm_sql.Item_No = ccjoblin_sql.item_no  
+														AND		cccusitm_sql.cus_no = ccjoblin_sql.customer)
+		-- ===========================
+		WHERE	ccjoblin_sql.jobno = @PP_ORDEN 
+		-- ===========================
+		ORDER BY CUS_ITEM_NO
     --ORDER BY ccjoblin_sql.Ser_No
+	END
 	-----////////////////////////////////////////////////////////////////
 	-- ////////////////////////////////////////////////////////////////////
 GO
