@@ -39,8 +39,9 @@ AS
 	DECLARE @VP_DEFECTO VARCHAR(255) = ''
 	SELECT @VP_DEFECTO = LTRIM(RTRIM(clave)) 
 	FROM PPMS_PEARL.DBO.def 
-	WHERE descripcion='NATURAL'
-	AND clave = @PP_CLAVE_DEFECTO
+	WHERE clave = @PP_CLAVE_DEFECTO
+	--descripcion='NATURAL'
+	--AND clave = @PP_CLAVE_DEFECTO
 
 	IF ( @VP_DEFECTO IS NULL OR @VP_DEFECTO = '' )
 		SET @VP_MENSAJE = 'La clave del defecto proporcionado no existe.'
