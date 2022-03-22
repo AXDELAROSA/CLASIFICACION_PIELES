@@ -49,8 +49,8 @@
 	order by hide
 	
 	SELECT [CDATE],[COLOUR],[LOT],[HIDE],[SQF],[TAGNO],[YARDAS],[YLB],[PESO],[TYPE],[MOVEMENT],[K_CLASIFICACION]
-	FROM RP_SC_HIDE_DELETE
-	WHERE LTRIM(RTRIM(LOT)) = '68791' --AND MOVEMENT = 'MHI' 
+	FROM RP_SC --_HIDE_DELETE
+	WHERE LTRIM(RTRIM(LOT)) = '67061' --AND MOVEMENT = 'MHI' 
 	--TAGNO IN ( 3895623)
 	AND COLOUR = 'FMCKPD2'
 	AND CONVERT(INT, LTRIM(RTRIM(HIDE))) IN (527) 
@@ -78,8 +78,8 @@
 	 FROM cccuthst_sql
 	 WHERE -- jobno IN ('16773 ') order by colkey desc
 	--AND 
-	LTRIM(RTRIM(LOTNO)) = RIGHT('000000' + CONVERT(VARCHAR(20), 32311     ), 6)
-	AND	CONVERT(INT, hideno) IN (	120 )
+	LTRIM(RTRIM(LOTNO)) = RIGHT('000000' + CONVERT(VARCHAR(20), 66851     ), 6)
+	AND	CONVERT(INT, hideno) IN (	57 )
 		
 	--UPDATE cccuthst_sql
 	--	SET hidesqm = '14.3000'
@@ -99,7 +99,7 @@
 	
 	SELECT * FROM   RP_Folios  WHERE TAG IN ( 3801643)
 
-	 SELECT * FROM ccjobhdr_sql WHERE jobno  IN ('19726') 
+	 SELECT * FROM ccjobhdr_sql WHERE jobno  IN ('17844') 
 	 
 	---- UPDATE RP_Folios
 	----	SET MACHINE = NULL,
@@ -113,15 +113,16 @@
 
 	--	SELECT * FROM RP_SC_FOLIO_STATUS_XX WHERE tagno IN ( 3823391) ORDER BY HIDE
 	
-	SELECT * FROM	IMLSMST_SQL	WHERE--	item_no = 'FCNPDX9'  and loc = 'T21' and 
-	 LTRIM(RTRIM(SER_LOT_NO)) IN ('402011')  AND qty_on_hand > 0
+	SELECT * FROM	IMLSMST_SQL	WHERE	item_no = 'fcprdx9'  and loc = 'gt1' --and 
+	 --LTRIM(RTRIM(SER_LOT_NO)) IN ('402011')  
+	 AND qty_on_hand > 0
 
 	--update IMLSMST_SQL	
 	--	set qty_on_hand = qty_on_hand - 289.2000
 	--WHERE	LTRIM(RTRIM(SER_LOT_NO)) IN ('068151') and loc = 'GT2' and item_no = 'FNRUDX9'
 
 	SELECT TOP 10 * FROM	IMINVLOC_SQL	
-	WHERE	loc = 'T21' and item_no = 'FCNPDX9'
+	WHERE	loc = 'gt1' and item_no = 'fcprdx9'
 
 	-- 20401.4000 - 53 = 20454.4
 
