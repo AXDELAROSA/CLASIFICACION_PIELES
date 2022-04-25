@@ -49,10 +49,10 @@ AS
 		-- ///////////////////////////////////////////
 	DECLARE @VP_MENSAJE	VARCHAR(255) = ''
 
-	IF	(	SELECT	COUNT(K_DETAILS_RMA)
-			FROM	DETAILS_RMA (NOLOCK)
-			WHERE	JOBNO	= @PP_ORDEN	) > 0
-		SET @VP_MENSAJE = 'ERROR: La orden [RMA] no es modificable.'
+	--IF	(	SELECT	COUNT(K_DETAILS_RMA)
+	--		FROM	DETAILS_RMA (NOLOCK)
+	--		WHERE	JOBNO	= @PP_ORDEN	) > 0
+	--	SET @VP_MENSAJE = 'ERROR: La orden [RMA] no es modificable.'
 
 	-- // SECCION#1 /////////////////////////////////////////////////////////// VALIDACIONES + REGLAS DE NEGOCIO 	
 	IF @VP_MENSAJE=''
