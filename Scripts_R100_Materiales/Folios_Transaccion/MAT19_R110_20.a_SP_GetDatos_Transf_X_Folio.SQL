@@ -9,8 +9,49 @@
 -- // Fecha creación:	20/ENE/2020
 -- ////////////////////////////////////////////////////////////// 
 
-USE [DATA_02Pruebas] 
+USE [DATA_02] 
 GO
+
+
+-- //////////////////////////////////////////////////////////////
+-- // STORED PROCEDURE ---> SELECT /								
+-- //////////////////////////////////////////////////////////////
+-- EXEC [PG_GET_TIPO_ORDEN_X_FOLIO] 0, 0, 3905182 -- RMA
+-- EXEC [PG_GET_TIPO_ORDEN_X_FOLIO] 0, 0, 3873984 -- NORMAL
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PG_GET_TIPO_ORDEN_X_FOLIO]') AND type in (N'P', N'PC'))
+	DROP PROCEDURE [dbo].[PG_GET_TIPO_ORDEN_X_FOLIO]
+GO
+
+CREATE PROCEDURE [dbo].[PG_GET_TIPO_ORDEN_X_FOLIO]
+	@PP_K_SISTEMA_EXE			INT,
+	@PP_K_USUARIO_ACCION		INT,
+	-- ===========================
+	@PP_FOLIO					INT
+AS
+
+	-- ///////////////////////////////////////////
+	DECLARE @VP_ORDEN VARCHAR(10) = '', @VP_TIPO_ORDEN VARCHAR(10) = 'NORMAL', @VP_N_ORDEN_RMA INT = 0;
+	-- ///////////////////////////////////////////
+		
+	SELECT TOP 1 @VP_ORDEN = LTRIM(RTRIM(JOBNO))
+	FROM	ccjobhdr_sql (NOLOCK)
+	WHERE	FOLIO = @PP_FOLIO
+
+	IF ISNULL(@VP_ORDEN, '') <> ''
+		BEGIN
+			 SELECT @VP_N_ORDEN_RMA = COUNT(K_HEADER_RMA) 
+			 FROM HEADER_RMA (NOLOCK)
+			 WHERE JOBNO = @VP_ORDEN
+
+			 IF ISNULL(@VP_N_ORDEN_RMA, 0) > 0
+				SET @VP_TIPO_ORDEN = 'RMA'
+		END
+		
+	SELECT @VP_TIPO_ORDEN AS TIPO_ORDEN
+      
+	-- ////////////////////////////////////////////////////////////////////
+GO
+
 
 
 -- //////////////////////////////////////////////////////////////
